@@ -1,0 +1,131 @@
+.food-details {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.food-details-container {
+    display: flex;
+    gap: 60px;
+    margin-top: 40px;
+}
+
+.food-details-image {
+    flex: 1;
+    max-width: 600px;
+}
+
+.food-details-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.food-details-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.food-details-name {
+    font-size: 40px;
+    font-weight: 600;
+    color: #333;
+}
+
+.food-details-category {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #ff4d4d;
+    color: white;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.food-details-description {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #666;
+}
+
+.food-details-price {
+    font-size: 32px;
+    font-weight: 600;
+    color: #ff4d4d;
+}
+
+.add-to-cart-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.stock-status {
+    font-size: 14px;
+    color: #666;
+    background: #f8f8f8;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.out-of-stock-message {
+    color: #ff4444;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 8px 16px;
+    background: #fff0f0;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #f8f8f8;
+    padding: 10px 20px;
+    border-radius: 8px;
+}
+
+.quantity-control img {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.quantity-control p {
+    font-size: 18px;
+    font-weight: 500;
+    min-width: 30px;
+    text-align: center;
+}
+
+.add-to-cart-button {
+    padding: 12px 30px;
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.add-to-cart-button:hover {
+    background: #ff3333;
+}
+
+.food-details-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.food-details-rating img {
+    height: 20px;
+}
