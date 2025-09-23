@@ -21,7 +21,8 @@ const List = ({url}) => {
   const removeFood = async (foodId) =>{
 
     try {
-      const response = await axios.post(`${url}/api/food/remove`, { id: foodId });
+      const response = await axios.post(`${url}/api/food/remove`, 
+                                        {id: foodId});
       await fetchList();
       
       if (response.data.success) {
@@ -41,7 +42,7 @@ const List = ({url}) => {
 
   useEffect(()=>{
     fetchList();
-  },[])
+  }, [])
   return (
     <div className='list add flex-col'>
       <p>All Foods List</p>

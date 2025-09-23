@@ -7,7 +7,7 @@ import FoodDisplay from '../../components/FoodDisplay/FoodDisplay'
 import AppDownload from '../../components/AppDownload/AppDownload'
 
 const Home = () => {
-  const [category, setCategory] = useState('All')
+  const [category, setCategory]     = useState('All')
   const [priceRange, setPriceRange] = useState(200); 
   const [searchTerm, setSearchTerm] = useState(''); 
 
@@ -18,8 +18,8 @@ const Home = () => {
       <div className="home-content">
         <div className="home-sidebar">
           <Filter 
-            setPriceRange={setPriceRange}
-            setSearchTerm={setSearchTerm}
+            setPriceRange = {setPriceRange}
+            setSearchTerm = {setSearchTerm}
           />
         </div>
         <div className="home-main">

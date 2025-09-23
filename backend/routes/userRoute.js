@@ -3,9 +3,17 @@ import { loginUser, registerUser, getAllUsers, toggleCartLock} from '../controll
 
 const userRouter = express.Router();
 
-userRouter.post('/register', registerUser)
-userRouter.post('/login', loginUser)
-userRouter.get('/list', getAllUsers)
-userRouter.post('/toggle-cart-lock', toggleCartLock)
+userRouter
+    .route("/register")
+    .post(registerUser)
+userRouter
+    .route("/login")
+    .post(loginUser)
+userRouter
+    .route("/list")
+    .get(getAllUsers)
+userRouter
+    .route("/toggle-cart-lock")
+    .post(toggleCartLock)
 
 export default userRouter;

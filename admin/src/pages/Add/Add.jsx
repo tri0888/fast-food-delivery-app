@@ -7,19 +7,17 @@ import { toast } from 'react-toastify'
 const Add = ({url}) => {
 
     const [image, setImage] = useState(false);
-    const [data, setData] = useState({
-        name:'',
-        description:'',
-        price:'',
-        category:'Salad',
-        stock: 0,
-        isAvailable: true
-    })
+    const [data, setData] = useState({name        : '',
+                                      description : '',
+                                      price       : '',
+                                      category    : 'Salad',
+                                      stock       :  0,
+                                      isAvailable :  true})
 
     const onChangeHandler = (event) =>{
-        const name = event.target.name;
+        const name  = event.target.name;
         const value = event.target.value;
-        setData(data=>({...data,[name]:value}))
+        setData(data => ({...data,[name]:value}))
     }
 
     const onSubmitHandler = async (event) =>{
@@ -30,15 +28,14 @@ const Add = ({url}) => {
         formData.append('price', Number(data.price))
         formData.append('category', data.category)
         formData.append('image', image)
+        formData.append('stock', Number(data.stock))
         const response = await axios.post(`${url}/api/food/add`, formData);
 
         if(response.data.success){
-            setData({
-                name:'',
-                description:'',
-                price:'',
-                category:'Salad'
-            })
+            setData({name        : '',
+                     description : '',
+                     price       : '',
+                     category    : 'Salad'})
             setImage(false);
             toast.success(response.data.message)
         }else{
@@ -52,7 +49,9 @@ const Add = ({url}) => {
             <div className="add-img-upload flex-col">
                 <p>Upload Image</p>
                 <label htmlFor="image">
-                    <img src={image? URL.createObjectURL(image):assets.upload_area} alt="" />
+                    <img src={image
+                              ? URL.createObjectURL(image)
+                              : assets.upload_area} alt="" />
                 </label>
                 <input onChange={(e)=>setImage(e.target.files[0])} type="file" id='image' hidden required />
             </div>
@@ -84,7 +83,7 @@ const Add = ({url}) => {
                 </div>
                 <div className="add-stock flex-col">
                     <p>Stock quantity</p>
-                    <input onChange={onChangeHandler} value={data.stock} type="number" min="0" name='stock' placeholder='0'/>
+                    <input onChange={onChangeHandler} value={data.stock} type="number" name='stock' placeholder='0'/>
                 </div>
             </div>
             <button type='submit' className='add-btn'>ADD</button>

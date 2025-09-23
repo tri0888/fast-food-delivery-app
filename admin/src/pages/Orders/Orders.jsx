@@ -32,7 +32,7 @@ const Orders = ({url}) => {
 
   useEffect(()=>{
     fetchAllOrders()
-  },[])
+  }, [])
   return (
     <div className='order add'>
       <h3>Order Page</h3>
@@ -42,7 +42,7 @@ const Orders = ({url}) => {
             <img src={assets.parcel_icon} alt="" />
             <div>
               <p className="order-item-food">
-                {order.items.map((item,index)=>{
+                {order.items.map((item,index) => {
                   if(index===order.items.length-1){
                     return item.name + " x " + item.quantity
                   }else{

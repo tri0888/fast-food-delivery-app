@@ -36,7 +36,7 @@ const Filter = ({setPriceRange, setSearchTerm}) => {
             
 
             <button className="apply-button" onClick={()=>{setPriceRange(tempPriceRange);
-                                                            setSearchTerm(tempSearchTerm)}}>
+                                                           setSearchTerm(tempSearchTerm)}}>
                 Apply
             </button>
         </div>

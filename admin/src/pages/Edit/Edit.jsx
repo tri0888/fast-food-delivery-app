@@ -5,18 +5,16 @@ import { toast } from 'react-toastify';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const Edit = ({ url }) => {
-  const { id } = useParams();
+  const { id }            = useParams();
   const [image, setImage] = useState(false);
-  const [data, setData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category: 'Salad',
-    isAvailable: true,
-    stock: 0,
-    discount: 0,
-    rating: 0
-  });
+  const [data, setData]   = useState({name        : '',
+                                      description : '',
+                                      price       : '',
+                                      category    : 'Salad',
+                                      isAvailable : true,
+                                      stock       : 0,
+                                      discount    : 0,
+                                      rating      : 0});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,16 +23,14 @@ const Edit = ({ url }) => {
       if (response.data.success) {
         const food = response.data.data.find(f => f._id === id);
         if (food) {
-          setData({
-            name: food.name,
-            description: food.description,
-            price: food.price,
-            category: food.category,
-            isAvailable: food.isAvailable,
-            stock: food.stock,
-            discount: food.discount,
-            rating: food.rating
-          });
+          setData({name        : food.name,
+                   description : food.description,
+                   price       : food.price,
+                   category    : food.category,
+                   isAvailable : food.isAvailable,
+                   stock       : food.stock,
+                   discount    : food.discount,
+                   rating      : food.rating});
           setImage(food.image);
         }
       }
@@ -44,7 +40,7 @@ const Edit = ({ url }) => {
 
   const onChangeHandler = (event) => {
     const name = event.target.name;
-    let value = event.target.value;
+    let value  = event.target.value;
     if (event.target.type === 'checkbox') value = event.target.checked;
     setData(data => ({ ...data, [name]: value }));
   };
@@ -77,7 +73,9 @@ const Edit = ({ url }) => {
         <div className='edit-img-upload flex-col'>
           <p>Upload Image</p>
           <label htmlFor='image'>
-            <img src={image ? (typeof image === 'string' ? `${url}/images/${image}` : URL.createObjectURL(image)) : ''} alt='' />
+            <img src={image ? (typeof image === 'string' 
+                                      ? `${url}/images/${image}` 
+                                      : URL.createObjectURL(image)) : ''} alt='' />
           </label>
           <input onChange={e => setImage(e.target.files[0])} type='file' id='image' hidden />
         </div>

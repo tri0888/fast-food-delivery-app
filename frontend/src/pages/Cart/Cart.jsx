@@ -5,10 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const Cart = () => {
+  const {cartItems, 
+         food_list, 
+         removeFromCart, 
+         addToCart, 
+         getTotalCartAmount, 
+         url, 
+         isCartLocked} = useContext(StoreContext);
+  const navigate       = useNavigate();
 
-  const {cartItems, food_list, removeFromCart, addToCart, getTotalCartAmount, url, isCartLocked} = useContext(StoreContext);
-
-  const navigate = useNavigate();
   return (
     <div className='cart'>
       {isCartLocked && <p>Your cart has been locked by admin</p>}
@@ -25,37 +30,37 @@ const Cart = () => {
         <hr />
         {food_list.map((item,index)=>{
           if(cartItems[item._id]>0){
-            return <div>
-              <div className="cart-items-title cart-items-item">
-              <img src={url+'/images/'+item.image} alt="" />
-              <p>{item.name}</p>
-              <p>${item.price}</p>
-              <div className="cart-quantity">
-                {!isCartLocked && (
-                  <span onClick={() => removeFromCart(item._id)} className="cart-action-btn">-</span>
-                )}
-                <div className="quantity-display">
-                  {cartItems[item._id]}
-                  <span className="stock-info">
-                    (Available: {item.stock})
-                  </span>
+            return (
+              <div>
+                <div className="cart-items-title cart-items-item">
+                <img src={url+'/images/'+item.image} alt="" />
+                <p>{item.name}</p>
+                <p>${item.price}</p>
+                <div className="cart-quantity">
+                  {!isCartLocked && (
+                    <span onClick={() => removeFromCart(item._id)} className="cart-action-btn">-</span>
+                  )}
+                  <div className="quantity-display">
+                    {cartItems[item._id]}
+                    <span className="stock-info">
+                      (Available: {item.stock})
+                    </span>
+                  </div>
+                  {!isCartLocked && (
+                    <span onClick={() => addToCart(item._id)} className="cart-action-btn" style={{cursor: 'pointer'}}>+</span>
+                  )}
                 </div>
-                {!isCartLocked && (
-                  <span onClick={() => addToCart(item._id)} className="cart-action-btn" style={{cursor: 'pointer'}}>+</span>
-                )}
+                <p>${item.price*cartItems[item._id]}</p>
+                <div className="cart-actions">
+                  {!isCartLocked && (
+                    <span onClick   = {() => !isCartLocked && removeFromCart(item._id, true)} 
+                          className = {`cross ${isCartLocked ? 'disabled' : ''}`}>x</span>
+                  )}
+                </div>
               </div>
-              <p>${item.price*cartItems[item._id]}</p>
-              <div className="cart-actions">
-                {!isCartLocked && (
-                  <span onClick={() => !isCartLocked && removeFromCart(item._id, true)} 
-                        className={`cross ${isCartLocked ? 'disabled' : ''}`}>x</span>
-                )}
+              <hr />
               </div>
-            </div>
-            <hr />
-            </div>
-
-            
+            );
           }
         })}
       </div>
@@ -78,9 +83,10 @@ const Cart = () => {
               <b>${getTotalCartAmount()===0?0:getTotalCartAmount()+2}</b>
             </div> 
           </div>
-          <button onClick={() => !isCartLocked ? navigate('/order') : 
-            toast.error("Cart is locked by admin")
-          }>PROCEED TO CHECKOUT</button>
+          <button onClick={() => ! isCartLocked 
+                                 ? navigate('/order') 
+                                 : toast.error("Cart is locked by admin")}
+          >PROCEED TO CHECKOUT</button>
         </div>
         <div className="cart-promocode">
           <div>

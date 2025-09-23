@@ -6,7 +6,11 @@ import { assets } from '../../assets/assets'
 
 const FoodDetails = () => {
     const { id } = useParams()
-    const { food_list, cartItems, addToCart, removeFromCart, url } = useContext(StoreContext)
+    const {food_list, 
+           cartItems, 
+           addToCart, 
+           removeFromCart, 
+           url}  = useContext(StoreContext)
     const [food, setFood] = useState(null)
 
     useEffect(() => {
@@ -38,31 +42,26 @@ const FoodDetails = () => {
                                 <div className="stock-status">
                                     Available: {food.stock} items
                                 </div>
-                                {food.stock > 0 ? (
-                                    cartItems && cartItems[id] > 0 ? (
-                                        <div className="quantity-control">
+                                {food.stock > 0 
+                                 ? (cartItems && cartItems[id] > 0 
+                                    ? (<div className="quantity-control">
                                             <img 
                                                 onClick={() => removeFromCart(id)} 
                                                 src={assets.remove_icon_red} 
                                                 alt="remove" 
                                             />
                                             <p>{cartItems[id]}</p>
-                                            {cartItems[id] < food.stock && (
-                                                <img 
-                                                    onClick={() => addToCart(id)} 
-                                                    src={assets.add_icon_green} 
-                                                    alt="add" 
-                                                />
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <button onClick={() => addToCart(id)} className="add-to-cart-button">
+                                            <img 
+                                                onClick={() => addToCart(id)} 
+                                                src={assets.add_icon_green} 
+                                                alt="add" 
+                                            />
+                                        </div>) 
+                                    : (<button onClick={() => addToCart(id)} className="add-to-cart-button">
                                             Add to Cart
-                                        </button>
-                                    )
-                                ) : (
-                                    <div className="out-of-stock-message">Out of Stock</div>
-                                )}
+                                        </button>)
+                                ) 
+                                 : (<div className="out-of-stock-message">Out of Stock</div>)}
                             </div>
                         </div>
                     </div>

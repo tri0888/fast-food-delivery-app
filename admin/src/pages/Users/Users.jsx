@@ -5,14 +5,14 @@ import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom';
 
 const Users = ({url}) => {
-    const navigate = useNavigate();
+    const navigate          = useNavigate();
     const [users, setUsers] = useState([]);
 
     const fetchUsers = async () => {
         try {
             const response = await axios.get(`${url}/api/user/list`);
             if(response.data.success) {
-            setUsers(response.data.data);
+              setUsers(response.data.data);
             } 
         } catch (error) {
             console.log(error);
@@ -22,13 +22,15 @@ const Users = ({url}) => {
 
     const toggleCartLock = async (userId) => {
         try {
-            const response = await axios.post(`${url}/api/user/toggle-cart-lock`, { userId });
+            const response = await axios.post(`${url}/api/user/toggle-cart-lock`, 
+                                              {userId});
             if (response.data.success) {
                 const newStatus = response.data.data.isCartLock;
                 setUsers(prevUsers =>
-                prevUsers.map(u =>
-                    u._id === userId ? { ...u, isCartLock: newStatus } : u)
-                )
+                  prevUsers.map(u =>
+                    u._id === userId 
+                    ? { ...u, isCartLock: newStatus } 
+                    : u))
                 toast.success(`Cart ${newStatus ? 'locked' : 'unlocked'} successfully`);
                 navigate(0);
             }
