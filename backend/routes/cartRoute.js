@@ -14,6 +14,6 @@ cartRouter
     .post(authMiddleware, removeFromCart)
 cartRouter
     .route("/get")
-    .post(authMiddleware, getCart)
+    .get(authMiddleware, getCart)
 
 export default cartRouter;

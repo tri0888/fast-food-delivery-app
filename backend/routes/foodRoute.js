@@ -26,6 +26,6 @@ foodRouter
     .post(removeFood)
 foodRouter
     .route('/edit')
-    .post(upload.single('image'), editFood)
+    .patch(upload.single('image'), editFood)
 
 export default foodRouter;

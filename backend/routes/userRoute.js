@@ -8,12 +8,12 @@ userRouter
     .post(registerUser)
 userRouter
     .route("/login")
-    .post(loginUser)
+    .get(loginUser)
 userRouter
     .route("/list")
     .get(getAllUsers)
 userRouter
     .route("/toggle-cart-lock")
-    .post(toggleCartLock)
+    .patch(toggleCartLock)
 
 export default userRouter;

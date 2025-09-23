@@ -22,7 +22,7 @@ orderRouter
     .get(listOrders)
 orderRouter
     .route("/status")
-    .post(updateStatus)
+    .patch(updateStatus)
 
 export default orderRouter;
 
