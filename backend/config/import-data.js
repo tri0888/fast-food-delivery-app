@@ -2,9 +2,9 @@ import fs from 'fs';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-import Food from './models/foodModel.js';
-import Orders from './models/orderModel.js';
-import User from './models/userModel.js';
+import Food from '../models/foodModel.js';
+import Orders from '../models/orderModel.js';
+import User from '../models/userModel.js';
 
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -12,7 +12,7 @@ import path from 'path';
 // __dirname trong ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({path: './backend/.env'});
+dotenv.config({path: './../.env'});
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',

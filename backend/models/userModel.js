@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({name       : {type     : String, 
-                                                      required : true},
+                                                      required : [true, "An user must have a name"]},
                                         email      : {type     : String, 
-                                                      required : true, 
+                                                      required : [true, "An user must have a email"], 
                                                       unique   : true},
                                         password   : {type     : String,
-                                                      required : true},
+                                                      required : [true, "An user must have a password"]},
                                         cartData   : {type    : Object, 
                                                       default : {}},
                                         isCartLock : {type    : Boolean, 

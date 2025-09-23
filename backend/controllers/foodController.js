@@ -20,7 +20,7 @@ const addFood = async (req,res) => {
     } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : 'Error'})
+                  message : error})
     }
 }
 
@@ -33,7 +33,7 @@ const listFood = async (req,res) => {
     } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : 'Error'})
+                  message : error})
     }
 }
 
@@ -49,7 +49,7 @@ const removeFood = async (req,res)=>{
     } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : 'Error'})
+                  message : error})
     }
 }
 
@@ -66,14 +66,16 @@ const editFood = async (req, res) => {
         delete updateData.id;
         // Cập nhật updatedAt
         updateData.updatedAt = Date.now();
-        const food = await foodModel.findByIdAndUpdate(foodId, updateData, { new: true });
+        const food = await foodModel.findByIdAndUpdate(id      = foodId, 
+                                                       update  = updateData, 
+                                                       options = { new: true });
         res.json({success : true, 
                   message : 'Food updated', 
                   data    : food});
     } catch (error) {
         console.log(error);
         res.json({success : false, 
-                  message : 'Error updating food' });
+                  message : error});
     }
 }
 

@@ -1,15 +1,15 @@
 import mongoose from "mongoose";
 
 const foodSchema = new mongoose.Schema({name        : {type     : String,
-                                                       required : true},
+                                                       required : [true, "A food must have a name"]},
                                         description : {type     : String,
-                                                       required : true},
+                                                       required : [true, "A food must have a name"]},
                                         price       : {type     : Number,
-                                                       required : true},
+                                                       required : [true, "A food must have a price"]},
                                         image       : {type     : String,
-                                                       required : true},
+                                                       required : [true, "A food must have a image"]},
                                         category    : {type     : String,
-                                                       required : true},
+                                                       required : [true, "A food must have a category"]},
 
                                         // ✅ Gợi ý thêm
                                         isAvailable : {type    : Boolean, 

@@ -16,7 +16,8 @@ const placeOrder = async (req, res) =>{
                                          address :  req.body.address})
 
         await newOrder.save();
-        await userModel.findByIdAndUpdate(req.body.userId,{cartData:{}});
+        await userModel.findByIdAndUpdate(id     = req.body.userId,
+                                          update = {cartData : {}});
 
         const line_items = req.body.items.map((item)=>({
             price_data : {
@@ -48,7 +49,7 @@ const placeOrder = async (req, res) =>{
     } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : "Error"})
+                  message : error})
     }
 }
 
@@ -88,7 +89,7 @@ const verifyOrder = async (req, res) =>{
     } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : "Error"})
+                  message : error})
     }
 }
 
@@ -101,7 +102,7 @@ const userOrders = async (req,res) => {
     } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : "Error"})
+                  message : error})
     }
 }
 
@@ -114,19 +115,20 @@ const listOrders = async (req,res) =>{
    } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : "Error"})  
+                  message : error})  
    } 
 }
 
 // api for updating order status
 const updateStatus = async (req, res) =>{
     try {
-        await orderModel.findByIdAndUpdate(req.body.orderId,{status:req.body.status})
+        await orderModel.findByIdAndUpdate(id     = req.body.orderId,
+                                           update = {status : req.body.status})
         res.json({success:true, message:"Status Updated"})
     } catch (error) {
         console.log(error)
         res.json({success : false, 
-                  message : "Error"})  
+                  message : error})  
     }
 }
 
