@@ -2,27 +2,47 @@ import React, { useEffect, useState } from 'react'
 import './List.css'
 import axios from 'axios'
 import { toast } from 'react-toastify';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
 const List = ({url}) => {
 
   const [list, setList] = useState([]);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    foodId: null,
+    foodName: ''
+  });
 
   const fetchList = async () =>{
     const response = await axios.get(`${url}/api/food/list`)
-   
-    if(response.data.success){
-      setList(response.data.data)
+     
+      if(response.data.success){
+        setList(response.data.data)
+      }
+      else{
+        toast.error("Error")
+      }
     }
-    else{
-      toast.error("Error")
-    }
-  }
+  
 
-  const removeFood = async (foodId) =>{
+  const handleDeleteClick = (foodId, foodName) => {
+    setConfirmDialog({
+      isOpen: true,
+      foodId: foodId,
+      foodName: foodName
+    });
+  };
 
+  const handleConfirmDelete = async () => {
+    const { foodId } = confirmDialog;
+    
     try {
-      const response = await axios.post(`${url}/api/food/remove`, 
-                                        {id: foodId});
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.post(`${url}/api/food/remove`, {id: foodId}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       await fetchList();
       
       if (response.data.success) {
@@ -38,7 +58,13 @@ const List = ({url}) => {
       toast.error(errorMessage);
     }
     
-  }
+    // Close dialog
+    setConfirmDialog({ isOpen: false, foodId: null, foodName: '' });
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDialog({ isOpen: false, foodId: null, foodName: '' });
+  };
 
   useEffect(()=>{
     fetchList();
@@ -65,12 +91,22 @@ const List = ({url}) => {
               <div>{item.stock}</div>
               <div>
                 <a href={`/edit/${item._id}`} className='cursor' style={{marginRight:8}}>Edit</a>
-                <span onClick={()=> removeFood(item._id)} className='cursor'>X</span>
+                <span onClick={()=> handleDeleteClick(item._id, item.name)} className='cursor delete-btn'>🗑️</span>
               </div>
             </div>
           )
         })}
       </div>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title="Xác nhận xóa"
+        message={`Bạn có chắc chắn muốn xóa "${confirmDialog.foodName}"? Hành động này không thể hoàn tác.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Xóa"
+        cancelText="Hủy"
+      />
     </div>
   )
 }

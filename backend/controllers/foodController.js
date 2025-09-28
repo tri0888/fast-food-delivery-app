@@ -2,7 +2,11 @@ import fs from 'fs'
 import foodModel from '../models/foodModel.js'
 
 //add food item
-const addFood = async (req,res) => {
+const addFood = async (req,res) => {    
+
+    if (!req.file) {
+        return res.json({success: false, message: 'Image is required'});
+    }
 
     let image_filename = `${req.file.filename}`;
 
@@ -11,6 +15,7 @@ const addFood = async (req,res) => {
                                 price       : req.body.price,
                                 category    : req.body.category,
                                 image       : image_filename,
+                                isAvailable : req.body.isAvailable !== undefined ? req.body.isAvailable : true,
                                 stock       : req.body.stock,})
 
     try {
@@ -66,9 +71,9 @@ const editFood = async (req, res) => {
         delete updateData.id;
         // Cập nhật updatedAt
         updateData.updatedAt = Date.now();
-        const food = await foodModel.findByIdAndUpdate(id      = foodId, 
-                                                       update  = updateData, 
-                                                       options = { new: true });
+        const food = await foodModel.findByIdAndUpdate(foodId, 
+                                                       updateData, 
+                                                       { new: true });//k sửa đc
         res.json({success : true, 
                   message : 'Food updated', 
                   data    : food});

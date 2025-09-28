@@ -11,31 +11,33 @@ const Add = ({url}) => {
                                       description : '',
                                       price       : '',
                                       category    : 'Salad',
-                                      stock       :  0,
-                                      isAvailable :  true})
+                                      stock       : '',
+                                      isAvailable : true})
 
     const onChangeHandler = (event) =>{
         const name  = event.target.name;
         const value = event.target.value;
+        
         setData(data => ({...data,[name]:value}))
     }
 
     const onSubmitHandler = async (event) =>{
-        event.preventDefault();
+        event.preventDefault();        
         const formData = new FormData();
-        formData.append('name', data.name)
-        formData.append('description', data.description)
+        formData.append('name', data.name.trim())
+        formData.append('description', data.description.trim())
         formData.append('price', Number(data.price))
         formData.append('category', data.category)
         formData.append('image', image)
-        formData.append('stock', Number(data.stock))
+        formData.append('stock', Number(data.stock))        
         const response = await axios.post(`${url}/api/food/add`, formData);
 
         if(response.data.success){
             setData({name        : '',
                      description : '',
                      price       : '',
-                     category    : 'Salad'})
+                     category    : 'Salad',
+                     stock       : ''})
             setImage(false);
             toast.success(response.data.message)
         }else{
@@ -53,11 +55,11 @@ const Add = ({url}) => {
                               ? URL.createObjectURL(image)
                               : assets.upload_area} alt="" />
                 </label>
-                <input onChange={(e)=>setImage(e.target.files[0])} type="file" id='image' hidden required />
+                <input onChange={(e)=>setImage(e.target.files[0])} type="file" id='image' />
             </div>
             <div className="add-product-name flex-col">
                 <p>Product name</p>
-                <input onChange={onChangeHandler} value={data.name} type="text" name='name' placeholder='Type Here' />
+                <input onChange={onChangeHandler} value={data.name} type="text" name='name' placeholder='Type Here' required />
             </div>
             <div className="add-product-description flex-col">
                 <p>Product description</p>
@@ -79,11 +81,11 @@ const Add = ({url}) => {
                 </div>
                 <div className="add-price flex-col">
                     <p>Product price</p>
-                    <input onChange={onChangeHandler} value={data.price} type="number" name='price' placeholder='$20'/>
+                    <input onChange={onChangeHandler} value={data.price} type="number" name='price' placeholder='$20' min="1" step="0.01" required/>
                 </div>
                 <div className="add-stock flex-col">
                     <p>Stock quantity</p>
-                    <input onChange={onChangeHandler} value={data.stock} type="number" name='stock' placeholder='0'/>
+                    <input onChange={onChangeHandler} value={data.stock} type="number" name='stock' placeholder='0' min="0" required/>
                 </div>
             </div>
             <button type='submit' className='add-btn'>ADD</button>

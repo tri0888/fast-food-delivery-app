@@ -5,30 +5,84 @@ import axios from 'axios'
 import { toast } from 'react-toastify';
 import { useEffect } from 'react';
 import { assets } from './../../../../frontend/src/assets/assets';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
 const Orders = ({url}) => {
 
   const [orders, setOrders] = useState([])
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    orderId: null,
+    newStatus: '',
+    orderInfo: ''
+  });
 
   const fetchAllOrders = async () =>{
     const response = await axios.get(url+"/api/order/list");
-    if(response.data.success){
-      setOrders(response.data.data);
-      console.log(response.data.data);
-    }else{
-      toast.error("Error")
-    }
+      if(response.data.success){
+        setOrders(response.data.data);
+        console.log(response.data.data);
+      }else{
+        toast.error("Error")
+      }
   }
 
-  const statusHandler = async (event,orderId) =>{
-    const response = await axios.post(url+"/api/order/status",{
-      orderId,
-      status:event.target.value
-    })
-    if(response.data.success){
-      await fetchAllOrders();
+  const statusHandler = async (event, orderId) => {
+    const newStatus = event.target.value;
+    const currentOrder = orders.find(order => order._id === orderId);
+    
+    if (currentOrder && currentOrder.status === newStatus) {
+      return; // Không thay đổi nếu trạng thái giống nhau
     }
-  }
+
+    const statusText = {
+      'Food Processing': 'đang xử lý',
+      'Out for delivery': 'đang giao hàng',
+      'Delivered': 'đã giao hàng'
+    };
+
+    const orderInfo = `${currentOrder?.address.firstName} ${currentOrder?.address.lastName}`;
+    
+    setConfirmDialog({
+      isOpen: true,
+      orderId: orderId,
+      newStatus: newStatus,
+      orderInfo: `Đơn hàng của ${orderInfo} thành "${statusText[newStatus] || newStatus}"`
+    });
+    
+    // Reset select về giá trị cũ
+    event.target.value = currentOrder?.status || 'Food Processing';
+  };
+
+  const handleConfirmStatusChange = async () => {
+    const { orderId, newStatus } = confirmDialog;
+    
+    try {
+      const response = await axios.post(`${url}/api/order/status`, {
+        orderId,
+        status: newStatus
+      });
+      
+      if(response.data.success){
+        await fetchAllOrders();
+        const statusText = {
+          'Food Processing': 'đang xử lý',
+          'Out for delivery': 'đang giao hàng',
+          'Delivered': 'đã giao hàng'
+        };
+        toast.success(`Đã cập nhật trạng thái thành "${statusText[newStatus] || newStatus}"`);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Không thể cập nhật trạng thái đơn hàng");
+    }
+    
+    setConfirmDialog({ isOpen: false, orderId: null, newStatus: '', orderInfo: '' });
+  };
+
+  const handleCancelStatusChange = () => {
+    setConfirmDialog({ isOpen: false, orderId: null, newStatus: '', orderInfo: '' });
+  };
 
   useEffect(()=>{
     fetchAllOrders()
@@ -67,6 +121,16 @@ const Orders = ({url}) => {
           </div>
         ))}
       </div>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title="Xác nhận thay đổi trạng thái"
+        message={`Bạn có chắc chắn muốn thay đổi trạng thái ${confirmDialog.orderInfo}?`}
+        onConfirm={handleConfirmStatusChange}
+        onCancel={handleCancelStatusChange}
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+      />
     </div>
   )
 }

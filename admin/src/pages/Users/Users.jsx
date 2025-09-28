@@ -3,10 +3,17 @@ import './Users.css'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
 const Users = ({url}) => {
     const navigate          = useNavigate();
     const [users, setUsers] = useState([]);
+    const [confirmDialog, setConfirmDialog] = useState({
+        isOpen: false,
+        userId: null,
+        userName: '',
+        action: ''
+    });
 
     const fetchUsers = async () => {
         try {
@@ -20,10 +27,26 @@ const Users = ({url}) => {
         }
     }
 
-    const toggleCartLock = async (userId) => {
+    const toggleCartLock = (user) => {
+        const currentStatus = user.isCartLock;
+        const action = currentStatus ? 'mở khóa' : 'khóa';
+        
+        setConfirmDialog({
+            isOpen: true,
+            userId: user._id,
+            userName: user.name,
+            action: action
+        });
+    };
+
+    const handleConfirmToggleLock = async () => {
+        const { userId } = confirmDialog;
+        
         try {
-            const response = await axios.post(`${url}/api/user/toggle-cart-lock`, 
-                                              {userId});
+            const response = await axios.post(`${url}/api/user/toggle-cart-lock`, {
+                userId
+            });
+            
             if (response.data.success) {
                 const newStatus = response.data.data.isCartLock;
                 setUsers(prevUsers =>
@@ -31,13 +54,21 @@ const Users = ({url}) => {
                     u._id === userId 
                     ? { ...u, isCartLock: newStatus } 
                     : u))
-                toast.success(`Cart ${newStatus ? 'locked' : 'unlocked'} successfully`);
+                
+                const actionText = newStatus ? 'đã khóa' : 'đã mở khóa';
+                toast.success(`Giỏ hàng của "${confirmDialog.userName}" ${actionText} thành công`);
                 navigate(0);
             }
         } catch (error) {
             console.log(error);
-            toast.error("Failed to toggle cart lock");
+            toast.error("Không thể thay đổi trạng thái khóa giỏ hàng");
         }
+        
+        setConfirmDialog({ isOpen: false, userId: null, userName: '', action: '' });
+    };
+
+    const handleCancelToggleLock = () => {
+        setConfirmDialog({ isOpen: false, userId: null, userName: '', action: '' });
     };
 
   useEffect(() => {
@@ -73,6 +104,16 @@ const Users = ({url}) => {
           )
         })}
       </div>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title="Xác nhận thay đổi trạng thái"
+        message={`Bạn có chắc chắn muốn ${confirmDialog.action} giỏ hàng của "${confirmDialog.userName}"?`}
+        onConfirm={handleConfirmToggleLock}
+        onCancel={handleCancelToggleLock}
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+      />
     </div>
   )
 }

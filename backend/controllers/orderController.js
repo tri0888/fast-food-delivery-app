@@ -1,24 +1,47 @@
 import orderModel from './../models/orderModel.js';
 import userModel from './../models/userModel.js';
 import foodModel from './../models/foodModel.js';
+import dotenv from 'dotenv';
 import Stripe from "stripe"
 
-const stripe =  new Stripe(process.env.STRIPE_SECRET_KEY)
+dotenv.config();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Placing user order for frontend
 const placeOrder = async (req, res) =>{
 
     const frontend_url = 'http://localhost:5173';
     try {
+        // First, check and reserve stock for all items
+        for (const orderItem of req.body.items) {
+            const foodItem = await foodModel.findById(orderItem._id);
+            if (!foodItem) {
+                return res.json({success: false, message: `Product ${orderItem.name} not found`});
+            }
+            if (foodItem.stock < orderItem.quantity) {
+                return res.json({success: false, message: `Insufficient stock for ${orderItem.name}. Available: ${foodItem.stock}`});
+            }
+        }
+
+        // Reserve stock by updating it
+        for (const orderItem of req.body.items) {
+            const newStock = await foodModel.findByIdAndUpdate(
+                orderItem._id,
+                { $inc: { stock: -orderItem.quantity }, updatedAt: Date.now() },
+                { new: true }
+            );
+            console.log(`Reserved stock for ${orderItem.name}: ${newStock.stock + orderItem.quantity} -> ${newStock.stock}`);
+        }
+
         const newOrder = new orderModel({userId  :  req.body.userId,
                                          items   :  req.body.items,
                                          amount  : req.body.amount,
                                          address :  req.body.address})
 
         await newOrder.save();
-        await userModel.findByIdAndUpdate(id     = req.body.userId,
-                                          update = {cartData : {}});
-
+        await userModel.findByIdAndUpdate(req.body.userId,
+                                          {cartData:{}});//k sửa đc
+        
         const line_items = req.body.items.map((item)=>({
             price_data : {
                 currency     : "lkr",
@@ -64,27 +87,27 @@ const verifyOrder = async (req, res) =>{
                                  message : "Order not found"});
             }
 
-            // Update stock for each item in the order
-            for (const orderItem of order.items) {
-                const foodItem = await foodModel.findById(orderItem._id);
-                if (foodItem) {
-                    // Make sure we don't go below 0 stock
-                    const newStock = Math.max(0, foodItem.stock - orderItem.quantity);
-                    await foodModel.findByIdAndUpdate(id     = orderItem._id, 
-                                                      update = {stock     : newStock,
-                                                                updatedAt : Date.now()});
+            // Mark order as paid (stock already deducted in placeOrder)
+            await orderModel.findByIdAndUpdate(orderId, {payment : true});
+            res.json({success : true, 
+                      message : "Payment verified successfully"})
+        }else{
+            // Payment failed - restore stock and delete order
+            const order = await orderModel.findById(orderId);
+            if (order) {
+                // Restore stock for each item
+                for (const orderItem of order.items) {
+                    await foodModel.findByIdAndUpdate(
+                        orderItem._id,
+                        { $inc: { stock: orderItem.quantity }, updatedAt: Date.now() }
+                    );
+                    console.log(`Restored stock for ${orderItem.name}: +${orderItem.quantity}`);
                 }
             }
-
-            // Mark order as paid
-            await orderModel.findByIdAndUpdate(id     = orderId, 
-                                               update = {payment : true});
-            res.json({success : true, 
-                      message : "Paid and stock updated"})
-        }else{
+            
             await orderModel.findByIdAndDelete(orderId);
             res.json({success : false, 
-                      message : "Not Paid"})
+                      message : "Payment failed - stock restored"})
         }
     } catch (error) {
         console.log(error)
@@ -122,8 +145,8 @@ const listOrders = async (req,res) =>{
 // api for updating order status
 const updateStatus = async (req, res) =>{
     try {
-        await orderModel.findByIdAndUpdate(id     = req.body.orderId,
-                                           update = {status : req.body.status})
+        await orderModel.findByIdAndUpdate(req.body.orderId,
+                                           {status : req.body.status})//k sửa đc
         res.json({success : true, 
                   message : "Status Updated"})
     } catch (error) {

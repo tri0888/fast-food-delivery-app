@@ -8,12 +8,12 @@ userRouter
     .post(registerUser)
 userRouter
     .route("/login")
-    .get(loginUser)
+    .post(loginUser)//k sửa đc
 userRouter
     .route("/list")
     .get(getAllUsers)
 userRouter
     .route("/toggle-cart-lock")
-    .patch(toggleCartLock)
+    .post(toggleCartLock)//k sửa đc
 
 export default userRouter;

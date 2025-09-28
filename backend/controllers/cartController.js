@@ -12,8 +12,8 @@ const addToCart = async (req,res) => {
             cartData[req.body.itemId] += 1;
         }
 
-        await userModel.findByIdAndUpdate(id     = req.body.userId,
-                                          update = {cartData})
+        await userModel.findByIdAndUpdate(req.body.userId,
+                                          {cartData})//k sửa đc
         res.json({success : true,
                   message : 'Added to cart'});
     } catch (error) {
@@ -43,8 +43,8 @@ const removeFromCart = async (req, res) => {
             }
         }
 
-        await userModel.findByIdAndUpdate(id     = req.body.userId,
-                                          update = {cartData});
+        await userModel.findByIdAndUpdate(req.body.userId,
+                                          {cartData});//k sửa đc
         res.json({success : true,
                   message : 'Removed from cart'});
     } catch (error) {

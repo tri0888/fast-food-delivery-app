@@ -12,9 +12,7 @@ const Edit = ({ url }) => {
                                       price       : '',
                                       category    : 'Salad',
                                       isAvailable : true,
-                                      stock       : 0,
-                                      discount    : 0,
-                                      rating      : 0});
+                                      stock       : 0});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,9 +26,7 @@ const Edit = ({ url }) => {
                    price       : food.price,
                    category    : food.category,
                    isAvailable : food.isAvailable,
-                   stock       : food.stock,
-                   discount    : food.discount,
-                   rating      : food.rating});
+                   stock       : food.stock});
           setImage(food.image);
         }
       }
@@ -49,14 +45,12 @@ const Edit = ({ url }) => {
     event.preventDefault();
     const formData = new FormData();
     formData.append('id', id);
-    formData.append('name', data.name);
-    formData.append('description', data.description);
+    formData.append('name', data.name.trim());
+    formData.append('description', data.description.trim());
     formData.append('price', Number(data.price));
     formData.append('category', data.category);
     formData.append('isAvailable', data.isAvailable);
     formData.append('stock', Number(data.stock));
-    formData.append('discount', Number(data.discount));
-    formData.append('rating', Number(data.rating));
     if (image && typeof image !== 'string') formData.append('image', image);
     const response = await axios.post(`${url}/api/food/edit`, formData);
     if (response.data.success) {
@@ -75,13 +69,13 @@ const Edit = ({ url }) => {
           <label htmlFor='image'>
             <img src={image ? (typeof image === 'string' 
                                       ? `${url}/images/${image}` 
-                                      : URL.createObjectURL(image)) : ''} alt='' />
+                                      : URL.createObjectURL(image)) : 'https://via.placeholder.com/120x120?text=No+Image'} alt='' />
           </label>
-          <input onChange={e => setImage(e.target.files[0])} type='file' id='image' hidden />
+          <input onChange={e => setImage(e.target.files[0])} type='file' id='image' accept="image/*" />
         </div>
         <div className='edit-product-name flex-col'>
           <p>Product name</p>
-          <input onChange={onChangeHandler} value={data.name} type='text' name='name' placeholder='Type Here' />
+          <input onChange={onChangeHandler} value={data.name} type='text' name='name' placeholder='Type Here' required />
         </div>
         <div className='edit-product-description flex-col'>
           <p>Product description</p>
@@ -103,7 +97,7 @@ const Edit = ({ url }) => {
           </div>
           <div className='edit-price flex-col'>
             <p>Product price</p>
-            <input onChange={onChangeHandler} value={data.price} type='number' name='price' placeholder='$20' />
+            <input onChange={onChangeHandler} value={data.price} type='number' name='price' placeholder='$20' min="1" step="0.01" required/>
           </div>
         </div>
         <div className='edit-extra-fields'>
@@ -114,18 +108,15 @@ const Edit = ({ url }) => {
           </div>
           <div>
             <label>Stock</label>
-            <input type='number' name='stock' value={data.stock} onChange={onChangeHandler} min='0' />
-          </div>
-          <div>
-            <label>Discount (%)</label>
-            <input type='number' name='discount' value={data.discount} onChange={onChangeHandler} min='0' max='100' />
-          </div>
-          <div>
-            <label>Rating</label>
-            <input type='number' name='rating' value={data.rating} onChange={onChangeHandler} min='0' max='5' step='0.1' />
-          </div>
+            <input type='number' name='stock' value={data.stock} onChange={onChangeHandler} min='0' required />
+          </div>          
         </div>
-        <button type='submit' className='edit-btn'>UPDATE</button>
+        <div className='back-buttons'>
+          <button type='button' className='back-btn' onClick={() => navigate('/list')}>
+            🔙 Back
+          </button>
+          <button type='submit' className='edit-btn'>UPDATE</button>
+        </div>
       </form>
     </div>
   );
