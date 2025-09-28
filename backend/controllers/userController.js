@@ -1,4 +1,7 @@
 import userModel from "../models/userModel.js";
+
+import AppError from "../utils/appError.js";
+
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import validator from 'validator'
@@ -26,9 +29,7 @@ const loginUser = async (req,res) => {
         res.json({success : true, 
                   token})
     } catch (error) {
-        console.log(error)
-        res.json({success : false,
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -39,9 +40,7 @@ const getAllUsers = async (req, res) => {
         res.json({success : true, 
                   data    : users });
     } catch (error) {
-        console.log(error);
-        res.json({success : false, 
-                  message : 'Error fetching users' });
+        return next(new AppError('Error fetching users', 404))
     }
 }
 
@@ -52,22 +51,24 @@ const createToken = (id) =>{
 
 //register user
 const registerUser = async (req, res) => {
-    const {name,password,email} = req.body;
+    const {name, 
+           password, 
+           email} = req.body;
     try {
         // checking is user already exists
         const exists = await userModel.findOne({email});
-        if(exists){
+        if (exists) {
             return res.json({success : false, 
                              message : 'User already exists'})
         }
 
         //validating email format and strong password
-        if(!validator.isEmail(email)){
+        if (!validator.isEmail(email)) {
             return res.json({success : false, 
                              message : 'Please enter a valid email'})
         }
 
-        if(password.length<8){
+        if (password.length<8) {
             return res.json({success : false, 
                              message : 'Please enter a strong password'})
         }
@@ -80,15 +81,13 @@ const registerUser = async (req, res) => {
                                        email    : email,
                                        password : hashedPassword})
 
-      const user  =  await newUser.save()
-      const token = createToken(user._id)
-      res.json({success : true, 
-                token})
+        const user  =  await newUser.save()
+        const token = createToken(user._id)
+        res.json({success : true, 
+                  token})
 
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -109,9 +108,7 @@ const toggleCartLock = async (req, res) => {
                   data: {userId     : user._id, 
                          isCartLock : user.isCartLock}});
     } catch (error) {
-        console.log(error);
-        res.status(500).json({success : false, 
-                              message : "Error toggling cart lock" });
+        return next(new AppError("Error toggling cart lock", 500))
     }
 };
 

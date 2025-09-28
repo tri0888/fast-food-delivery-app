@@ -1,5 +1,6 @@
 import fs from 'fs'
 import foodModel from '../models/foodModel.js'
+import AppError from '../utils/appError.js';
 
 //add food item
 const addFood = async (req,res) => {    
@@ -23,9 +24,7 @@ const addFood = async (req,res) => {
         res.json({success : true,
                   message : 'Food Added'})
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -36,9 +35,7 @@ const listFood = async (req,res) => {
         res.json({success : true,
                   data    : foods})
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -52,9 +49,7 @@ const removeFood = async (req,res)=>{
         res.json({success : true,
                   message : 'Food Removed'})
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -78,9 +73,7 @@ const editFood = async (req, res) => {
                   message : 'Food updated', 
                   data    : food});
     } catch (error) {
-        console.log(error);
-        res.json({success : false, 
-                  message : error});
+        return next(new AppError(error.message, 404))
     }
 }
 

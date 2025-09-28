@@ -23,4 +23,5 @@ const foodSchema = new mongoose.Schema({name        : {type     : String,
                                         {timestamps : true} ) // tự động thêm createdAt & updatedAt
 
 const foodModel = mongoose.model.food || mongoose.model("food",foodSchema);
+
 export default foodModel;

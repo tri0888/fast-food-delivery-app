@@ -4,6 +4,8 @@ import foodModel from './../models/foodModel.js';
 import dotenv from 'dotenv';
 import Stripe from "stripe"
 
+import AppError from '../utils/appError.js';
+
 dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -70,16 +72,14 @@ const placeOrder = async (req, res) =>{
         res.json({success     : true, 
                   session_url : session.url})
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
 const verifyOrder = async (req, res) =>{
     const {orderId, success} = req.body;
     try {
-        if(success=='true'){
+        if (success=='true') {
             // Get order details
             const order = await orderModel.findById(orderId);
             if (!order) {
@@ -91,7 +91,8 @@ const verifyOrder = async (req, res) =>{
             await orderModel.findByIdAndUpdate(orderId, {payment : true});
             res.json({success : true, 
                       message : "Payment verified successfully"})
-        }else{
+        }
+        else {
             // Payment failed - restore stock and delete order
             const order = await orderModel.findById(orderId);
             if (order) {
@@ -99,20 +100,20 @@ const verifyOrder = async (req, res) =>{
                 for (const orderItem of order.items) {
                     await foodModel.findByIdAndUpdate(
                         orderItem._id,
-                        { $inc: { stock: orderItem.quantity }, updatedAt: Date.now() }
+                        { $inc : { 
+                            stock : orderItem.quantity 
+                        }, 
+                        updatedAt : Date.now() }
                     );
                     console.log(`Restored stock for ${orderItem.name}: +${orderItem.quantity}`);
                 }
             }
             
             await orderModel.findByIdAndDelete(orderId);
-            res.json({success : false, 
-                      message : "Payment failed - stock restored"})
+            return next(new AppError("Payment failed - stock restored", 404))
         }
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -123,9 +124,7 @@ const userOrders = async (req,res) => {
         res.json({success : true, 
                   data    : orders})
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -136,9 +135,7 @@ const listOrders = async (req,res) =>{
     res.json({success : true, 
               data    : orders})
    } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})  
+        return next(new AppError(error.message, 404))
    } 
 }
 
@@ -150,9 +147,7 @@ const updateStatus = async (req, res) =>{
         res.json({success : true, 
                   message : "Status Updated"})
     } catch (error) {
-        console.log(error)
-        res.json({success : false, 
-                  message : error})  
+        return next(new AppError(error.message, 404))
     }
 }
 

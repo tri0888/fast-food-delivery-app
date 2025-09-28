@@ -1,0 +1,37 @@
+import express from "express";
+import morgan from "morgan";
+import cors from 'cors';
+
+import globalErrorHandler from "./controllers/errorController.js";
+import AppError from './utils/appError.js';
+
+import foodRouter from './routes/foodRoute.js'
+import userRouter from './routes/userRoute.js';
+import orderRouter from './routes/orderRoute.js';
+import cartRouter from './routes/cartRoute.js';
+
+//app config
+const app = express()
+
+// middleware
+app.use(morgan('dev'));
+app.use(express.json());
+app.use(cors())
+
+// api endpoints
+app.use("/api/food", foodRouter)
+app.use("/images", express.static('uploads'))
+app.use('/api/user', userRouter)
+app.use('/api/cart', cartRouter)
+app.use('/api/order', orderRouter)
+app.get("/", (req, res) => {
+    res.send("API working")
+})
+// Capture all falsy url
+app.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+app.use(globalErrorHandler);
+
+export default app;

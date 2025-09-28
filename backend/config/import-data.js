@@ -12,7 +12,7 @@ import path from 'path';
 // __dirname trong ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({path: './backend/.env'});//k sửa ddc
+dotenv.config({path: './../.env'});// ai nói không sửa được? ông dẫn đường dẫn sai nên nó không config được thôi
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',

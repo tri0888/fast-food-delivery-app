@@ -17,9 +17,7 @@ const addToCart = async (req,res) => {
         res.json({success : true,
                   message : 'Added to cart'});
     } catch (error) {
-        console.log(error) ;
-        res.json({success : false,
-                  message : error});
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -48,9 +46,7 @@ const removeFromCart = async (req, res) => {
         res.json({success : true,
                   message : 'Removed from cart'});
     } catch (error) {
-        console.log(error) ;
-        res.json({success : false,
-                  message : error});
+        return next(new AppError(error.message, 404))
     }
 }
 
@@ -63,9 +59,7 @@ const getCart = async (req,res) => {
         res.json({success: true, 
                   cartData, isCartLocked});
     } catch (error) {
-        console.log(error) ;
-        res.json({success : false,
-                  message : error});
+        return next(new AppError(error.message, 404))
     }
 }
 
