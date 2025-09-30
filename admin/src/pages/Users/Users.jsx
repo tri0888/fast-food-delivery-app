@@ -29,7 +29,7 @@ const Users = ({url}) => {
 
     const toggleCartLock = (user) => {
         const currentStatus = user.isCartLock;
-        const action = currentStatus ? 'mở khóa' : 'khóa';
+        const action = currentStatus ? 'Unlock Cart' : 'Lock Cart';
         
         setConfirmDialog({
             isOpen: true,
@@ -43,7 +43,7 @@ const Users = ({url}) => {
         const { userId } = confirmDialog;
         
         try {
-            const response = await axios.post(`${url}/api/user/toggle-cart-lock`, {
+            const response = await axios.patch(`${url}/api/user/toggle-cart-lock`, {
                 userId
             });
             
@@ -54,14 +54,13 @@ const Users = ({url}) => {
                     u._id === userId 
                     ? { ...u, isCartLock: newStatus } 
                     : u))
-                
-                const actionText = newStatus ? 'đã khóa' : 'đã mở khóa';
-                toast.success(`Giỏ hàng của "${confirmDialog.userName}" ${actionText} thành công`);
-                navigate(0);
+
+                const actionText = newStatus ? 'Locked' : 'Unlocked';
+                toast.success(`"${confirmDialog.userName}" shopping cart has been ${actionText} successfully`);
             }
         } catch (error) {
             console.log(error);
-            toast.error("Không thể thay đổi trạng thái khóa giỏ hàng");
+            toast.error("Failed to toggle cart lock");
         }
         
         setConfirmDialog({ isOpen: false, userId: null, userName: '', action: '' });
@@ -107,12 +106,12 @@ const Users = ({url}) => {
       
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
-        title="Xác nhận thay đổi trạng thái"
-        message={`Bạn có chắc chắn muốn ${confirmDialog.action} giỏ hàng của "${confirmDialog.userName}"?`}
+        title="Confirm Status Change"
+        message={`Are you sure you want to ${confirmDialog.action} "${confirmDialog.userName}"'s shopping cart?`}
         onConfirm={handleConfirmToggleLock}
         onCancel={handleCancelToggleLock}
-        confirmText="Xác nhận"
-        cancelText="Hủy"
+        confirmText="Confirm"
+        cancelText="Cancel"
       />
     </div>
   )

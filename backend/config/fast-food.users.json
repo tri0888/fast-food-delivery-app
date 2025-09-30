@@ -1,9 +1,16 @@
 [{
   "_id": "68ceb619bc52975e535cd91b",
   "name": "tri",
-  "email": "as@gmail.com",
-  "password": "$2b$10$NsX3iHTRLJiD17ySglc9eu0O.ov6/bs0dtbifNvUiybs58hmBA/Eq", 
+  "email": "tri@gmail.com",
+  "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO", 
   "isCartLock": false,
-  "cartData": {},
-  "__v": 0
+  "cartData": {}
+},
+{
+  "_id": "68ceb619bc52975e535cd91c",
+  "name": "abc",
+  "email": "abc@gmail.com",
+  "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO", 
+  "isCartLock": false,
+  "cartData": {}
 }]

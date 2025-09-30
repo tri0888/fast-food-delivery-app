@@ -52,7 +52,7 @@ const Edit = ({ url }) => {
     formData.append('isAvailable', data.isAvailable);
     formData.append('stock', Number(data.stock));
     if (image && typeof image !== 'string') formData.append('image', image);
-    const response = await axios.post(`${url}/api/food/edit`, formData);
+    const response = await axios.patch(`${url}/api/food/edit`, formData);
     if (response.data.success) {
       toast.success(response.data.message);
       navigate('/list');

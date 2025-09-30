@@ -13,10 +13,9 @@ const StoreContextProvider = (props) => {
 
     const [food_list, setFoodList] = useState([]);
 
-    const loadCartData = async (token) =>{
-        const response = await axios.post(url+"/api/cart/get",
-                                          {},
-                                          {headers:{token}})
+    const loadCartData = async (token) =>{        
+        const response = await axios.get(url+"/api/cart/get",                                        
+                                         {headers:{token}})
         setCartItems(response.data.cartData);
         setIsCartLocked(response.data.isCartLocked || false);
     }
@@ -85,7 +84,9 @@ const StoreContextProvider = (props) => {
         for (const item in cartItems) {
             if (cartItems[item] > 0) {
                 let itemInfo = food_list.find((product) => product._id === item);
-                totalAmount += itemInfo.price * cartItems[item];
+                if (itemInfo) {
+                    totalAmount += itemInfo.price * cartItems[item];
+                }
             }
 
         }

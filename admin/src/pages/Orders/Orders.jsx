@@ -32,14 +32,8 @@ const Orders = ({url}) => {
     const currentOrder = orders.find(order => order._id === orderId);
     
     if (currentOrder && currentOrder.status === newStatus) {
-      return; // Không thay đổi nếu trạng thái giống nhau
+      return;
     }
-
-    const statusText = {
-      'Food Processing': 'đang xử lý',
-      'Out for delivery': 'đang giao hàng',
-      'Delivered': 'đã giao hàng'
-    };
 
     const orderInfo = `${currentOrder?.address.firstName} ${currentOrder?.address.lastName}`;
     
@@ -47,9 +41,9 @@ const Orders = ({url}) => {
       isOpen: true,
       orderId: orderId,
       newStatus: newStatus,
-      orderInfo: `Đơn hàng của ${orderInfo} thành "${statusText[newStatus] || newStatus}"`
+      orderInfo: `the order of ${orderInfo} become "${newStatus || newStatus}"`
     });
-    
+
     // Reset select về giá trị cũ
     event.target.value = currentOrder?.status || 'Food Processing';
   };
@@ -65,16 +59,11 @@ const Orders = ({url}) => {
       
       if(response.data.success){
         await fetchAllOrders();
-        const statusText = {
-          'Food Processing': 'đang xử lý',
-          'Out for delivery': 'đang giao hàng',
-          'Delivered': 'đã giao hàng'
-        };
-        toast.success(`Đã cập nhật trạng thái thành "${statusText[newStatus] || newStatus}"`);
+        toast.success(`The order of ${orderInfo} has become "${[newStatus] || newStatus}"`);
       }
     } catch (error) {
       console.log(error);
-      toast.error("Không thể cập nhật trạng thái đơn hàng");
+      toast.error("Failed to update order status");
     }
     
     setConfirmDialog({ isOpen: false, orderId: null, newStatus: '', orderInfo: '' });
@@ -124,12 +113,12 @@ const Orders = ({url}) => {
       
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
-        title="Xác nhận thay đổi trạng thái"
-        message={`Bạn có chắc chắn muốn thay đổi trạng thái ${confirmDialog.orderInfo}?`}
+        title="Confirm Status Change"
+        message={`Are you sure you want to change the status of ${confirmDialog.orderInfo}?`}
         onConfirm={handleConfirmStatusChange}
         onCancel={handleCancelStatusChange}
-        confirmText="Xác nhận"
-        cancelText="Hủy"
+        confirmText="Confirm"
+        cancelText="Cancel"
       />
     </div>
   )
