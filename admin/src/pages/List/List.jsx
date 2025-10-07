@@ -37,14 +37,11 @@ const List = ({url}) => {
     const { foodId } = confirmDialog;
     
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await axios.post(`${url}/api/food/remove`, {id: foodId}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      await fetchList();
-      
+      const token = sessionStorage.getItem("token");
+      const response = await axios.delete(`${url}/api/food/remove`, 
+                                          {data   : {id: foodId},
+                                          headers : {token}});
+      await fetchList();      
       if (response.data.success) {
         toast.success(response.data.message);
       } else {

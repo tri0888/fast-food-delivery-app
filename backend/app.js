@@ -17,7 +17,7 @@ const app = express()
 
 // middleware
 // Set security HTTP headers
-app.use(helmet())
+// app.use(helmet())
 
 // Data sanitization against NoSQL query injection
 app.use(ExpressMongoSanitize())

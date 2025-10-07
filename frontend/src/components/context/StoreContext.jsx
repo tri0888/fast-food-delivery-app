@@ -121,6 +121,17 @@ const StoreContextProvider = (props) => {
             }
         }
         loadData();
+        // Poll for food list updates every 15 seconds
+        const PollInterval = setInterval(() => {
+            const token = localStorage.getItem("token");
+            if(token){
+                loadCartData(token);
+            }
+            fetchFoodList();
+        }, 15000);
+        return () => {
+            clearInterval(PollInterval);
+        };
     },[])
 
     const contextValue = {food_list,

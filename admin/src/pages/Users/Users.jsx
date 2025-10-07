@@ -16,8 +16,10 @@ const Users = ({url}) => {
     });
 
     const fetchUsers = async () => {
+        const token = sessionStorage.getItem("token");
         try {
-            const response = await axios.get(`${url}/api/user/list`);
+            const response = await axios.get(`${url}/api/user/list`, {
+                                             headers: { token }});
             if(response.data.success) {
               setUsers(response.data.data);
             } 
@@ -41,12 +43,11 @@ const Users = ({url}) => {
 
     const handleConfirmToggleLock = async () => {
         const { userId } = confirmDialog;
-        
+        const token = sessionStorage.getItem("token");
         try {
-            const response = await axios.patch(`${url}/api/user/toggle-cart-lock`, {
-                userId
-            });
-            
+            const response = await axios.patch(`${url}/api/user/toggle-cart-lock`, 
+                                              { userId },
+                                              { headers: { token } });            
             if (response.data.success) {
                 const newStatus = response.data.data.isCartLock;
                 setUsers(prevUsers =>

@@ -17,15 +17,17 @@ const Orders = ({url}) => {
     orderInfo: ''
   });
 
-  const fetchAllOrders = async () =>{
-    const response = await axios.get(url+"/api/order/list");
-      if(response.data.success){
-        setOrders(response.data.data);
-        console.log(response.data.data);
-      }else{
-        toast.error("Error")
-      }
-  }
+  const fetchAllOrders = async () => {
+    const token = sessionStorage.getItem("token");
+    const response = await axios.get(url + "/api/order/list", {
+                                     headers: { token }});    
+    if (response.data.success) {
+      setOrders(response.data.data);
+      console.log(response.data.data);
+    }else{
+      toast.error("Error")
+    }
+    }
 
   const statusHandler = async (event, orderId) => {
     const newStatus = event.target.value;
@@ -41,7 +43,7 @@ const Orders = ({url}) => {
       isOpen: true,
       orderId: orderId,
       newStatus: newStatus,
-      orderInfo: `the order of ${orderInfo} become "${newStatus || newStatus}"`
+      orderInfo: `${orderInfo} become "${newStatus || newStatus}"`
     });
 
     // Reset select về giá trị cũ
@@ -49,17 +51,17 @@ const Orders = ({url}) => {
   };
 
   const handleConfirmStatusChange = async () => {
-    const { orderId, newStatus } = confirmDialog;
+    const { orderId, newStatus, orderInfo } = confirmDialog;
+    const token = sessionStorage.getItem("token");
     
     try {
-      const response = await axios.post(`${url}/api/order/status`, {
-        orderId,
-        status: newStatus
-      });
+      const response = await axios.patch(`${url}/api/order/status`, 
+                                          {orderId, status: newStatus},
+                                          {headers: {token}});
       
       if(response.data.success){
         await fetchAllOrders();
-        toast.success(`The order of ${orderInfo} has become "${[newStatus] || newStatus}"`);
+        toast.success(`The order of ${orderInfo}`);
       }
     } catch (error) {
       console.log(error);
@@ -114,7 +116,7 @@ const Orders = ({url}) => {
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         title="Confirm Status Change"
-        message={`Are you sure you want to change the status of ${confirmDialog.orderInfo}?`}
+        message={`Are you sure you want to change the status of the order of ${confirmDialog.orderInfo}?`}
         onConfirm={handleConfirmStatusChange}
         onCancel={handleCancelStatusChange}
         confirmText="Confirm"

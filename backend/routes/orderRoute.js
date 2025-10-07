@@ -1,5 +1,5 @@
 import express from "express"
-import authMiddleware from './../middleware/auth.js';
+import authMiddleware, { restrictTo } from '../middleware/auth.js';
 import {placeOrder, 
         verifyOrder, 
         userOrders,
@@ -19,10 +19,10 @@ orderRouter
     .post(authMiddleware, userOrders)
 orderRouter
     .route("/list")
-    .get(listOrders)
+    .get(authMiddleware, restrictTo('admin'), listOrders)
 orderRouter
     .route("/status")
-    .post(updateStatus)//k sửa đc
+    .patch(authMiddleware, restrictTo('admin'), updateStatus)
 
 export default orderRouter;
 

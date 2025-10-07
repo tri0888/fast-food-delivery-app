@@ -4,6 +4,7 @@ import {addFood,
         removeFood, 
         editFood} from '../controllers/foodController.js'
 import multer from 'multer'
+import authMiddleware, { restrictTo } from '../middleware/auth.js'
 
 const foodRouter = express.Router();
 
@@ -16,16 +17,16 @@ const storage = multer.diskStorage({destination : "uploads",
 
 const upload = multer({storage:storage})
 foodRouter
-    .route('/add')
-    .post(upload.single('image'), addFood)
-foodRouter
     .route('/list')
     .get(listFood)
 foodRouter
+    .route('/add')
+    .post(authMiddleware, restrictTo('admin'), upload.single('image'), addFood)
+foodRouter
     .route('/remove')
-    .post(removeFood)
+    .delete(authMiddleware, restrictTo('admin'), removeFood)
 foodRouter
     .route('/edit')
-    .patch(upload.single('image'), editFood)
+    .patch(authMiddleware, restrictTo('admin'), upload.single('image'), editFood)
 
 export default foodRouter;

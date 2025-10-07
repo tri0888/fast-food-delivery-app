@@ -44,6 +44,7 @@ const Edit = ({ url }) => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     const formData = new FormData();
+    const token = sessionStorage.getItem("token");
     formData.append('id', id);
     formData.append('name', data.name.trim());
     formData.append('description', data.description.trim());
@@ -52,7 +53,9 @@ const Edit = ({ url }) => {
     formData.append('isAvailable', data.isAvailable);
     formData.append('stock', Number(data.stock));
     if (image && typeof image !== 'string') formData.append('image', image);
-    const response = await axios.patch(`${url}/api/food/edit`, formData);
+    const response = await axios.patch(`${url}/api/food/edit`, 
+                                       formData, 
+                                       {headers: { token }});    
     if (response.data.success) {
       toast.success(response.data.message);
       navigate('/list');

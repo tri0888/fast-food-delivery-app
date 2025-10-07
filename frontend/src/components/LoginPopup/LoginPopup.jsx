@@ -31,9 +31,17 @@ const LoginPopup = ({setShowLogin}) => {
                                           data);
 
         if (response.data.success) {
-            setToken(response.data.token);
-            localStorage.setItem("token", response.data.token)
-            setShowLogin(false);
+            const token = response.data.token;
+            const role = response.data.role;
+            if (role === 'admin') {
+                const redirectUrl = `http://localhost:5174/?token=${token}`;
+                window.location.href = redirectUrl;
+            }
+            else {
+                setToken(token);
+                localStorage.setItem("token", token);
+                setShowLogin(false);
+            }            
         }
         else {
             alert(response.data.message);
