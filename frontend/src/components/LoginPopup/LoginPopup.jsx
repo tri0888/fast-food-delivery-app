@@ -21,9 +21,10 @@ const LoginPopup = ({setShowLogin}) => {
    const onLogin = async (event) =>{
         event.preventDefault()
         let newUrl = url;
-        if(currentState==='Login'){
+        if (currentState==='Login') {
             newUrl += "/api/user/login"
-        }else{
+        }
+        else {
             newUrl += "/api/user/register"
         }
 
@@ -32,8 +33,8 @@ const LoginPopup = ({setShowLogin}) => {
 
         if (response.data.success) {
             const token = response.data.token;
-            const role = response.data.role;
-            if (role === 'admin') {
+            const role  = response.data.role;
+            if (role == 'admin') {
                 const redirectUrl = `http://localhost:5174/?token=${token}`;
                 window.location.href = redirectUrl;
             }

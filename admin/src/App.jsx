@@ -16,7 +16,7 @@ const App = () => {
   const navigate = useNavigate();
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');      
+    const token     = urlParams.get('token');      
     if (token != null) {
       sessionStorage.setItem('token', token);
       navigate(window.location.pathname, { replace: true });

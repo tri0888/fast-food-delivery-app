@@ -35,10 +35,10 @@ const placeOrder = async (req, res) =>{
             console.log(`Reserved stock for ${orderItem.name}: ${newStock.stock + orderItem.quantity} -> ${newStock.stock}`);
         }
 
-        const newOrder = new orderModel({userId  :  req.body.userId,
-                                         items   :  req.body.items,
+        const newOrder = new orderModel({userId  : req.body.userId,
+                                         items   : req.body.items,
                                          amount  : req.body.amount,
-                                         address :  req.body.address})
+                                         address : req.body.address})
 
         await newOrder.save();
         await userModel.findByIdAndUpdate(req.body.userId,
