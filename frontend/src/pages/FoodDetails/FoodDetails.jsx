@@ -57,9 +57,9 @@ const FoodDetails = () => {
                                                 alt="add" 
                                             />
                                         </div>) 
-                                    : (<button onClick={() => addToCart(id)} className="add-to-cart-button">
-                                            Add to Cart
-                                        </button>)
+                                    : (
+                                        <div></div>
+                                        )
                                 ) 
                                  : (<div className="out-of-stock-message">Out of Stock</div>)}
                             </div>

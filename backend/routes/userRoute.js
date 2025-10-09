@@ -1,5 +1,5 @@
 import express from 'express'
-import { loginUser, registerUser, getAllUsers, toggleCartLock} from '../controllers/userController.js'
+import { loginUser, registerUser, getAllUsers} from '../controllers/userController.js'
 import authMiddleware, { restrictTo } from '../middleware/auth.js'
 
 const userRouter = express.Router();
@@ -13,8 +13,5 @@ userRouter
 userRouter
     .route("/list")
     .get(authMiddleware, restrictTo('admin'), getAllUsers)
-userRouter
-    .route("/toggle-cart-lock")
-    .patch(authMiddleware, restrictTo('admin'), toggleCartLock)
 
 export default userRouter;
