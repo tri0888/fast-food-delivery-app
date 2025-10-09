@@ -60,7 +60,6 @@ const Users = ({url}) => {
                 toast.success(`"${confirmDialog.userName}" shopping cart has been ${actionText} successfully`);
             }
         } catch (error) {
-            console.log(error);
             toast.error("Failed to toggle cart lock");
         }
         

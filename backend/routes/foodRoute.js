@@ -24,7 +24,7 @@ foodRouter
     .post(authMiddleware, restrictTo('admin'), upload.single('image'), addFood)
 foodRouter
     .route('/remove')
-    .delete(authMiddleware, restrictTo('admin'), removeFood)
+    .post(authMiddleware, restrictTo('admin'), removeFood)
 foodRouter
     .route('/edit')
     .patch(authMiddleware, restrictTo('admin'), upload.single('image'), editFood)

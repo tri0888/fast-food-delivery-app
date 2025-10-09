@@ -43,11 +43,16 @@ const listFood = async (req,res) => {
 const removeFood = async (req,res)=>{
     try {
         const food = await foodModel.findById(req.body.id);
-        fs.unlink(`uploads/${food.image}`,()=>{})
-
-        await foodModel.findByIdAndDelete(req.body.id)
-        res.json({success : true,
-                  message : 'Food Removed'})
+        if (food != null){
+            fs.unlink(`uploads/${food.image}`,()=>{})
+    
+            await foodModel.findByIdAndDelete(req.body.id)
+            res.json({success : true,
+                      message : 'Food Removed'})
+        }
+        else 
+            res.status(404).json({success : false,
+                                  message : 'Food not found'})
     } catch (error) {
         return next(new AppError(error.message, 404))
     }
@@ -69,9 +74,14 @@ const editFood = async (req, res) => {
         const food = await foodModel.findByIdAndUpdate(foodId, 
                                                        updateData, 
                                                        { new: true });//k sửa đc
-        res.json({success : true, 
-                  message : 'Food updated', 
-                  data    : food});
+        if (food != null){
+            res.json({success : true, 
+                      message : 'Food updated', 
+                      data    : food});    
+        }
+        else 
+            res.status(404).json({success : false, 
+                                  message : 'Food not found'});
     } catch (error) {
         return next(new AppError(error.message, 404))
     }

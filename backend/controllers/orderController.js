@@ -108,9 +108,10 @@ const verifyOrder = async (req, res) =>{
                     console.log(`Restored stock for ${orderItem.name}: +${orderItem.quantity}`);
                 }
             }
-            
             await orderModel.findByIdAndDelete(orderId);
-            return next(new AppError("Payment failed - stock restored", 404))
+            res.json({success : false, 
+                      message:"Payment failed - stock restored"})
+            // return next(new AppError("Payment failed - stock restored", 404))
         }
     } catch (error) {
         return next(new AppError(error.message, 404))

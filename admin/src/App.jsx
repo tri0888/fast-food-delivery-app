@@ -20,6 +20,7 @@ const App = () => {
     if (token != null) {
       sessionStorage.setItem('token', token);
       navigate(window.location.pathname, { replace: true });
+      navigate('/users');
     }
     else if (sessionStorage.getItem('token') == null && token == null) {
       alert('Please login as admin to access the admin panel.');

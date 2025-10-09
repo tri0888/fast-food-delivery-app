@@ -26,8 +26,10 @@ const loginUser = async (req,res) => {
         }
 
         const token = createToken(user._id);
+        const role  = user.role;
         res.json({success : true, 
-                  token})
+                  token,
+                  role})
     } catch (error) {
         return next(new AppError(error.message, 404))
     }
@@ -91,22 +93,22 @@ const registerUser = async (req, res) => {
     }
 }
 
-const toggleCartLock = async (req, res) => {
-    const { userId } = req.body;
-
+const toggleCartLock = async (req, res, next) => {
     try {
         // Lấy user
+        const { userId } = req.body;
         const user = await userModel.findById(userId);
-        if (!user) return res.status(404).json({success : false, 
-                                                message : "User not found" });
-
-        // Đảo trạng thái isCartLock
-        user.isCartLock = !user.isCartLock;
-        await user.save();
-
-        res.json({success: true, 
-                  data: {userId     : user._id, 
-                         isCartLock : user.isCartLock}});
+        if (user) {
+            // Đảo trạng thái isCartLock
+            user.isCartLock = !user.isCartLock;
+            await user.save();
+            res.json({success: true, 
+                      data: {userId     : user._id, 
+                             isCartLock : user.isCartLock}});
+        }
+        else
+            return res.json({success : false, 
+                             message : "User not found" });
     } catch (error) {
         return next(new AppError("Error toggling cart lock", 500))
     }
