@@ -13,7 +13,7 @@ services:
   api:
     build:
       context    : ./backend
-      # dockerfile : Dockerfile
+      dockerfile : Dockerfile
     restart  : unless-stopped
     env_file : ./backend/.env
     volumes  :
@@ -30,7 +30,7 @@ services:
   frontend:
     build:
       context    : ./frontend
-      # dockerfile : Dockerfile
+      dockerfile : Dockerfile
     restart  : unless-stopped
     volumes  :
       - ./frontend:/app/frontend
@@ -39,14 +39,14 @@ services:
       - 5173:5173
     networks:
       - mern-app
-    command: npm run dev -- --host
+    command: npm run dev
     depends_on:
       - api
 
   admin:
     build:
       context    : ./admin
-      # dockerfile : Dockerfile
+      dockerfile : Dockerfile
     restart  : unless-stopped
     volumes  :
       - ./admin:/app/admin
