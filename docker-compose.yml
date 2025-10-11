@@ -13,7 +13,7 @@ services:
   api:
     build:
       context    : ./backend
-      # dockerfile : Dockerfile
+      dockerfile : Dockerfile
     restart  : unless-stopped
     env_file : ./backend/.env
     volumes  :
@@ -30,7 +30,7 @@ services:
   frontend:
     build:
       context    : ./frontend
-      # dockerfile : Dockerfile
+      dockerfile : Dockerfile
     restart  : unless-stopped
     volumes  :
       - ./frontend:/app/frontend
@@ -46,7 +46,7 @@ services:
   admin:
     build:
       context    : ./admin
-      # dockerfile : Dockerfile
+      dockerfile : Dockerfile
     restart  : unless-stopped
     volumes  :
       - ./admin:/app/admin
