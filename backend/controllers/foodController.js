@@ -20,6 +20,11 @@ const addFood = async (req,res) => {
                                 stock       : req.body.stock,})
 
     try {
+        if (!req.body.name || !req.body.description || !req.body.price || !req.body.category || !req.body.stock) {
+            return res.json({success : false, 
+                             message : 'Food information cannot be left blank'});
+        }
+
         await food.save();
         res.json({success : true,
                   message : 'Food Added'})
@@ -69,6 +74,12 @@ const editFood = async (req, res) => {
         }
         // Không cho sửa id
         delete updateData.id;
+
+        if (!updateData.name || !updateData.description || !updateData.price || !updateData.category || !updateData.stock) {
+            return res.json({success : false, 
+                             message : 'Food information cannot be left blank'});
+        }
+
         // Cập nhật updatedAt
         updateData.updatedAt = Date.now();
         const food = await foodModel.findByIdAndUpdate(foodId, 
