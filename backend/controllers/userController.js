@@ -10,6 +10,16 @@ import validator from 'validator'
 const loginUser = async (req,res) => {
     const {email, password} = req.body;
     try {
+        if (!email || !password) {
+            return res.json({success : false, 
+                             message : 'Login information cannot be left blank'})
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.json({success : false, 
+                             message : 'Please enter a valid email'})
+        }
+
         const user = await userModel.findOne({email});
 
         if(!user){
@@ -59,6 +69,11 @@ const registerUser = async (req, res) => {
     try {
         // checking is user already exists
         const exists = await userModel.findOne({email});
+        if (!name || !email || !password) {
+            return res.json({success : false, 
+                             message : 'Registration information cannot be left blank'})
+        }
+
         if (exists) {
             return res.json({success : false, 
                              message : 'User already exists'})
@@ -72,7 +87,7 @@ const registerUser = async (req, res) => {
 
         if (password.length<8) {
             return res.json({success : false, 
-                             message : 'Please enter a strong password'})
+                             message : 'Please enter a password have at least 8 characters'})
         }
 
         // hashing user password
