@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import './Edit.css';
+import './EditFoods.css';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useParams, useNavigate } from 'react-router-dom';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
-const Edit = ({ url }) => {
+const EditFoods = ({ url }) => {
   const { id }            = useParams();
   const [image, setImage] = useState(false);
   const [data, setData]   = useState({name        : '',
@@ -14,6 +15,9 @@ const Edit = ({ url }) => {
                                       isAvailable : true,
                                       stock       : 0});
   const navigate = useNavigate();
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false
+  });
 
   useEffect(() => {
     const fetchFood = async () => {
@@ -43,6 +47,10 @@ const Edit = ({ url }) => {
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setConfirmDialog({ isOpen: true });
+  };
+
+  const handleConfirmUpdate = async () => {
     const formData = new FormData();
     const token = sessionStorage.getItem("token");
     formData.append('id', id);
@@ -62,6 +70,12 @@ const Edit = ({ url }) => {
     } else {
       toast.error(response.data.message);
     }
+    
+    setConfirmDialog({ isOpen: false });
+  };
+
+  const handleCancelUpdate = () => {
+    setConfirmDialog({ isOpen: false });
   };
 
   return (
@@ -121,8 +135,18 @@ const Edit = ({ url }) => {
           <button type='submit' className='edit-btn'>UPDATE</button>
         </div>
       </form>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title="Confirm Food Update"
+        message={`Are you sure you want to update food "${data.name}" with price $${data.price}?`}
+        onConfirm={handleConfirmUpdate}
+        onCancel={handleCancelUpdate}
+        confirmText="Update"
+        cancelText="Cancel"
+      />
     </div>
   );
 };
 
-export default Edit;
+export default EditFoods;

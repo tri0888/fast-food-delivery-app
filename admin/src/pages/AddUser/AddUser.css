@@ -1,0 +1,68 @@
+.add-user {
+    width: 70%;
+    margin-left: max(5vw, 25px);
+    margin-top: 50px;
+    color: #6d6d6d;
+    font-size: 16px;
+}
+
+.add-user h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.add-user form {
+    gap: 20px;
+}
+
+.add-user-field {
+    width: max(40%, 280px);
+}
+
+.add-user-field input,
+.add-user-field select {
+    padding: 10px;
+    border: 1px solid #c9c9c9;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.add-user-field p {
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.add-btn {
+    max-width: 150px;
+    border: none;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+.add-btn:hover {
+    background-color: #218838;
+}
+
+.back-btn {
+    max-width: 120px;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    background-color: #f8f8f8;
+    color: #333;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.back-btn:hover {
+    background-color: #e8e8e8;
+}

@@ -1,10 +1,11 @@
 import React, {useState } from 'react'
-import './Add.css'
+import './AddFoods.css'
 import { assets } from '../../assets/assets'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog'
 
-const Add = ({url}) => {
+const AddFoods = ({url}) => {
 
     const [image, setImage] = useState(false);
     const [data, setData] = useState({name        : '',
@@ -13,6 +14,9 @@ const Add = ({url}) => {
                                       category    : 'Salad',
                                       stock       : '',
                                       isAvailable : true})
+    const [confirmDialog, setConfirmDialog] = useState({
+        isOpen: false
+    });
 
     const onChangeHandler = (event) =>{
         const name  = event.target.name;
@@ -22,7 +26,11 @@ const Add = ({url}) => {
     }
 
     const onSubmitHandler = async (event) =>{
-        event.preventDefault();        
+        event.preventDefault();
+        setConfirmDialog({ isOpen: true });
+    }
+
+    const handleConfirmAdd = async () => {
         const formData = new FormData();
         formData.append('name', data.name.trim())
         formData.append('description', data.description.trim())
@@ -45,6 +53,12 @@ const Add = ({url}) => {
         }else{
             toast.error(response.data.message)
         }
+        
+        setConfirmDialog({ isOpen: false });
+    }
+
+    const handleCancelAdd = () => {
+        setConfirmDialog({ isOpen: false });
     }
 
   return (
@@ -92,8 +106,18 @@ const Add = ({url}) => {
             </div>
             <button type='submit' className='add-btn'>ADD</button>
         </form>
+
+        <ConfirmDialog
+            isOpen={confirmDialog.isOpen}
+            title="Confirm Add Food"
+            message={`Are you sure you want to add food "${data.name}" with price $${data.price}?`}
+            onConfirm={handleConfirmAdd}
+            onCancel={handleCancelAdd}
+            confirmText="Add"
+            cancelText="Cancel"
+        />
     </div>
   )
 }
 
-export default Add
+export default AddFoods

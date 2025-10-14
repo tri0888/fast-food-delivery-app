@@ -2,11 +2,13 @@ import React, { useEffect } from 'react'
 import Navbar from './components/Navbar/Navbar'
 import Sidebar from './components/Sidebar/Sidebar'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Add from './pages/Add/Add';
+import AddFoods from './pages/AddFoods/AddFoods';
 import List from './pages/List/List';
 import Orders from './pages/Orders/Orders';
 import Users from './pages/Users/Users';
-import Edit from './pages/Edit/Edit';
+import EditFoods from './pages/EditFoods/EditFoods';
+import AddUser from './pages/AddUser/AddUser';
+import EditUser from './pages/EditUser/EditUser';
 import { ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -36,11 +38,13 @@ const App = () => {
         <Sidebar/>
         <Routes>
           <Route path='/' element={<Navigate to={`/${window.location.search}`} replace />} />
-          <Route path='/add' element={<Add url={url} />} />
+          <Route path='/add' element={<AddFoods url={url} />} />
           <Route path='/list' element={<List url={url}/>} />
           <Route path='/orders' element={<Orders url={url}/>} />
           <Route path='/users' element={<Users url={url}/>} />
-          <Route path='/edit/:id' element={<Edit url={url}/>} />
+          <Route path='/edit/:id' element={<EditFoods url={url}/>} />
+          <Route path='/add-user' element={<AddUser url={url}/>} />
+          <Route path='/edit-user/:id' element={<EditUser url={url}/>} />
         </Routes>
       </div>
     </div>

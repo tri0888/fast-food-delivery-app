@@ -10,7 +10,7 @@ dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Placing user order for frontend
-const placeOrder = async (req, res) =>{
+const placeOrder = async (req, res, next) =>{
 
     const frontend_url = 'http://localhost:5173';
     try {
@@ -76,7 +76,7 @@ const placeOrder = async (req, res) =>{
     }
 }
 
-const verifyOrder = async (req, res) =>{
+const verifyOrder = async (req, res, next) =>{
     const {orderId, success} = req.body;
     try {
         if (success=='true') {

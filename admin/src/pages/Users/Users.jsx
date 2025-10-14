@@ -76,7 +76,12 @@ const Users = ({url}) => {
 
   return (
     <div className='users add flex-col'>
-      <p>Users Management</p>
+      <div className="users-header">
+        <p>Users Management</p>
+        <button className="add-user-btn" onClick={() => navigate('/add-user')}>
+           Add User
+        </button>
+      </div>
       <div className="users-table">
         <div className="users-table-format title">
           <b>Name</b>
@@ -93,12 +98,15 @@ const Users = ({url}) => {
               <p>{user.name}</p>
               <p>{user.email}</p>
               <p>{cartItemsCount}</p>
-              <button 
-                onClick={() => toggleCartLock(user)} 
-                className={`toggle-btn ${isLocked ? 'locked' : 'unlocked'}`}
-              >
-                {isLocked ? 'Unlock Cart' : 'Lock Cart'}
-              </button>
+              <div className="user-actions">
+                <a href={`/edit-user/${user._id}`} className='cursor edit-link' style={{marginRight:10}}>Edit</a>
+                <button 
+                  onClick={() => toggleCartLock(user)} 
+                  className={`toggle-btn ${isLocked ? 'locked' : 'unlocked'}`}
+                >
+                  {isLocked ? '🔓 Unlock Cart' : '🔒 Lock Cart'}
+                </button>
+              </div>
             </div>
           )
         })}
