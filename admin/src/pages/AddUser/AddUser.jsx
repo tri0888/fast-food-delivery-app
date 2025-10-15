@@ -90,6 +90,7 @@ const AddUser = ({ url }) => {
             name='email' 
             placeholder='Enter email address' 
             required 
+            disabled={true}
           />
         </div>
 
