@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 import Food from '../models/foodModel.js';
-import Orders from '../models/orderModel.js';
 import User from '../models/userModel.js';
 
 import { fileURLToPath } from 'url';
@@ -42,7 +41,6 @@ const users = JSON.parse(
 const importData = async () => {
   try {
     await Food.create(foods);
-    await Orders.create(orders);
     await User.create(users);
 
     console.log('Data successfully loaded!');
@@ -56,7 +54,6 @@ const importData = async () => {
 const deleteData = async () => {
   try {
     await Food.deleteMany();
-    await Orders.deleteMany();
     await User.deleteMany();
 
     console.log('Data successfully deleted!');

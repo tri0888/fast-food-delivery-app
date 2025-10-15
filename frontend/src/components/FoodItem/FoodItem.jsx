@@ -24,8 +24,8 @@ const FoodItem = ({id, name, price, description, image}) => {
           </div>
           ) 
           : stock > 0 
-            ? <img className='add' onClick={() => addToCart(id)} src={assets.add_icon_white} alt="Add" />
-            : <span className="out-of-stock">Out of Stock</span>
+            // ? <img className='add' onClick={() => addToCart(id)} src={assets.add_icon_white} alt="Add" />
+            // : <span className="out-of-stock">Out of Stock</span>
         }
 
       </div>
