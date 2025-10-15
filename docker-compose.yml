@@ -1,4 +1,4 @@
-name: mern-app
+name: period_1
 
 services:
   mongo:
