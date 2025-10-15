@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 const Navbar = () => {
   const logout = () => {
     sessionStorage.removeItem("token");
-    setToken("");
     window.location.href = 'http://localhost:5173';
   };
 
