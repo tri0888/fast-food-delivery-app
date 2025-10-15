@@ -127,6 +127,7 @@ const EditUser = ({ url }) => {
             name='email' 
             placeholder='Enter email address' 
             required 
+            disabled={true}
           />
         </div>
 
