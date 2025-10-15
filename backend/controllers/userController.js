@@ -180,7 +180,7 @@ const addUser = async (req, res, next) => {
 
 // Edit user (admin only)
 const editUser = async (req, res, next) => {
-    const { id, name, email, password, role, isCartLock } = req.body;
+    const { id, name, password, role, isCartLock } = req.body;
     try {
         const user = await userModel.findById(id);        
         if (!user) {
@@ -190,28 +190,35 @@ const editUser = async (req, res, next) => {
             });
         }
 
-        // Check if email is being changed and if it already exists
-        if (email !== user.email) {
-            const emailExists = await userModel.findOne({ email });
-            if (emailExists) {
-                return res.json({
-                    success: false,
-                    message: 'Email already in use'
-                });
-            }
-        }
-
-        // Validate email format
-        if (!validator.isEmail(email)) {
+        if (!name || !role || isCartLock === undefined || isCartLock === null) {
             return res.json({
                 success: false,
-                message: 'Please enter a valid email'
+                message: 'All fields are required'
             });
         }
 
+        // // Check if email is being changed and if it already exists
+        // if (email !== user.email) {
+        //     const emailExists = await userModel.findOne({ email });
+        //     if (emailExists) {
+        //         return res.json({
+        //             success: false,
+        //             message: 'Email already in use'
+        //         });
+        //     }
+        // }
+
+        // // Validate email format
+        // if (!validator.isEmail(email)) {
+        //     return res.json({
+        //         success: false,
+        //         message: 'Please enter a valid email'
+        //     });
+        // }
+
         // Update user fields
         user.name = name;
-        user.email = email;
+        // user.email = email;
         user.role = role || user.role;
         user.isCartLock = isCartLock !== undefined ? isCartLock : user.isCartLock;
 
