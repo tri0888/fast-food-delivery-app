@@ -108,26 +108,26 @@ const registerUser = async (req, res) => {
     }
 }
 
-const toggleCartLock = async (req, res, next) => {
-    try {
-        // Lấy user
-        const { userId } = req.body;
-        const user = await userModel.findById(userId);
-        if (user) {
-            // Đảo trạng thái isCartLock
-            user.isCartLock = !user.isCartLock;
-            await user.save();
-            res.json({success: true, 
-                      data: {userId     : user._id, 
-                             isCartLock : user.isCartLock}});
-        }
-        else
-            return res.json({success : false, 
-                             message : "User not found" });
-    } catch (error) {
-        return next(new AppError("Error toggling cart lock", 500))
-    }
-};
+// const toggleCartLock = async (req, res, next) => {
+//     try {
+//         // Lấy user
+//         const { userId } = req.body;
+//         const user = await userModel.findById(userId);
+//         if (user) {
+//             // Đảo trạng thái isCartLock
+//             user.isCartLock = !user.isCartLock;
+//             await user.save();
+//             res.json({success: true, 
+//                       data: {userId     : user._id, 
+//                              isCartLock : user.isCartLock}});
+//         }
+//         else
+//             return res.json({success : false, 
+//                              message : "User not found" });
+//     } catch (error) {
+//         return next(new AppError("Error toggling cart lock", 500))
+//     }
+// };
 
 const addUser = async (req, res, next) => {
     const {name, 
