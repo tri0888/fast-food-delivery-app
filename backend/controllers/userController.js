@@ -48,7 +48,7 @@ const loginUser = async (req,res,next) => {
 // Get all users
 const getAllUsers = async (req, res) => {
     try {
-        const users = await userModel.find({role: { $ne: "admin" }}, { password: 0 }); // Exclude password field
+        const users = await userModel.find({}, { password: 0 }); // Exclude password field
         res.json({success : true, 
                   data    : users });
     } catch (error) {
