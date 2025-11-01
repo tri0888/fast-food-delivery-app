@@ -1,8 +1,8 @@
 import express from 'express'
-import {addFood, 
-        listFood,
-        removeFood, 
-        editFood} from '../controllers/foodController.js'
+import {addFood} from '../modules/Foods/addFood/Controller.js'
+import {listFood} from '../modules/Foods/listFood/Controller.js'
+import {editFood} from '../modules/Foods/editFood/Controller.js'
+import {removeFood} from '../modules/Foods/removeFood/Controller.js'
 import multer from 'multer'
 import authMiddleware, { restrictTo } from '../middleware/auth.js'
 
