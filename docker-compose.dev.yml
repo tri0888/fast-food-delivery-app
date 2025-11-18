@@ -11,15 +11,9 @@ services:
       - mern-app
 
   api:
-    build:
-      context    : ./backend
-      dockerfile : Dockerfile
+    image: ${DOCKERHUB_USERNAME}/backend:latest
     restart  : unless-stopped
     env_file : ./backend/.env
-    volumes  :
-      - ./backend:/app/backend
-      - /app/backend/node_modules
-    command: sh -c "node config/import-data.js --delete && node config/import-data.js --import && npx nodemon server.js"
     ports:
       - 4000:4000
     networks:
@@ -28,34 +22,22 @@ services:
       - mongo
 
   frontend:
-    build:
-      context    : ./frontend
-      dockerfile : Dockerfile
+    image: ${DOCKERHUB_USERNAME}/frontend:latest
     restart  : unless-stopped
-    volumes  :
-      - ./frontend:/app/frontend
-      - /app/frontend/node_modules
     ports   :
       - 5173:5173
     networks:
       - mern-app
-    command: npm run dev -- --host
     depends_on:
       - api
 
   admin:
-    build:
-      context    : ./admin
-      dockerfile : Dockerfile
+    image: ${DOCKERHUB_USERNAME}/admin:latest
     restart  : unless-stopped
-    volumes  :
-      - ./admin:/app/admin
-      - /app/admin/node_modules
     ports   :
       - 5174:5174
     networks:
       - mern-app
-    command: npm run dev
     depends_on:
       - api
 
