@@ -1,12 +1,14 @@
 name: Docker Image CI
 
 # ĐOẠN NÀY QUAN TRỌNG:
-# Nó bảo: "Tao sẽ chỉ chạy khi cái workflow tên là 'Node.js CI (Check Code)' hoàn thành"
+# Nó bảo: "Tao sẽ chỉ chạy khi cái workflow tên là 'Node.js CI' hoàn thành"
 on:
   workflow_run:
     workflows: ["Node.js CI"]
     types:
       - completed
+    branches:
+      - CI/CD
 
 jobs:
   build-and-push-images:
