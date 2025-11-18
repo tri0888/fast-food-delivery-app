@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build the Docker image
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
@@ -27,7 +27,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # --- BUILD BACKEND ---
-      - name: Build Backend
+      - name: Build the Docker image Backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -36,7 +36,7 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
 
       # --- BUILD FRONTEND ---
-      - name: Build Frontend
+      - name: Build the Docker image Frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
@@ -45,7 +45,7 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
 
       # --- BUILD ADMIN ---
-      - name: Build Admin
+      - name: Build the Docker image Admin
         uses: docker/build-push-action@v5
         with:
           context: ./admin
