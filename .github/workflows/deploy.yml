@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -18,10 +19,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push backend image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest ./backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest ./frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+
+      - name: Build and push admin image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest ./admin
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest
 
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@v0.1.4
