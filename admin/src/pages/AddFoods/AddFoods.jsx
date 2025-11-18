@@ -39,8 +39,9 @@ const AddFoods = ({url}) => {
         formData.append('image', image)
         formData.append('stock', Number(data.stock))
         const token = sessionStorage.getItem("token");
-        const response = await axios.post(`${url}/api/food/add`, formData, {
-                                          headers: { token }});
+        const response = await axios.post(`${url}/api/food/add`, 
+                                          formData, 
+                                          {headers: { token }});
 
         if(response.data.success){
             setData({name        : '',

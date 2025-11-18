@@ -1,11 +1,13 @@
 [{
+  "_id": "690cb92803f7fc767a7b0001",
   "userId": "68ceb619bc52975e535cd91b",
   "items": [
     {
+      "_id": "68ff3f3ead7e818bf246dd01",
       "name": "Greek salad",
       "image": "food_1.png",
       "price": 12,
-      "description": "Food provides essential nutrients for overall health and well-being",
+      "description": "Fresh Greek salad with feta cheese and olives",
       "category": "Salad",
       "isAvailable": true,
       "stock": 10,
@@ -31,14 +33,15 @@
   "payment": false
 },
 {
+  "_id": "690cb92803f7fc767a7b0002",
   "userId": "68ceb619bc52975e535cd91b",
   "items": [
     {
-      "_id": "68cd2362b3792e91617ad23e",
+      "_id": "68ff3f3ead7e818bf246dd01",
       "name": "Greek salad",
       "image": "food_1.png",
       "price": 12,
-      "description": "Food provides essential nutrients for overall health and well-being",
+      "description": "Fresh Greek salad with feta cheese and olives",
       "category": "Salad",
       "isAvailable": true,
       "stock": 10,
