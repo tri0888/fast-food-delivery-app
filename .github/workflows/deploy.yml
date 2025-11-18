@@ -61,6 +61,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           script: |
             cd ~/app
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             docker compose pull
             docker compose up -d --remove-orphans
 
