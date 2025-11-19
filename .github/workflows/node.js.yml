@@ -103,8 +103,8 @@ jobs:
           export DOCKERHUB_USERNAME=$DOCKERHUB_USER
           
           # 7. Pull và Up (Dùng docker compose v2 mới hơn)
-          docker compose pull
-          docker compose up -d --force-recreate --remove-orphans
+          docker-compose pull
+          docker-compose up -d --force-recreate --remove-orphans
           
           # 8. Dọn rác
           docker image prune -f
