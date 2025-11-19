@@ -1,7 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: MERN CI/CD Pipeline
 
 on:
   push:
@@ -10,150 +7,104 @@ on:
     branches: [ "CI/CD" ]
 
 jobs:
-  build-backend:
-
+  # --- 1. TEST & BUILD CODE (GỘP 3 JOB THÀNH 1) ---
+  check-code:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./backend
-
     strategy:
       matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: backend/package-lock.json
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test --if-present
-
-  build-frontend:
-
-    runs-on: ubuntu-latest
-
+        # Đây là danh sách các thư mục, GitHub sẽ chạy job này 3 lần cho 3 cái tên này
+        service: [backend, frontend, admin] 
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: ./${{ matrix.service }}
 
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test --if-present
-
-  build-admin:
-
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./admin
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: admin/package-lock.json
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test --if-present
-
-  build-and-push-images:
-    needs: [build-backend, build-frontend, build-admin]
-    runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          # Tự động trỏ đúng file lock theo tên service
+          cache-dependency-path: ${{ matrix.service }}/package-lock.json 
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test --if-present
 
+  # --- 2. BUILD & PUSH DOCKER ---
+  build-push-docker:
+    needs: check-code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- BUILD BACKEND ---
-      - name: Build the Docker image Backend
+      # Phần này giữ nguyên vì Docker Action không hỗ trợ matrix mượt mà trong 1 step
+      - name: Build Backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          file: ./backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
 
-      # --- BUILD FRONTEND ---
-      - name: Build the Docker image Frontend
+      - name: Build Frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          file: ./frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
 
-      # --- BUILD ADMIN ---
-      - name: Build the Docker image Admin
+      - name: Build Admin
         uses: docker/build-push-action@v5
         with:
           context: ./admin
-          file: ./admin/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest
 
+  # --- 3. DEPLOY (SELF-HOSTED) ---
   deploy:
-    needs: build-and-push-images
+    needs: build-push-docker
     runs-on: self-hosted
-    
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # Lấy code mới về (chứa file docker-compose.CICD.yml)
 
-      - name: Create .env file
+      - name: Deploy Application
+        env:
+          # Map secrets vào biến môi trường để dùng trong lệnh run bên dưới
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
         run: |
-          mkdir -p ~/app/backend
-          echo "${{ secrets.BACKEND_ENV }}" > ~/app/backend/.env
-
-      - name: Copy docker-compose.CICD.yml
-        run: |
-          cp docker-compose.CICD.yml ~/app/docker-compose.yml
-
-      - name: Cleanup old resources
-        run: |
-          docker system prune -f --volumes
-          rm -rf ~/actions-runner/_diag/*.log 2>/dev/null || true
-
-      - name: Pull and deploy
-        run: |
-          cd ~/app
-          export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-          docker-compose -f docker-compose.yml down || true
-          docker-compose -f docker-compose.yml pull
-          docker-compose -f docker-compose.yml up -d --remove-orphans
-          docker image prune -af
+          # 1. Chuẩn bị thư mục
+          APP_DIR=~/app
+          mkdir -p $APP_DIR/backend
+          
+          # 2. Tạo file .env cho Backend
+          echo "$BACKEND_ENV" > $APP_DIR/backend/.env
+          
+          # 3. Copy file compose mới nhất
+          cp docker-compose.CICD.yml $APP_DIR/docker-compose.yml
+          
+          # 4. Di chuyển vào thư mục app để chạy lệnh
+          cd $APP_DIR
+          
+          # 5. Đăng nhập Docker (Quan trọng: Nếu không có bước này sẽ không pull được Private Repo)
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+          
+          # 6. Set biến môi trường username để docker-compose hiểu ${DOCKERHUB_USERNAME}
+          export DOCKERHUB_USERNAME=$DOCKERHUB_USER
+          
+          # 7. Pull và Up (Dùng docker compose v2 mới hơn)
+          docker compose pull
+          docker compose up -d --force-recreate --remove-orphans
+          
+          # 8. Dọn rác
+          docker image prune -f
