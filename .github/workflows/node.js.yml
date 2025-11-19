@@ -144,6 +144,11 @@ jobs:
         run: |
           cp docker-compose.CICD.yml ~/app/docker-compose.yml
 
+      - name: Cleanup old resources
+        run: |
+          docker system prune -f --volumes
+          rm -rf ~/actions-runner/_diag/*.log 2>/dev/null || true
+
       - name: Pull and deploy
         run: |
           cd ~/app
@@ -151,4 +156,4 @@ jobs:
           docker-compose -f docker-compose.yml down || true
           docker-compose -f docker-compose.yml pull
           docker-compose -f docker-compose.yml up -d --remove-orphans
-          docker image prune -f
+          docker image prune -af
