@@ -130,3 +130,25 @@ jobs:
           file: ./admin/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest
+
+  deploy:
+    needs: build-and-push-images
+    runs-on: self-hosted
+    
+    steps:
+      - name: Create .env file
+        run: |
+          mkdir -p ~/app/backend
+          echo "${{ secrets.BACKEND_ENV }}" > ~/app/backend/.env
+
+      - name: Copy docker-compose.yml
+        run: |
+          cp docker-compose.yml ~/app/
+
+      - name: Pull and deploy
+        run: |
+          cd ~/app
+          export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+          docker-compose pull
+          docker-compose up -d --remove-orphans
+          docker image prune -f
