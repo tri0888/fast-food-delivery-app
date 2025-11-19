@@ -12,8 +12,8 @@ services:
 
   api:
     image: ${DOCKERHUB_USERNAME}/backend:latest
-    restart  : unless-stopped
-    env_file : ./backend/.env
+    restart: unless-stopped
+    env_file: ./backend/.env
     ports:
       - 4000:4000
     networks:
@@ -23,8 +23,8 @@ services:
 
   frontend:
     image: ${DOCKERHUB_USERNAME}/frontend:latest
-    restart  : unless-stopped
-    ports   :
+    restart: unless-stopped
+    ports:
       - 5173:5173
     networks:
       - mern-app
@@ -33,8 +33,8 @@ services:
 
   admin:
     image: ${DOCKERHUB_USERNAME}/admin:latest
-    restart  : unless-stopped
-    ports   :
+    restart: unless-stopped
+    ports:
       - 5174:5174
     networks:
       - mern-app

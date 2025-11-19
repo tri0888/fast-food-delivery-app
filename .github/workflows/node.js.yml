@@ -140,14 +140,14 @@ jobs:
           mkdir -p ~/app/backend
           echo "${{ secrets.BACKEND_ENV }}" > ~/app/backend/.env
 
-      - name: Copy docker-compose.yml
+      - name: Copy docker-compose.CICD.yml
         run: |
-          cp docker-compose.yml ~/app/
+          cp docker-compose.CICD.yml ~/app/docker-compose.yml
 
       - name: Pull and deploy
         run: |
           cd ~/app
           export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-          docker-compose pull
-          docker-compose up -d --remove-orphans
+          docker-compose -f docker-compose.yml pull
+          docker-compose -f docker-compose.yml up -d --remove-orphans
           docker image prune -f
