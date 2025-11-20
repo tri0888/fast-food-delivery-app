@@ -15,6 +15,8 @@ services:
     image: ${DOCKERHUB_USERNAME}/fast-food-app:backend-latest
     restart: unless-stopped
     env_file: ./backend/.env
+    environment:
+      - NODE_ENV=docker
     # Import sample data nếu DB rỗng, sau đó chạy server
     command: sh -c "node config/import-data.js --import && node server.js" 
     ports:
