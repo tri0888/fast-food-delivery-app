@@ -33,10 +33,24 @@ jobs:
       - run: npm run build --if-present
       - run: npm test --if-present
 
-  # --- 2. BUILD & PUSH DOCKER (CÓ CACHING) ---
-  build-push-docker:
+  # --- 2. BUILD & PUSH DOCKER (DÙNG MATRIX) ---
+  build-push-docker-image:
     needs: check-code
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: backend
+            build_args: ""
+          - name: frontend
+            build_args: |
+              VITE_API_URL=http://3.25.79.221:4000
+              VITE_ADMIN_URL=http://3.25.79.221:5174
+          - name: admin
+            build_args: |
+              VITE_API_URL=http://3.25.79.221:4000
+              VITE_FRONTEND_URL=http://3.25.79.221:5173
+    
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -47,43 +61,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Backend
+      - name: Build and Push ${{ matrix.service.name }}
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./${{ matrix.service.name }}
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
-          # TỐI ƯU: Cache layer
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            VITE_API_URL=http://3.25.79.221:4000
-            VITE_ADMIN_URL=http://3.25.79.221:5174
-
-      - name: Build Admin
-        uses: docker/build-push-action@v5
-        with:
-          context: ./admin
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            VITE_API_URL=http://3.25.79.221:4000
-            VITE_FRONTEND_URL=http://3.25.79.221:5173
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/fast-food-app:${{ matrix.service.name }}-latest
+          cache-from: type=gha,scope=${{ matrix.service.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}
+          build-args: ${{ matrix.service.build_args }}
 
   # --- 3. DEPLOY (TỐI ƯU SCRIPT) ---
   deploy:
-    needs: build-push-docker
+    needs: build-push-docker-image
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4 
@@ -109,22 +99,22 @@ jobs:
           
           cd $APP_DIR
 
-          echo "Force removing old containers..."
+          # echo "Force removing old containers..."
           
-          # 1. Xóa container cụ thể theo tên (Tên do docker-compose tạo ra: folder_service_1)
-          # Dùng '|| true' để nếu không có thì không báo lỗi
-          docker rm -f app-frontend-1 || true
-          docker rm -f app-admin-1 || true
-          docker rm -f app-api-1 || true
-          docker rm -f app-mongo-1 || true
+          # # 1. Xóa container cụ thể theo tên (Tên do docker-compose tạo ra: folder_service_1)
+          # # Dùng '|| true' để nếu không có thì không báo lỗi
+          # docker rm -f app-frontend-1 || true
+          # docker rm -f app-admin-1 || true
+          # docker rm -f app-api-1 || true
+          # docker rm -f app-mongo-1 || true
           
-          # 2. Dọn dẹp mạng cũ (Network pruning)
-          docker network prune -f
+          # # 2. Dọn dẹp mạng cũ (Network pruning)
+          # docker network prune -f
           
-          # 3. Giết cổng hệ thống lần cuối
-          sudo fuser -k 5173/tcp || true
-          sudo fuser -k 5174/tcp || true
-          sudo fuser -k 4000/tcp || true          
+          # # 3. Giết cổng hệ thống lần cuối
+          # sudo fuser -k 5173/tcp || true
+          # sudo fuser -k 5174/tcp || true
+          # sudo fuser -k 4000/tcp || true          
           
           # Dùng lệnh docker compose (v2)
           docker-compose pull

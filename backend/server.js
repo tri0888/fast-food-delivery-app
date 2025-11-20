@@ -15,7 +15,9 @@ import app from "./app.js"
 
 
 //db connection
-const DB = process.env.DATABASE.replace("<PASSWORD>", process.env.DATABASE_PASSWORD)
+const DB = process.env.NODE_ENV === "docker"
+    ? process.env.DATABASE_DOCKER.replace("<PASSWORD>", process.env.DATABASE_PASSWORD)
+    : process.env.DATABASE_LOCAL.replace("<PASSWORD>", process.env.DATABASE_PASSWORD);
 // connectDB();
 mongoose
     .connect(DB)

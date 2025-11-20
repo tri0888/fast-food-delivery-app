@@ -1,3 +1,5 @@
+name: mern-app
+
 services:
   mongo:
     image: mongo:8.0
@@ -10,7 +12,7 @@ services:
       - mern-app
 
   api:
-    image: ${DOCKERHUB_USERNAME}/backend:latest
+    image: ${DOCKERHUB_USERNAME}/fast-food-app:backend-latest
     restart: unless-stopped
     env_file: ./backend/.env
     # Import sample data nếu DB rỗng, sau đó chạy server
@@ -23,7 +25,7 @@ services:
       - mongo
 
   frontend:
-    image: ${DOCKERHUB_USERNAME}/frontend:latest
+    image: ${DOCKERHUB_USERNAME}/fast-food-app:frontend-latest
     restart: unless-stopped
     ports:
       - 5173:80 # Map cổng 5173 máy chủ vào cổng 80 của Nginx
@@ -31,7 +33,7 @@ services:
       - mern-app
 
   admin:
-    image: ${DOCKERHUB_USERNAME}/admin:latest
+    image: ${DOCKERHUB_USERNAME}/fast-food-app:admin-latest
     restart: unless-stopped
     ports:
       - 5174:80 # Map cổng 5174 máy chủ vào cổng 80 của Nginx
