@@ -102,18 +102,29 @@ jobs:
           
           # Copy compose file
           cp docker-compose.CICD.yml $APP_DIR/docker-compose.yml
-          
-          cd $APP_DIR
 
-          # Tìm và diệt bất cứ thứ gì đang chiếm cổng 5173, 5174, 4000 trước khi deploy
-          echo "Cleaning up ports..."
-          sudo fuser -k 5173/tcp || true
-          sudo fuser -k 5174/tcp || true
-          sudo fuser -k 4000/tcp || true
-          
           # Login & Deploy
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
           export DOCKERHUB_USERNAME=$DOCKERHUB_USER
+          
+          cd $APP_DIR
+
+          echo "Force removing old containers..."
+          
+          # 1. Xóa container cụ thể theo tên (Tên do docker-compose tạo ra: folder_service_1)
+          # Dùng '|| true' để nếu không có thì không báo lỗi
+          docker rm -f app-frontend-1 || true
+          docker rm -f app-admin-1 || true
+          docker rm -f app-api-1 || true
+          docker rm -f app-mongo-1 || true
+          
+          # 2. Dọn dẹp mạng cũ (Network pruning)
+          docker network prune -f
+          
+          # 3. Giết cổng hệ thống lần cuối
+          sudo fuser -k 5173/tcp || true
+          sudo fuser -k 5174/tcp || true
+          sudo fuser -k 4000/tcp || true          
           
           # Dùng lệnh docker compose (v2)
           docker-compose pull
