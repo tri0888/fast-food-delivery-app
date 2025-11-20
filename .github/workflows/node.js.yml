@@ -71,6 +71,8 @@ jobs:
           context: ./admin
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest
+          build-args: |
+            VITE_API_URL=http://3.25.79.221:4000
 
   # --- 3. DEPLOY (SELF-HOSTED) ---
   deploy:

@@ -14,6 +14,7 @@ services:
     image: ${DOCKERHUB_USERNAME}/backend:latest
     restart: unless-stopped
     env_file: ./backend/.env
+    command: sh -c "node config/import-data.js --delete && node config/import-data.js --import && node server.js"
     ports:
       - 4000:4000
     networks:
