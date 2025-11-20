@@ -18,7 +18,7 @@ services:
     # Import sample data nếu DB rỗng, sau đó chạy server
     command: sh -c "node config/import-data.js --import && node server.js" 
     ports:
-      - 4000:4000
+      - 5000:4000
     networks:
       - mern-app
     depends_on:
@@ -28,7 +28,7 @@ services:
     image: ${DOCKERHUB_USERNAME}/fast-food-app:frontend-latest
     restart: unless-stopped
     ports:
-      - 5173:80 # Map cổng 5173 máy chủ vào cổng 80 của Nginx
+      - 3000:80 # Map cổng 3000 máy chủ vào cổng 80 của Nginx
     networks:
       - mern-app
 
@@ -36,7 +36,7 @@ services:
     image: ${DOCKERHUB_USERNAME}/fast-food-app:admin-latest
     restart: unless-stopped
     ports:
-      - 5174:80 # Map cổng 5174 máy chủ vào cổng 80 của Nginx
+      - 3001:80 # Map cổng 3001 máy chủ vào cổng 80 của Nginx
     networks:
       - mern-app
 

@@ -75,6 +75,8 @@ jobs:
   deploy:
     needs: build-push-docker-image
     runs-on: self-hosted
+    # CHỈ CHẠY KHI PUSH VÀO BRANCH CI/CD (không chạy khi PR)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/CI/CD'
     steps:
       - uses: actions/checkout@v4 
 
@@ -122,3 +124,33 @@ jobs:
           
           # Dọn dẹp mạnh tay hơn
           docker system prune -f
+
+  # --- 4. AUTO MERGE TO MAIN (CHỈ KHI TẤT CẢ PASS) ---
+  auto-merge-to-main:
+    needs: [check-code, build-push-docker-image, deploy]
+    runs-on: ubuntu-latest
+    # CHỈ CHẠY KHI PUSH VÀO CI/CD VÀ TẤT CẢ JOBS PASS
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/CI/CD' &&
+      success()
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Merge CI/CD to main
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          # Checkout main branch
+          git checkout main
+          git pull origin main
+          
+          # Merge CI/CD branch
+          git merge origin/CI/CD --no-ff -m "Auto-merge: CI/CD pipeline passed ✅"
+          
+          # Push to main
+          git push origin main
