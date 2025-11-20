@@ -1,23 +1,30 @@
-FROM node:22-alpine
-
+# --- Stage 1: Build (Dùng Node để đóng gói) ---
+FROM node:22-alpine as builder
 WORKDIR /app
 
-# Set build arguments
-ARG VITE_API_URL=http://3.25.79.221:4000
-ARG VITE_FRONTEND_URL=http://3.25.79.221:5173
+# 1. Khai báo ARG để nhận biến từ GitHub Action
+ARG VITE_API_URL
+ARG VITE_FRONTEND_URL
 
-# Set as environment variables
+# 2. Gán vào ENV để Vite nhận được lúc build
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_FRONTEND_URL=$VITE_FRONTEND_URL
 
 COPY package*.json ./
-RUN npm ci
+# Dùng npm ci nhanh hơn npm install
+RUN npm ci 
 
 COPY . .
-
 RUN npm run build
-RUN npm install -g serve
 
-EXPOSE 5174
+# --- Stage 2: Serve (Dùng Nginx siêu nhẹ) ---
+FROM nginx:alpine
 
-CMD ["serve", "-s", "dist", "-l", "5174"]
+# Copy kết quả build (thư mục dist) sang Nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# (Tùy chọn) Tạo file nginx.conf để fix lỗi React Router 404 khi reload
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

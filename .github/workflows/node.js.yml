@@ -33,7 +33,7 @@ jobs:
       - run: npm run build --if-present
       - run: npm test --if-present
 
-  # --- 2. BUILD & PUSH DOCKER ---
+  # --- 2. BUILD & PUSH DOCKER (CÓ CACHING) ---
   build-push-docker:
     needs: check-code
     runs-on: ubuntu-latest
@@ -47,13 +47,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Phần này giữ nguyên vì Docker Action không hỗ trợ matrix mượt mà trong 1 step
       - name: Build Backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
+          # TỐI ƯU: Cache layer
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build Frontend
         uses: docker/build-push-action@v5
@@ -61,6 +63,8 @@ jobs:
           context: ./frontend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             VITE_API_URL=http://3.25.79.221:4000
             VITE_ADMIN_URL=http://3.25.79.221:5174
@@ -71,46 +75,43 @@ jobs:
           context: ./admin
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             VITE_API_URL=http://3.25.79.221:4000
             VITE_FRONTEND_URL=http://3.25.79.221:5173
 
-  # --- 3. DEPLOY (SELF-HOSTED) ---
+  # --- 3. DEPLOY (TỐI ƯU SCRIPT) ---
   deploy:
     needs: build-push-docker
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4 # Lấy code mới về (chứa file docker-compose.CICD.yml)
+      - uses: actions/checkout@v4 
 
       - name: Deploy Application
         env:
-          # Map secrets vào biến môi trường để dùng trong lệnh run bên dưới
           DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
         run: |
-          # 1. Chuẩn bị thư mục
           APP_DIR=~/app
           mkdir -p $APP_DIR/backend
           
-          # 2. Tạo file .env cho Backend
+          # Tạo .env
           echo "$BACKEND_ENV" > $APP_DIR/backend/.env
           
-          # 3. Copy file compose mới nhất
+          # Copy compose file
           cp docker-compose.CICD.yml $APP_DIR/docker-compose.yml
           
-          # 4. Di chuyển vào thư mục app để chạy lệnh
           cd $APP_DIR
           
-          # 5. Đăng nhập Docker (Quan trọng: Nếu không có bước này sẽ không pull được Private Repo)
+          # Login & Deploy
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
-          
-          # 6. Set biến môi trường username để docker-compose hiểu ${DOCKERHUB_USERNAME}
           export DOCKERHUB_USERNAME=$DOCKERHUB_USER
           
-          # 7. Pull và Up (Dùng docker compose v2 mới hơn)
+          # Dùng lệnh docker compose (v2)
           docker-compose pull
           docker-compose up -d --force-recreate --remove-orphans
           
-          # 8. Dọn rác
-          docker image prune -f
+          # Dọn dẹp mạnh tay hơn
+          docker system prune -f

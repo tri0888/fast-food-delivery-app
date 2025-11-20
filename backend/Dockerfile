@@ -7,4 +7,4 @@ RUN npm ci
 
 COPY . .
 
-CMD ["npx", "nodemon", "server.js"]
+CMD ["node", "server.js"]
