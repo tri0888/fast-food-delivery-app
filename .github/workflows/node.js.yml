@@ -61,6 +61,9 @@ jobs:
           context: ./frontend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+          build-args: |
+            VITE_API_URL=http://3.25.79.221:4000
+            VITE_ADMIN_URL=http://3.25.79.221:5174
 
       - name: Build Admin
         uses: docker/build-push-action@v5
