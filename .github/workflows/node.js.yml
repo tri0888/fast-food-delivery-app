@@ -104,6 +104,12 @@ jobs:
           cp docker-compose.CICD.yml $APP_DIR/docker-compose.yml
           
           cd $APP_DIR
+
+          # Tìm và diệt bất cứ thứ gì đang chiếm cổng 5173, 5174, 4000 trước khi deploy
+          echo "Cleaning up ports..."
+          sudo fuser -k 5173/tcp || true
+          sudo fuser -k 5174/tcp || true
+          sudo fuser -k 4000/tcp || true
           
           # Login & Deploy
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
