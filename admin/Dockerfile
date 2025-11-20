@@ -23,8 +23,11 @@ FROM nginx:alpine
 # Copy kết quả build (thư mục dist) sang Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Tạo file nginx.conf để fix lỗi React Router 404 khi reload
+# Copy nginx.conf từ builder stage (COPY . . đã copy file này vào /app)
 COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Verify nginx config
+RUN nginx -t
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
