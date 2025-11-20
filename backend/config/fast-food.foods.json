@@ -352,16 +352,4 @@
         "updatedAt": "2024-09-20T08:11:44.408Z",
         "createdAt": "2024-09-22T07:23:00.552Z"
     }
-    , {
-        "_id": "68ff3f3ead7e818bf246dd33",
-        "name": "Test",
-        "image": "food_32.png",
-        "price": 15,
-        "description": "Cooked noodles, tender and served hot with sauce",
-        "category": "Noodles",
-        "isAvailable": true,
-        "stock": 10,
-        "updatedAt": "2024-09-20T08:11:44.408Z",
-        "createdAt": "2024-09-22T07:23:00.552Z"
-    }
 ]
