@@ -14,7 +14,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
 
-  const url = 'http://localhost:4000';
+  const url = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   const navigate = useNavigate();
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -26,7 +26,7 @@ const App = () => {
     }
     else if (sessionStorage.getItem('token') == null && token == null) {
       alert('Please login as admin to access the admin panel.');
-      window.location.href = 'http://localhost:5173';
+      window.location.href = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
     }
   }, [navigate]);
   return (

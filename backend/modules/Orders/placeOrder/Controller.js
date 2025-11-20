@@ -3,7 +3,7 @@ import orderService from './Service.js'
 const placeOrder = async (req, res, next) => {
     try {
         const { userId, items, amount, address } = req.body
-        const frontendUrl = 'http://localhost:5173'
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
         
         const result = await orderService.placeOrder(userId, items, amount, address, frontendUrl)
         

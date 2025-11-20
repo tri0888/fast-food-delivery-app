@@ -73,6 +73,7 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/admin:latest
           build-args: |
             VITE_API_URL=http://3.25.79.221:4000
+            VITE_FRONTEND_URL=http://3.25.79.221:5173
 
   # --- 3. DEPLOY (SELF-HOSTED) ---
   deploy:

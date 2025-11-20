@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const Navbar = () => {
   const logout = () => {
     sessionStorage.removeItem("token");
-    window.location.href = 'http://localhost:5173';
+    window.location.href = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
   };
 
   return (
