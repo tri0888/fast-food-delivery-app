@@ -14,10 +14,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({path: './../.env'});// ai nói không sửa được? ông dẫn đường dẫn sai nên nó không config được thôi
 
-const DB = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD
-);
+const DB = process.env.NODE_ENV === "docker"
+    ? process.env.DATABASE_DOCKER.replace("<PASSWORD>", process.env.DATABASE_PASSWORD)
+    : process.env.DATABASE_LOCAL.replace("<PASSWORD>", process.env.DATABASE_PASSWORD);
 
 mongoose
   .connect(DB, {
