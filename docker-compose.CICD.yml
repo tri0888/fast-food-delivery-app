@@ -20,7 +20,7 @@ services:
     # Import sample data nếu DB rỗng, sau đó chạy server
     command: sh -c "node config/import-data.js --import && node server.js" 
     ports:
-      - 5000:5000
+      - 5000:4000
     networks:
       - mern-app
     depends_on:
