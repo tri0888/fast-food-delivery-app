@@ -1,3 +1,7 @@
+# Hosting Web App (MERN Stack)
+Web Hosting: [Host](http://3.25.79.221:3000/)
+
+
 # Food Ordering Web App (MERN Stack)
 
 ## Table of Contents
