@@ -13,7 +13,8 @@ describe('User Model', () => {
       expect(user.password).toBe(mockUser.password);
       expect(user.role).toBe('user');
       expect(user.cartData).toEqual({});
-      expect(user.isCartLock).toBe(false);
+      expect(user.cartLocks).toBeInstanceOf(Map);
+      expect(user.cartLocks.size).toBe(0);
     });
 
     it('should have default values for optional fields', () => {
@@ -25,7 +26,8 @@ describe('User Model', () => {
 
       expect(user.role).toBe('user');
       expect(user.cartData).toEqual({});
-      expect(user.isCartLock).toBe(false);
+      expect(user.cartLocks).toBeInstanceOf(Map);
+      expect(user.cartLocks.size).toBe(0);
     });
 
     it('should fail validation when name is missing', () => {
@@ -88,7 +90,7 @@ describe('User Model', () => {
         name: 'Test User',
         email: 'test@example.com',
         password: 'Test123456',
-        role: 'superadmin',
+        role: 'manager',
       });
 
       const validationError = user.validateSync();
@@ -107,15 +109,16 @@ describe('User Model', () => {
       expect(user.cartData).toEqual({ 'food-123': 2, 'food-456': 1 });
     });
 
-    it('should allow isCartLock to be true', () => {
+    it('should allow cartLocks map to store entries', () => {
       const user = new userModel({
         name: 'Test User',
         email: 'test@example.com',
         password: 'Test123456',
-        isCartLock: true,
+        cartLocks: { 'restaurant-123': true },
       });
 
-      expect(user.isCartLock).toBe(true);
+      expect(user.cartLocks).toBeInstanceOf(Map);
+      expect(user.cartLocks.get('restaurant-123')).toBe(true);
     });
   });
 
@@ -128,7 +131,7 @@ describe('User Model', () => {
       expect(typeof user.password).toBe('string');
       expect(typeof user.role).toBe('string');
       expect(typeof user.cartData).toBe('object');
-      expect(typeof user.isCartLock).toBe('boolean');
+      expect(user.cartLocks).toBeInstanceOf(Map);
     });
 
     it('should have minimize option set to false', () => {

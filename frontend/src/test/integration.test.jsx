@@ -157,7 +157,7 @@ describe('App Integration Tests', () => {
         return Promise.resolve({ 
           data: { 
             cartData: { '1': 2 },
-            isCartLocked: false 
+            lockedRestaurants: {} 
           } 
         });
       }

@@ -1,8 +1,8 @@
 import orderModel from '../../../models/orderModel.js'
 
 class OrderRepository {
-    async findAll() {
-        return await orderModel.find({})
+    async findAll(filter = {}) {
+        return await orderModel.find(filter)
     }
 }
 

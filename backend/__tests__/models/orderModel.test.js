@@ -9,18 +9,17 @@ describe('Order Model', () => {
       const order = new orderModel(mockOrder);
 
       expect(order.userId).toBe('user-123');
-      expect(Array.isArray(order.items)).toBe(true);
-      expect(order.items.length).toBeGreaterThan(0);
+      expect(Array.isArray(order.food_items)).toBe(true);
+      expect(order.food_items.length).toBeGreaterThan(0);
       expect(order.amount).toBe(21.98);
       expect(order.address).toBeDefined();
-      expect(order.status).toBe('Food Processing');
-      expect(order.payment).toBe(false);
+      expect(order.status).toBe('Pending Confirmation');
     });
 
     it('should have default values for optional fields', () => {
       const order = new orderModel({
         userId: 'user-123',
-        items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
+        food_items: [{ foodId: new mongoose.Types.ObjectId(), name: 'Test Food', quantity: 1, price: 10.99 }],
         amount: 10.99,
         address: {
           firstName: 'John',
@@ -31,14 +30,13 @@ describe('Order Model', () => {
         },
       });
 
-      expect(order.status).toBe('Food Processing');
-      expect(order.payment).toBe(false);
+      expect(order.status).toBe('Pending Confirmation');
       expect(order.date).toBeDefined();
     });
 
     it('should fail validation when userId is missing', () => {
       const order = new orderModel({
-        items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
+        food_items: [{ foodId: new mongoose.Types.ObjectId(), name: 'Test Food', quantity: 1, price: 10.99 }],
         amount: 10.99,
         address: { street: '123 Test St' },
       });
@@ -52,12 +50,13 @@ describe('Order Model', () => {
     it('should allow empty items array (Mongoose doesn\'t validate arrays)', () => {
       const order = new orderModel({
         userId: 'user-123',
-        items: [],
+        food_items: [],
         amount: 10.99,
         address: { street: '123 Test St' },
       });
 
-      expect(order.items).toEqual([]);
+      expect(Array.isArray(order.food_items)).toBe(true);
+      expect(order.food_items.length).toBe(0);
     });
 
     it('should fail validation when amount is missing', () => {
@@ -75,7 +74,7 @@ describe('Order Model', () => {
     it('should fail validation when address is missing', () => {
       const order = new orderModel({
         userId: 'user-123',
-        items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
+        food_items: [{ foodId: new mongoose.Types.ObjectId(), name: 'Test Food', quantity: 1, price: 10.99 }],
         amount: 10.99,
       });
 
@@ -87,7 +86,7 @@ describe('Order Model', () => {
     it('should allow custom status', () => {
       const order = new orderModel({
         userId: 'user-123',
-        items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
+        food_items: [{ foodId: new mongoose.Types.ObjectId(), name: 'Test Food', quantity: 1, price: 10.99 }],
         amount: 10.99,
         address: { street: '123 Test St' },
         status: 'Out for delivery',
@@ -96,33 +95,22 @@ describe('Order Model', () => {
       expect(order.status).toBe('Out for delivery');
     });
 
-    it('should allow payment to be true', () => {
-      const order = new orderModel({
-        userId: 'user-123',
-        items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
-        amount: 10.99,
-        address: { street: '123 Test St' },
-        payment: true,
-      });
-
-      expect(order.payment).toBe(true);
-    });
-
     it('should store items as array of objects', () => {
       const items = [
-        { name: 'Pizza', quantity: 2, price: 12.99 },
-        { name: 'Burger', quantity: 1, price: 8.99 },
+        { foodId: new mongoose.Types.ObjectId(), name: 'Pizza', quantity: 2, price: 12.99 },
+        { foodId: new mongoose.Types.ObjectId(), name: 'Burger', quantity: 1, price: 8.99 },
       ];
 
       const order = new orderModel({
         userId: 'user-123',
-        items,
+        food_items: items,
         amount: 34.97,
         address: { street: '123 Test St' },
       });
 
-      expect(order.items).toEqual(items);
-      expect(order.items.length).toBe(2);
+      const storedItems = order.food_items.map((item) => item.toObject());
+      expect(storedItems).toEqual(items);
+      expect(order.food_items.length).toBe(2);
     });
 
     it('should store address as object', () => {
@@ -140,7 +128,7 @@ describe('Order Model', () => {
 
       const order = new orderModel({
         userId: 'user-123',
-        items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
+        food_items: [{ foodId: new mongoose.Types.ObjectId(), name: 'Test Food', quantity: 1, price: 10.99 }],
         amount: 10.99,
         address,
       });
@@ -154,18 +142,17 @@ describe('Order Model', () => {
       const order = new orderModel(createMockOrder('user-123'));
 
       expect(typeof order.userId).toBe('string');
-      expect(Array.isArray(order.items)).toBe(true);
+      expect(Array.isArray(order.food_items)).toBe(true);
       expect(typeof order.amount).toBe('number');
       expect(typeof order.address).toBe('object');
       expect(typeof order.status).toBe('string');
-      expect(typeof order.payment).toBe('boolean');
       expect(order.date instanceof Date).toBe(true);
     });
 
     it('should auto-generate date on creation', () => {
       const order = new orderModel({
         userId: 'user-123',
-        items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
+        food_items: [{ foodId: new mongoose.Types.ObjectId(), name: 'Test Food', quantity: 1, price: 10.99 }],
         amount: 10.99,
         address: { street: '123 Test St' },
       });
@@ -177,16 +164,18 @@ describe('Order Model', () => {
 
   describe('Order Status Values', () => {
     const validStatuses = [
-      'Food Processing',
+      'Pending Confirmation',
+      'Confirmed',
       'Out for delivery',
       'Delivered',
+      'Cancelled'
     ];
 
     validStatuses.forEach((status) => {
       it(`should allow status: ${status}`, () => {
         const order = new orderModel({
           userId: 'user-123',
-          items: [{ name: 'Test Food', quantity: 1, price: 10.99 }],
+          food_items: [{ foodId: new mongoose.Types.ObjectId(), name: 'Test Food', quantity: 1, price: 10.99 }],
           amount: 10.99,
           address: { street: '123 Test St' },
           status,

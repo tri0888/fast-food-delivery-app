@@ -9,6 +9,7 @@ class OrderRepository {
     async findOrdersByUserId(userId) {
         return await orderModel.find({ userId })
     }
+
 }
 
 export default new OrderRepository()

@@ -8,7 +8,17 @@ class OrderService {
             throw new AppError('User not found', 404)
         }
 
-        return await orderRepository.findOrdersByUserId(userId)
+        const orders = await orderRepository.findOrdersByUserId(userId)
+        
+        return orders.map((order) => {
+            const orderObj = order.toObject()
+            const items = orderObj.food_items || []
+            return {
+                ...orderObj,
+                items,
+                food_items: items
+            }
+        })
     }
 }
 

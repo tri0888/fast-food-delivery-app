@@ -33,6 +33,17 @@
     color: #454545;
 }
 
+.order-items-details{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.order-restaurant-label{
+    font-size: 12px;
+    color: #6b7280;
+}
+
 .my-orders-order button{
     border: none;
     padding: 12px 0px;
@@ -42,6 +53,43 @@
     cursor: pointer;
 }
 
+.order-payment-state{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.payment-chip{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    text-transform: capitalize;
+    width: fit-content;
+}
+
+.payment-chip.pending{
+    background: #fff4e5;
+    color: #c05621;
+}
+
+.payment-chip.authorized{
+    background: #ebf8ff;
+    color: #2b6cb0;
+}
+
+.payment-chip.captured{
+    background: #e6fffa;
+    color: #2f855a;
+}
+
+.payment-chip.failed{
+    background: #ffeef0;
+    color: #c53030;
+}
+
 @media (max-width:900px){
     .my-orders-order{
         grid-template-columns: 1fr 2fr 1fr;
@@ -49,7 +97,15 @@
         font-size: 12px;
     }
 
+    .order-restaurant-label{
+        font-size: 11px;
+    }
+
     .my-orders-order button{
+        font-size: 10px;
+    }
+
+    .payment-chip{
         font-size: 10px;
     }
 }

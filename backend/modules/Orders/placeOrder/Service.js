@@ -1,49 +1,160 @@
+import crypto from 'crypto'
 import orderRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
 import stripeAdapter from '../../Payment/stripeAdapter.js'
 
+const DELIVERY_FEE = 2
+
 class OrderService {
     async placeOrder(userId, items, amount, address, frontendUrl) {
         const user = await orderRepository.findUserById(userId)
-        
         if (!user) {
             throw new AppError('User not found', 404)
         }
 
-        if (!amount || !address) {
-            throw new AppError('Please provide all required fields', 400)
+        if (!address) {
+            throw new AppError('Please provide delivery information', 400)
         }
 
         if (!Array.isArray(items) || items.length === 0) {
             throw new AppError('Order must contain at least one item', 400)
         }
 
-        for (const item of items) {
-            const food = await orderRepository.findFoodById(item._id)
-            
-            if (!food) {
-                throw new AppError(`Food item ${item.name} not found`, 404)
+        const normalizedItems = items.map((item) => ({
+            foodId: item.foodId || item._id,
+            quantity: Number(item.quantity) || 0
+        }))
+
+        normalizedItems.forEach((item) => {
+            if (!item.foodId) {
+                throw new AppError('Food reference is required for each item', 400)
             }
-            
-            if (food.stock < item.quantity) {
-                throw new AppError(`Insufficient stock for ${item.name}`, 400)
+            if (item.quantity <= 0) {
+                throw new AppError('Quantity must be greater than zero', 400)
+            }
+        })
+
+        const foodIds = normalizedItems.map((item) => item.foodId)
+        const foods = await orderRepository.findFoodsByIds(foodIds)
+        const foodsMap = new Map(foods.map((food) => [food._id.toString(), food]))
+
+        const restaurantGroups = new Map()
+        const checkoutItems = []
+        const reservations = new Map()
+        let subtotal = 0
+
+        for (const item of normalizedItems) {
+            const food = foodsMap.get(item.foodId.toString())
+            if (!food) {
+                throw new AppError('Some menu items are no longer available', 400)
             }
 
-            await orderRepository.reserveStock(item)
+            if (food.stock < item.quantity) {
+                throw new AppError(`Insufficient stock for ${food.name}`, 400)
+            }
+
+            subtotal += food.price * item.quantity
+            checkoutItems.push({
+                name: food.name,
+                price: food.price,
+                quantity: item.quantity
+            })
+
+            const currentReservation = reservations.get(food._id.toString()) || 0
+            reservations.set(food._id.toString(), currentReservation + item.quantity)
+
+            const restaurantKey = food.res_id.toString()
+            if (!restaurantGroups.has(restaurantKey)) {
+                restaurantGroups.set(restaurantKey, {
+                    restaurantId: food.res_id,
+                    items: [],
+                    amount: 0
+                })
+            }
+
+            const group = restaurantGroups.get(restaurantKey)
+            group.items.push({
+                foodId: food._id,
+                name: food.name,
+                quantity: item.quantity,
+                price: food.price,
+                image: food.image
+            })
+            group.amount += food.price * item.quantity
         }
 
-        const newOrder = await orderRepository.createOrder({userId,
-                                                            items,
-                                                            amount,
-                                                            address})
+        if (checkoutItems.length === 0) {
+            throw new AppError('Unable to create checkout session without items', 400)
+        }
 
-        // Clear user cart
-        await orderRepository.clearUserCart(userId)
+        const deliveryFee = subtotal > 0 ? DELIVERY_FEE : 0
+        const expectedTotal = subtotal + deliveryFee
 
-        // Create Stripe checkout session
-        const session_url = await stripeAdapter.createCheckoutSession(newOrder, frontendUrl)
+        if (typeof amount === 'number' && amount > 0) {
+            const delta = Math.abs(amount - expectedTotal)
+            if (delta > 0.01) {
+                throw new AppError('Order total mismatch. Please refresh and try again.', 400)
+            }
+        }
 
-        return { session_url }
+        const reservationEntries = Array.from(reservations.entries()).map(([foodId, quantity]) => ({
+            foodId,
+            quantity
+        }))
+
+        for (const reservation of reservationEntries) {
+            const reserved = await orderRepository.reserveStock(reservation.foodId, reservation.quantity)
+            if (!reserved) {
+                throw new AppError('Another customer purchased these items first. Please refresh the page.', 400)
+            }
+        }
+
+        const orderPayloads = Array.from(restaurantGroups.values()).map((group) => ({
+            userId,
+            res_id: group.restaurantId,
+            amount: group.amount,
+            address,
+            food_items: group.items,
+            status: 'Pending Confirmation',
+            paymentStatus: 'pending'
+        }))
+
+        const checkoutId = `chk_${crypto.randomBytes(8).toString('hex')}`
+        let createdOrders = []
+
+        try {
+            createdOrders = await orderRepository.createOrders(orderPayloads)
+            const orderIds = createdOrders.map((order) => order._id.toString())
+            const orderIdsValue = orderIds.join(',')
+            const encodedOrderIds = encodeURIComponent(orderIdsValue)
+
+            const { url: sessionUrl, sessionId, paymentIntentId } = await stripeAdapter.createCheckoutSession({
+                referenceId: checkoutId,
+                orderIdsParam: encodedOrderIds,
+                rawOrderIds: orderIdsValue,
+                items: checkoutItems,
+                frontendUrl,
+                deliveryFee,
+                metadata: {
+                    user_id: userId,
+                    checkout_id: checkoutId
+                }
+            })
+
+            await orderRepository.attachStripeDetails(orderIds, {
+                sessionId,
+                paymentIntentId
+            })
+
+            return { session_url: sessionUrl }
+        } catch (error) {
+            if (createdOrders.length > 0) {
+                const rollbackIds = createdOrders.map((order) => order._id)
+                await orderRepository.deleteOrders(rollbackIds)
+            }
+            await orderRepository.restoreStock(reservationEntries)
+            throw error
+        }
     }
 }
 

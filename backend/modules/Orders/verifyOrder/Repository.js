@@ -1,26 +1,41 @@
 import orderModel from '../../../models/orderModel.js'
 import foodModel from '../../../models/foodModel.js'
+import userModel from '../../../models/userModel.js'
 
 class OrderRepository {
-    async findById(orderId) {
-        return await orderModel.findById(orderId)
+    findById(orderId) {
+        return orderModel.findById(orderId)
     }
 
-    async updatePaymentStatus(orderId, paymentStatus) {
-        return await orderModel.findByIdAndUpdate(orderId, { payment: paymentStatus })
+    findByIds(orderIds) {
+        return orderModel.find({ _id: { $in: orderIds } })
     }
 
-    async restoreStock(items) {
-        // Restore stock for all items in the order
-        for (const item of items) {
-            await foodModel.findByIdAndUpdate(item._id, {
-                $inc: { stock: item.quantity }
-            })
-        }
+    findByStripeSessionId(sessionId) {
+        return orderModel.find({ stripeSessionId: sessionId })
     }
 
-    async deleteById(orderId) {
-        return await orderModel.findByIdAndDelete(orderId)
+    markPaymentAuthorized(orderId, { paymentIntentId, sessionId }) {
+        return orderModel.findByIdAndUpdate(orderId, {
+            paymentStatus: 'authorized',
+            stripePaymentIntent: paymentIntentId,
+            stripeSessionId: sessionId
+        }, { new: true })
+    }
+
+    restoreStock(reservations) {
+        const operations = reservations.map(({ foodId, quantity }) => (
+            foodModel.findByIdAndUpdate(foodId, { $inc: { stock: quantity } })
+        ))
+        return Promise.all(operations)
+    }
+
+    deleteOrders(orderIds) {
+        return orderModel.deleteMany({ _id: { $in: orderIds } })
+    }
+
+    clearUserCart(userId) {
+        return userModel.findByIdAndUpdate(userId, { cartData: {} })
     }
 }
 

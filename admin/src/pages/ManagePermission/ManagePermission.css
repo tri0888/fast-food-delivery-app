@@ -1,0 +1,162 @@
+.manage-permission {
+  width: 70%;
+  margin-left: max(5vw, 25px);
+  margin-top: 50px;
+}
+
+.permission-header {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.permission-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.restaurant-name {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  color: #6d6d6d;
+}
+
+.back-btn {
+  max-width: 120px;
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  background-color: #f8f8f8;
+  color: #6c757d;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: 500;
+}
+
+.back-btn:hover {
+  background-color: #e8e8e8;
+}
+
+.permission-actions {
+  margin-top: 30px;
+}
+
+.permissions-container {
+  padding: 0;
+}
+
+.description {
+  color: #6d6d6d;
+  margin: 0 0 20px 0;
+  font-size: 16px;
+}
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.permission-group {
+  border: 1px solid #cacaca;
+  padding: 15px;
+  background-color: #fff;
+}
+
+.group-title {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #cacaca;
+}
+
+.permission-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.permission-item span {
+  color: #6d6d6d;
+  font-size: 13px;
+}
+
+.permission-item:last-child {
+  border-bottom: none;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #28a745;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .permission-header {
+    margin-top: 0;
+  }
+
+  .back-btn {
+    width: 100%;
+  }
+
+  .permissions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .permissions-container {
+    padding: 16px;
+  }
+}

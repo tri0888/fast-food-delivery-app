@@ -21,22 +21,35 @@ const EditFoods = ({ url }) => {
 
   useEffect(() => {
     const fetchFood = async () => {
-      const response = await axios.get(`${url}/api/food/list`);
-      if (response.data.success) {
-        const food = response.data.data.find(f => f._id === id);
-        if (food) {
-          setData({name        : food.name,
-                   description : food.description,
-                   price       : food.price,
-                   category    : food.category,
-                   isAvailable : food.isAvailable,
-                   stock       : food.stock});
-          setImage(food.image);
+      const token = sessionStorage.getItem("token");
+      try {
+        const response = await axios.get(`${url}/api/food/admin/list`, { headers: { token } });
+        if (response.data.success) {
+          const food = response.data.data.find(f => f._id === id);
+          if (food) {
+            setData({name        : food.name,
+                     description : food.description,
+                     price       : food.price,
+                     category    : food.category,
+                     isAvailable : food.isAvailable,
+                     stock       : food.stock});
+            setImage(food.image);
+          } else {
+            toast.error('Food not found');
+            navigate('/list-food');
+          }
+        } else {
+          toast.error(response.data.message || 'Failed to fetch food');
+          navigate('/list-food');
         }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || 'Failed to fetch food';
+        toast.error(errorMessage);
+        navigate('/list-food');
       }
     };
     fetchFood();
-  }, [id, url]);
+  }, [id, url, navigate]);
 
   const onChangeHandler = (event) => {
     const name = event.target.name;
@@ -61,14 +74,20 @@ const EditFoods = ({ url }) => {
     formData.append('isAvailable', data.isAvailable);
     formData.append('stock', Number(data.stock));
     if (image && typeof image !== 'string') formData.append('image', image);
-    const response = await axios.patch(`${url}/api/food/edit`, 
-                                       formData, 
-                                       {headers: { token }});    
-    if (response.data.success) {
-      toast.success(response.data.message);
-      navigate('/list');
-    } else {
-      toast.error(response.data.message);
+    
+    try {
+      const response = await axios.patch(`${url}/api/food/edit`, 
+                                         formData, 
+                                         {headers: { token }});    
+      if (response.data.success) {
+        toast.success(response.data.message);
+        navigate('/list-food');
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to update food';
+      toast.error(errorMessage);
     }
     
     setConfirmDialog({ isOpen: false });
@@ -129,7 +148,7 @@ const EditFoods = ({ url }) => {
           </div>          
         </div>
         <div className='back-buttons'>
-          <button type='button' className='back-btn' onClick={() => navigate('/list')}>
+          <button type='button' className='back-btn' onClick={() => navigate('/list-food')}>
             🔙 Back
           </button>
           <button type='submit' className='edit-btn'>UPDATE</button>

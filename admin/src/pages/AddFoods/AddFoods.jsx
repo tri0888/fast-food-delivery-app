@@ -39,20 +39,26 @@ const AddFoods = ({url}) => {
         formData.append('image', image)
         formData.append('stock', Number(data.stock))
         const token = sessionStorage.getItem("token");
-        const response = await axios.post(`${url}/api/food/add`, 
-                                          formData, 
-                                          {headers: { token }});
+        
+        try {
+            const response = await axios.post(`${url}/api/food/add`, 
+                                              formData, 
+                                              {headers: { token }});
 
-        if(response.data.success){
-            setData({name        : '',
-                     description : '',
-                     price       : '',
-                     category    : 'Salad',
-                     stock       : ''})
-            setImage(false);
-            toast.success(response.data.message)
-        }else{
-            toast.error(response.data.message)
+            if(response.data.success){
+                setData({name        : '',
+                         description : '',
+                         price       : '',
+                         category    : 'Salad',
+                         stock       : ''})
+                setImage(false);
+                toast.success(response.data.message)
+            }else{
+                toast.error(response.data.message)
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to add food';
+            toast.error(errorMessage);
         }
         
         setConfirmDialog({ isOpen: false });

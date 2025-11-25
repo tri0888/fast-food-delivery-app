@@ -12,8 +12,7 @@ const EditUser = ({ url }) => {
     name: '',
     email: '',
     password: '',
-    role: 'user',
-    isCartLock: false
+    role: 'user'
   });
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false
@@ -33,17 +32,16 @@ const EditUser = ({ url }) => {
               name: user.name,
               email: user.email,
               password: '',
-              role: user.role,
-              isCartLock: user.isCartLock
+              role: user.role
             });
           } else {
             toast.error('User not found');
-            navigate('/users');
+            navigate('/list-user');
           }
         }
       } catch (error) {
         toast.error('Failed to fetch user details');
-        navigate('/users');
+        navigate('/list-user');
       }
     };
     fetchUser();
@@ -71,8 +69,7 @@ const EditUser = ({ url }) => {
         id: id,
         name: data.name.trim(),
         email: data.email.trim(),
-        role: data.role,
-        isCartLock: data.isCartLock
+        role: data.role
       };
       
       // Only include password if it's provided
@@ -86,7 +83,7 @@ const EditUser = ({ url }) => {
 
       if (response.data.success) {
         toast.success(response.data.message);
-        navigate('/users');
+        navigate('/list-user');
       } else {
         toast.error(response.data.message);
       }
@@ -151,20 +148,8 @@ const EditUser = ({ url }) => {
           </select>
         </div>
 
-        <div className='edit-user-extra-fields'>
-          <label>
-            <input 
-              type='checkbox' 
-              name='isCartLock' 
-              checked={data.isCartLock} 
-              onChange={onChangeHandler} 
-            /> 
-            Cart Locked
-          </label>
-        </div>
-
         <div className='button-group'>
-          <button type='button' className='back-btn' onClick={() => navigate('/users')}>
+          <button type='button' className='back-btn' onClick={() => navigate('/list-user')}>
             🔙 Back
           </button>
           <button type='submit' className='edit-btn'>UPDATE USER</button>

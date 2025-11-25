@@ -10,6 +10,9 @@ const foodSchema = new mongoose.Schema({name        : {type     : String,
                                                        required : [true, "A food must have a image"]},
                                         category    : {type     : String,
                                                        required : [true, "A food must have a category"]},
+                                        res_id      : {type     : mongoose.Schema.ObjectId,
+                                                       ref      : 'Restaurant',
+                                                       required : [true, "A food must belong to a restaurant"]},
 
                                         // ✅ Gợi ý thêm
                                         isAvailable : {type    : Boolean, 

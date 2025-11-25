@@ -1,5 +1,6 @@
 import cartRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
+import { cartLocksToObject } from '../../../utils/cartLockUtils.js'
 
 class CartService {
     async getCart(userId) {
@@ -10,8 +11,8 @@ class CartService {
         }
 
         return {
-            cartData     : userData.cartData,
-            isCartLocked : userData.isCartLock
+            cartData          : userData.cartData,
+            lockedRestaurants : cartLocksToObject(userData.cartLocks)
         }
     }
 }

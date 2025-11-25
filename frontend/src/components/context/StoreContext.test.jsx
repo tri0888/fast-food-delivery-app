@@ -3,7 +3,6 @@ import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import axios from 'axios';
 import StoreContextProvider, { StoreContext } from './StoreContext';
-import { toast } from 'react-toastify';
 
 // Mock axios
 vi.mock('axios');
@@ -43,7 +42,8 @@ describe('StoreContext', () => {
 
     expect(result.current.cartItems).toEqual({});
     expect(result.current.token).toBe('');
-    expect(result.current.isCartLocked).toBe(false);
+    expect(result.current.lockedRestaurants).toEqual({});
+    expect(result.current.isRestaurantLocked('random')).toBe(false);
   });
 
   it('should fetch food list on mount', async () => {
@@ -83,36 +83,6 @@ describe('StoreContext', () => {
       const total = result.current.getTotalCartAmount();
       expect(total).toBe(28); // 2 * 10 + 1 * 8 = 28
     });
-  });
-
-  it('should show error when cart is locked', async () => {
-    axios.get.mockResolvedValueOnce({ data: { data: mockFoodList } });
-
-    const { result } = renderHook(() => {
-      const context = React.useContext(StoreContext);
-      return context;
-    }, {
-      wrapper: ({ children }) => <StoreContextProvider>{children}</StoreContextProvider>
-    });
-
-    await waitFor(() => {
-      expect(result.current.food_list).toHaveLength(2);
-    });
-
-    // Manually lock the cart (simulating admin lock)
-    result.current.setCartItems({});
-    
-    // Mock isCartLocked to true by re-rendering with cart data
-    axios.get.mockResolvedValueOnce({ 
-      data: { 
-        cartData: {}, 
-        isCartLocked: true 
-      } 
-    });
-
-    // The actual test would need the context to be re-initialized
-    // This is a simplified version
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it('should handle empty food list gracefully', async () => {

@@ -1,8 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import axios from 'axios';
 import Home from './Home';
 import { StoreContext } from '../../components/context/StoreContext';
+
+vi.mock('axios');
 
 // Mock child components
 vi.mock('../../components/Header/Header', () => ({
@@ -18,6 +21,15 @@ vi.mock('../../components/ExploreMenu/ExploreMenu', () => ({
   )
 }));
 
+vi.mock('../../components/Filter/Filter', () => ({
+  default: ({ setPriceRange, setSearchTerm }) => (
+    <div data-testid="filter">
+      <button onClick={() => setPriceRange(100)}>Set Price</button>
+      <button onClick={() => setSearchTerm('pho')}>Set Search</button>
+    </div>
+  )
+}));
+
 vi.mock('../../components/FoodDisplay/FoodDisplay', () => ({
   default: ({ category }) => (
     <div data-testid="food-display">FoodDisplay - {category}</div>
@@ -29,51 +41,64 @@ vi.mock('../../components/AppDownload/AppDownload', () => ({
 }));
 
 describe('Home Component', () => {
-  const mockContextValue = {
-    food_list: [
-      { _id: '1', name: 'Pizza', price: 10, category: 'Pizza' },
-      { _id: '2', name: 'Burger', price: 8, category: 'Burger' }
-    ]
+  const mockRestaurants = [
+    {
+      _id: 'rest-1',
+      name: 'Sài Gòn Bites',
+      address: '123 Food Street',
+      phone: '0909 123 456'
+    }
+  ];
+
+  const renderHome = (overrides = {}) => {
+    const contextValue = {
+      url: 'http://localhost:4000',
+      setSelectedRestaurant: vi.fn(),
+      ...overrides
+    };
+
+    return {
+      contextValue,
+      ...render(
+        <BrowserRouter>
+          <StoreContext.Provider value={contextValue}>
+            <Home />
+          </StoreContext.Provider>
+        </BrowserRouter>
+      )
+    };
   };
 
-  const renderHome = (contextValue = mockContextValue) => {
-    return render(
-      <BrowserRouter>
-        <StoreContext.Provider value={contextValue}>
-          <Home />
-        </StoreContext.Provider>
-      </BrowserRouter>
-    );
-  };
+  beforeEach(() => {
+    vi.clearAllMocks();
+    axios.get.mockResolvedValue({ data: { success: true, data: mockRestaurants } });
+  });
 
-  it('should render all main sections', () => {
+  it('shows restaurant selector after loading completes', async () => {
     renderHome();
-    
-    expect(screen.getByTestId('header')).toBeInTheDocument();
-    expect(screen.getByTestId('explore-menu')).toBeInTheDocument();
-    expect(screen.getByTestId('food-display')).toBeInTheDocument();
+
+    expect(screen.getByText(/Loading restaurants/i)).toBeInTheDocument();
+
+    expect(await screen.findByText('Choose Your Restaurant')).toBeInTheDocument();
+    expect(screen.getByText('Sài Gòn Bites')).toBeInTheDocument();
     expect(screen.getByTestId('app-download')).toBeInTheDocument();
+    expect(screen.queryByTestId('explore-menu')).not.toBeInTheDocument();
   });
 
-  it('should initialize with "All" category', () => {
-    renderHome();
-    
-    expect(screen.getByText(/Category: All/i)).toBeInTheDocument();
-  });
+  it('allows selecting a restaurant and renders the menu layout', async () => {
+    const { contextValue } = renderHome();
 
-  it('should update category when changed', () => {
-    renderHome();
-    
-    const setPizzaButton = screen.getByText('Set Pizza');
-    fireEvent.click(setPizzaButton);
-    
-    // After clicking, verify FoodDisplay received the Pizza category
-    expect(screen.getByText(/FoodDisplay - Pizza/i)).toBeInTheDocument();
-  });
+    const restaurantCard = await screen.findByText('Sài Gòn Bites');
+    fireEvent.click(restaurantCard);
 
-  it('should pass category to FoodDisplay', () => {
-    renderHome();
-    
-    expect(screen.getByText(/FoodDisplay - All/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Back to Restaurants/)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('🏪 Sài Gòn Bites')).toBeInTheDocument();
+    expect(screen.getByTestId('explore-menu')).toBeInTheDocument();
+    expect(screen.getByTestId('filter')).toBeInTheDocument();
+    expect(screen.getByTestId('food-display')).toBeInTheDocument();
+    expect(contextValue.setSelectedRestaurant).toHaveBeenCalledWith(mockRestaurants[0]);
   });
 });

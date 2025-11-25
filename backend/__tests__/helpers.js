@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 /**
  * Generate JWT token for testing
@@ -37,7 +38,7 @@ export const createMockUser = (overrides = {}) => {
     password: 'Test123456',
     role: 'user',
     cartData: {},
-    isCartLock: false,
+    cartLocks: {},
     ...overrides,
   };
 };
@@ -52,7 +53,7 @@ export const createMockAdmin = (overrides = {}) => {
     password: 'Admin123456',
     role: 'admin',
     cartData: {},
-    isCartLock: false,
+    cartLocks: {},
     ...overrides,
   };
 };
@@ -61,13 +62,17 @@ export const createMockAdmin = (overrides = {}) => {
  * Create mock order data
  */
 export const createMockOrder = (userId, overrides = {}) => {
+  const foodId = new mongoose.Types.ObjectId().toString();
   return {
     userId,
-    items: [
+    res_id: new mongoose.Types.ObjectId(),
+    food_items: [
       {
+        foodId,
         name: 'Test Food',
         quantity: 2,
         price: 10.99,
+        image: 'test-image.jpg'
       },
     ],
     amount: 21.98,
@@ -82,8 +87,8 @@ export const createMockOrder = (userId, overrides = {}) => {
       country: 'Test Country',
       phone: '1234567890',
     },
-    status: 'Food Processing',
-    payment: false,
+    status: 'Pending Confirmation',
+    paymentStatus: 'pending',
     ...overrides,
   };
 };

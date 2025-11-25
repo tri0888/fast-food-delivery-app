@@ -16,16 +16,19 @@ vi.mock('react-router-dom', async () => {
 
 describe('Cart Component', () => {
   const mockFood = [
-    { _id: '1', name: 'Pizza', price: 10, image: 'pizza.jpg' },
-    { _id: '2', name: 'Burger', price: 8, image: 'burger.jpg' }
+    { _id: '1', name: 'Pizza', price: 10, image: 'pizza.jpg', res_id: 'res-1' },
+    { _id: '2', name: 'Burger', price: 8, image: 'burger.jpg', res_id: 'res-2' }
   ];
 
   const mockContextValue = {
     cartItems: { '1': 2, '2': 1 },
     food_list: mockFood,
+    addToCart: vi.fn(),
     removeFromCart: vi.fn(),
     getTotalCartAmount: () => 28,
-    url: 'http://localhost:4000'
+    url: 'http://localhost:4000',
+    lockedRestaurants: {},
+    isRestaurantLocked: () => false
   };
 
   const renderCart = (contextValue = mockContextValue) => {

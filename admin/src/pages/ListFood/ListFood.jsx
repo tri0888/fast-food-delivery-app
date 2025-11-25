@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import './List.css'
+import './ListFood.css'
 import axios from 'axios'
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
-const List = ({url}) => {
-
+const ListFood = ({url}) => {
+  const navigate = useNavigate();
   const [list, setList] = useState([]);
+  const [permissions, setPermissions] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     foodId: null,
@@ -14,23 +16,67 @@ const List = ({url}) => {
   });
 
   const fetchList = async () =>{
-    const response = await axios.get(`${url}/api/food/list`)
-     
+    const token = sessionStorage.getItem("token");
+    try {
+      const response = await axios.get(`${url}/api/food/admin/list`, { headers: { token } });
+      
       if(response.data.success){
         setList(response.data.data)
       }
       else{
-        toast.error("Error")
+        toast.error(response.data.message || "Error")
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to fetch food list';
+      toast.error(errorMessage);
+    }
+  }
+
+  const fetchPermissions = async () => {
+    const token = sessionStorage.getItem("token");
+    const role = sessionStorage.getItem('role');
+    if (role === 'admin' || role === 'superadmin') {
+      try {
+        const response = await axios.get(`${url}/api/restaurant/permissions`, { headers: { token } });
+        if (response.data.success) {
+          setPermissions(response.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch permissions');
       }
     }
-  
+  };
+
+  const handleAddClick = () => {
+    const role = sessionStorage.getItem('role');
+    if (role === 'superadmin' || permissions?.food?.add_food) {
+      navigate('/add');
+    } else {
+      toast.error('Permission "food.add_food" is disabled for your restaurant');
+    }
+  };
+
+  const handleEditClick = (e, foodId) => {
+    e.preventDefault();
+    const role = sessionStorage.getItem('role');
+    if (role === 'superadmin' || permissions?.food?.edit_food) {
+      navigate(`/edit/${foodId}`);
+    } else {
+      toast.error('Permission "food.edit_food" is disabled for your restaurant');
+    }
+  };
 
   const handleDeleteClick = (foodId, foodName) => {
-    setConfirmDialog({
-      isOpen: true,
-      foodId: foodId,
-      foodName: foodName
-    });
+    const role = sessionStorage.getItem('role');
+    if (role === 'superadmin' || permissions?.food?.remove_food) {
+      setConfirmDialog({
+        isOpen: true,
+        foodId: foodId,
+        foodName: foodName
+      });
+    } else {
+      toast.error('Permission "food.remove_food" is disabled for your restaurant');
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -65,10 +111,14 @@ const List = ({url}) => {
 
   useEffect(()=>{
     fetchList();
+    fetchPermissions();
   }, [])
   return (
     <div className='list add flex-col'>
-      <p>All Foods List</p>
+      <div className="list-header">
+        <p>All Foods List</p>
+        <button className="add-food-btn" onClick={handleAddClick}>➕ Add Food</button>
+      </div>
       <div className="list-table">
         <div className="list-table-format title">
             <b>Image</b>
@@ -87,7 +137,7 @@ const List = ({url}) => {
               <div>${item.price}</div>
               <div>{item.stock}</div>
               <div>
-                <a href={`/edit/${item._id}`} className='cursor' style={{marginRight:8}}>Edit</a>
+                <a href={`/edit/${item._id}`} onClick={(e) => handleEditClick(e, item._id)} className='cursor' style={{marginRight:8}}>Edit</a>
                 <span onClick={()=> handleDeleteClick(item._id, item.name)} className='cursor delete-btn'>🗑️</span>
               </div>
             </div>
@@ -108,4 +158,4 @@ const List = ({url}) => {
   )
 }
 
-export default List
+export default ListFood

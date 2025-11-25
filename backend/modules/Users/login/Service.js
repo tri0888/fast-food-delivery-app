@@ -5,8 +5,14 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 class UserService {
-    createToken(id) {
-        return jwt.sign({ id }, process.env.JWT_SECRET)
+    createToken(id, role, name, restaurantId) {
+        const payload = { id, role, name }
+
+        if (restaurantId) {
+            payload.restaurantId = restaurantId
+        }
+
+        return jwt.sign(payload, process.env.JWT_SECRET)
     }
 
     async login(email, password) {
@@ -30,10 +36,10 @@ class UserService {
             throw new AppError('Incorrect Password', 401)
         }
 
-        const token = this.createToken(user._id)
-        const role = user.role
+        const restaurantId = user.res_id ? user.res_id.toString() : undefined
+        const token = this.createToken(user._id, user.role, user.name, restaurantId)
 
-        return { token, role }
+        return { token, role: user.role, name: user.name, restaurantId }
     }
 }
 

@@ -1,0 +1,42 @@
+[{
+    "_id": "",
+    "name": "Drone A-1",
+    "res_id": "",
+    "status": "idle"
+},
+{
+    "_id": "",
+    "name": "Drone A-2",
+    "res_id": "",
+    "status": "idle"
+},
+{
+    "_id": "",
+    "name": "Drone A-3",
+    "res_id": "",
+    "status": "idle"
+},
+{
+    "_id": "",
+    "name": "Drone B-1",
+    "res_id": "",
+    "status": "idle"
+},
+{
+    "_id": "",
+    "name": "Drone B-2",
+    "res_id": "",
+    "status": "idle"
+},
+{
+    "_id": "",
+    "name": "Drone C-1",
+    "res_id": "",
+    "status": "idle"
+},
+{
+    "_id": "",
+    "name": "Drone C-2",
+    "res_id": "",
+    "status": "idle"
+}]

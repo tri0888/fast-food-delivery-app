@@ -34,7 +34,7 @@ const LoginPopup = ({setShowLogin}) => {
         if (response.data.success) {
             const token = response.data.token;
             const role  = response.data.role;
-            if (role == 'admin') {
+            if (role === 'admin' || role === 'superadmin') {
                 const redirectUrl = `${import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'}/?token=${token}`;
                 window.location.href = redirectUrl;
             }

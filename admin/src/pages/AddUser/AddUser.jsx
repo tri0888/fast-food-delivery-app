@@ -49,7 +49,7 @@ const AddUser = ({ url }) => {
           role: 'user'
         });
         toast.success(response.data.message);
-        navigate('/users');
+        navigate('/list-user');
       } else {
         toast.error(response.data.message);
       }
@@ -115,7 +115,7 @@ const AddUser = ({ url }) => {
         </div>
 
         <div className='button-group'>
-          <button type='button' className='back-btn' onClick={() => navigate('/users')}>
+          <button type='button' className='back-btn' onClick={() => navigate('/list-user')}>
             🔙 Back
           </button>
           <button type='submit' className='add-btn'>ADD USER</button>

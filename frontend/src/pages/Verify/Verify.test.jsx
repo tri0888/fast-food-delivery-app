@@ -6,14 +6,23 @@ import { StoreContext } from '../../components/context/StoreContext';
 import axios from 'axios';
 
 vi.mock('axios');
+vi.mock('react-toastify', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn()
+  }
+}));
 
 const mockNavigate = vi.fn();
+const mockSearchParams = '?success=true&orderId=123&session_id=session-456';
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useSearchParams: () => [new URLSearchParams('?success=true&orderId=123')]
+    useSearchParams: () => [new URLSearchParams(mockSearchParams)]
   };
 });
 
@@ -65,7 +74,7 @@ describe('Verify Component', () => {
     await waitFor(() => {
       expect(axios.post).toHaveBeenCalledWith(
         'http://localhost:4000/api/order/verify',
-        { success: 'true', orderId: '123' }
+        { success: 'true', sessionId: 'session-456', orderId: '123' }
       );
     }, { timeout: 3000 });
   });

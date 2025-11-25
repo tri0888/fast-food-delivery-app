@@ -1,0 +1,83 @@
+[
+    {
+        "_id": "64a1bcde9012345678900001",
+        "name": "Fast Food A",
+        "address": "123 Main St, Sydney",
+        "phone": "02-9876-5432",
+        "permissions": {
+            "food": {
+                "add_food": true,
+                "edit_food": true,
+                "list_food": true,
+                "remove_food": true
+            },
+            "orders": {
+                "list": true,
+                "update_status": true
+            },
+            "users": {
+                "add_user": true,
+                "edit_user": true,
+                "get_all_users": true,
+                "toggle_cart_lock": true
+            },
+            "restaurant": {
+                "edit_restaurant": true
+            }
+        }
+    },
+    {
+        "_id": "64a1bcde9012345678900002",
+        "name": "Fast Food B",
+        "address": "456 Queen St, Melbourne",
+        "phone": "03-8765-4321",
+        "permissions": {
+            "food": {
+                "add_food": true,
+                "edit_food": true,
+                "list_food": true,
+                "remove_food": true
+            },
+            "orders": {
+                "list": true,
+                "update_status": true
+            },
+            "users": {
+                "add_user": true,
+                "edit_user": true,
+                "get_all_users": true,
+                "toggle_cart_lock": true
+            },
+            "restaurant": {
+                "edit_restaurant": true
+            }
+        }
+    },
+    {
+        "_id": "64a1bcde9012345678900003",
+        "name": "Fast Food C",
+        "address": "789 King St, Brisbane",
+        "phone": "07-7654-3210",
+        "permissions": {
+            "food": {
+                "add_food": true,
+                "edit_food": true,
+                "list_food": true,
+                "remove_food": true
+            },
+            "orders": {
+                "list": true,
+                "update_status": true
+            },
+            "users": {
+                "add_user": true,
+                "edit_user": true,
+                "get_all_users": true,
+                "toggle_cart_lock": true
+            },
+            "restaurant": {
+                "edit_restaurant": true
+            }
+        }
+    }
+]

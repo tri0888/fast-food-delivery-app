@@ -3,9 +3,10 @@ import './PlaceOrder.css'
 import { StoreContext } from '../../components/context/StoreContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const PlaceOrder = () => {
-  const {getTotalCartAmount, token, food_list, cartItems, url} = useContext(StoreContext);
+  const {getTotalCartAmount, token, cartItems, url, allFoodsMap} = useContext(StoreContext);
 
   const [data, setData] = useState({firstName : "",
                                     lastName  : "",
@@ -25,15 +26,29 @@ const PlaceOrder = () => {
 
   const placeOrder = async (event) =>{
     event.preventDefault();
-    let orderItems = [];
-    food_list.map((item, index) => {
-      if(cartItems[item._id]>0){
-        let itemInfo = item;
+    const orderItems = [];
+    const missingItems = [];
 
-        itemInfo["quantity"] = cartItems[item._id];
-        orderItems.push(itemInfo);
-      }
-    })
+    Object.entries(cartItems)
+      .filter(([, qty]) => qty > 0)
+      .forEach(([itemId, qty]) => {
+        const item = allFoodsMap[itemId];
+        if (!item) {
+          missingItems.push(itemId);
+          return;
+        }
+        orderItems.push({ ...item, quantity: qty });
+      });
+
+    if (missingItems.length) {
+      toast.error('Some products could not be found. Please refresh and try again.');
+      return;
+    }
+
+    if (orderItems.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
     let orderData = {
       address : data,
       items   : orderItems,

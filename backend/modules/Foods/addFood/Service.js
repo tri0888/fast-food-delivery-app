@@ -28,7 +28,8 @@ class FoodService {
                                 category    : foodData.category,
                                 image       : image_filename,
                                 isAvailable : foodData.isAvailable !== undefined ? foodData.isAvailable : true,
-                                stock       : foodData.stock}
+                                stock       : foodData.stock,
+                                res_id      : foodData.res_id} // Required for multi-tenant
 
         return await foodRepository.create(newFoodData)
     }

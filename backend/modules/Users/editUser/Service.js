@@ -32,10 +32,6 @@ class UserService {
             updates.role = updateData.role
         }
 
-        if (updateData.isCartLock !== undefined) {
-            updates.isCartLock = updateData.isCartLock
-        }
-
         // Update user
         const updatedUser = await userRepository.updateById(id, updates)
 

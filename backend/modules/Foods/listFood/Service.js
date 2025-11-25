@@ -2,8 +2,8 @@ import foodRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
 
 class FoodService {
-    async getAllFoods () {
-        return await foodRepository.findAll()        
+    async getAllFoods (filter = {}) {
+        return await foodRepository.findAll(filter)        
     }
 }
 

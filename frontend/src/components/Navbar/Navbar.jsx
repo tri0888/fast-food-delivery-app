@@ -8,7 +8,7 @@ import { StoreContext } from './../context/StoreContext';
 const Navbar = ({setShowLogin}) => {
 
   const [menu, setMenu]                       = useState('home');
-  const {getTotalCartAmount, token, setToken} = useContext(StoreContext);
+  const {getTotalCartAmount, token, setToken, selectedRestaurant} = useContext(StoreContext);
   const navigate                              = useNavigate();
 
   const logout = () => {
@@ -20,9 +20,15 @@ const Navbar = ({setShowLogin}) => {
   return (
     <div className='navbar'>
       <Link to='/'> <img src={assets.logo} alt="" className='logo' /></Link>
+      {selectedRestaurant && (
+        <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '20px'}}>
+          <span style={{fontSize: '1.2rem'}}>🏢</span>
+          <span style={{fontWeight: '600', color: '#49557e'}}>{selectedRestaurant.name}</span>
+        </div>
+      )}
       <ul className="navbar-menu">
           <Link 
-            to        = '/' 
+            to        = '/home' 
             onClick   = {()=> setMenu('home')} 
             className = {menu === 'home'
                          ? 'active'

@@ -1,0 +1,70 @@
+.add-restaurant-page{
+    width: 70%;
+    margin-left: max(5vw, 25px);
+    margin-top: 50px;
+    color: #6d6d6d;
+    font-size: 16px;
+}
+
+.restaurant-form{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.restaurant-form h3{
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.form-field{
+    width: max(40%,280px);
+}
+
+.form-field label{
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.form-field input{
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #c9c9c9;
+    outline: none;
+}
+
+.form-actions{
+    display: flex;
+    gap: 30px;
+}
+
+.cancel-btn, .submit-btn{
+    max-width: 150px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.cancel-btn{
+    border: 1px solid #ccc;
+    background-color: #f8f8f8;
+    color: #6c757d;
+}
+
+.submit-btn{
+    border: none;
+    background-color: #28a745;
+    color: white;
+}
+
+.submit-btn:hover{ background-color: #218838; }
+.cancel-btn:hover{ background-color: #e8e8e8; }
+
+.cancel-btn:disabled, .submit-btn:disabled{
+    opacity: 0.6;
+    cursor: not-allowed;
+}

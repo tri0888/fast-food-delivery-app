@@ -6,9 +6,11 @@ const loginUser = async (req, res, next) => {
         
         const result = await userService.login(email, password)
         
-        res.json({success : true,
-                  token   : result.token,
-                  role    : result.role})
+          res.json({success      : true,
+                token        : result.token,
+                role         : result.role,
+                name         : result.name,
+                restaurantId : result.restaurantId})
 
     } catch (error) {
         return next(error)

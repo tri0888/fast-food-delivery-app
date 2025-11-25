@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { restrictTo } from '../../middleware/auth.js';
 import { setupTestEnv } from '../helpers.js';
 
@@ -15,11 +16,11 @@ describe('Auth Middleware', () => {
     };
     
     res = {
-      json: () => {},
-      status: () => res,
+      json: jest.fn(() => res),
+      status: jest.fn(() => res),
     };
     
-    next = () => {};
+    next = jest.fn();
   });
 
   describe('restrictTo Middleware', () => {
@@ -32,33 +33,35 @@ describe('Auth Middleware', () => {
     it('should allow access for authorized role', () => {
       req.user = { role: 'admin' };
       const middleware = restrictTo('admin');
-      let nextCalled = false;
-      next = () => { nextCalled = true; };
-
       middleware(req, res, next);
 
-      expect(nextCalled).toBe(true);
+      expect(next).toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
     });
 
     it('should deny access for unauthorized role', () => {
       req.user = { role: 'user' };
       const middleware = restrictTo('admin');
-      let jsonCalled = false;
-      res.json = () => { jsonCalled = true; return res; };
 
       middleware(req, res, next);
 
-      expect(jsonCalled).toBe(true);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'You do not have permission to perform this action'
+      });
+      expect(next).not.toHaveBeenCalled();
     });
 
     it('should handle missing user', () => {
       const middleware = restrictTo('admin');
-      let jsonCalled = false;
-      res.json = () => { jsonCalled = true; return res; };
 
       middleware(req, res, next);
 
-      expect(jsonCalled).toBe(true);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'User not authenticated'
+      });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });
