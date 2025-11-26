@@ -13,6 +13,8 @@ import ListRestaurant from './pages/ListRestaurant/ListRestaurant';
 import AddRestaurant from './pages/AddRestaurant/AddRestaurant';
 import EditRestaurant from './pages/EditRestaurant/EditRestaurant';
 import ManagePermission from './pages/ManagePermission/ManagePermission';
+import ListDrone from './pages/ListDrone/ListDrone';
+import AddDrone from './pages/AddDrone/AddDrone';
 import { ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -92,6 +94,8 @@ const App = () => {
           <Route path='/edit/:id' element={<EditFoods url={url}/>} />
           <Route path='/add-user' element={<AddUser url={url}/>} />
           <Route path='/edit-user/:id' element={<EditUser url={url}/>} />
+          <Route path='/drones' element={<ListDrone url={url}/>} />
+          <Route path='/drones/add' element={<AddDrone url={url}/>} />
           
           <Route path='/restaurants' element={<ListRestaurant url={url}/>} />
           <Route path='/restaurants/add' element={<AddRestaurant url={url}/>} />

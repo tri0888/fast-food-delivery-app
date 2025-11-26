@@ -1,9 +1,17 @@
-import React, { useState, useContext } from 'react'
+import React, { useEffect, useState } from 'react'
 import './Filter.css';
 
-const Filter = ({setPriceRange, setSearchTerm}) => {
-    const [tempPriceRange, setTempPriceRange] = useState(200); // giá trị tạm khi kéo slider
-    const [tempSearchTerm, setTempSearchTerm] = useState('');
+const Filter = ({ priceRange = 200, searchTerm = '', setPriceRange, setSearchTerm }) => {
+    const [tempPriceRange, setTempPriceRange] = useState(priceRange);
+    const [tempSearchTerm, setTempSearchTerm] = useState(searchTerm);
+
+    useEffect(() => {
+        setTempPriceRange(priceRange)
+    }, [priceRange])
+
+    useEffect(() => {
+        setTempSearchTerm(searchTerm)
+    }, [searchTerm])
     return (
         <div className="filter-sidebar">
             <h3>Filters</h3>

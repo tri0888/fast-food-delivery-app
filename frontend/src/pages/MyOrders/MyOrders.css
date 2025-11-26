@@ -44,13 +44,56 @@
     color: #6b7280;
 }
 
+.order-customer-label{
+    font-size: 12px;
+    color: #111827;
+    font-weight: 600;
+}
+
+.order-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .my-orders-order button{
     border: none;
-    padding: 12px 0px;
-    border-radius: 4px;
+    padding: 10px 14px;
+    border-radius: 6px;
     background-color: #ffe1e1;
-    color: #454545;
+    color: #111827;
     cursor: pointer;
+    font-weight: 600;
+}
+
+.my-orders-order .track-btn {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+.my-orders-order .confirm-btn {
+    background: #2563eb;
+    color: #fff;
+}
+
+.drone-status-chip {
+    grid-column: 1 / -1;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.drone-status-chip__note {
+    color: #b45309;
+}
+
+.my-orders-order .drone-tracker {
+    grid-column: 1 / -1;
 }
 
 .order-payment-state{
@@ -92,8 +135,8 @@
 
 @media (max-width:900px){
     .my-orders-order{
-        grid-template-columns: 1fr 2fr 1fr;
-        row-gap: 5px;
+        grid-template-columns: 1fr 1fr;
+        row-gap: 10px;
         font-size: 12px;
     }
 
@@ -107,5 +150,9 @@
 
     .payment-chip{
         font-size: 10px;
+    }
+
+    .drone-status-chip {
+        font-size: 11px;
     }
 }

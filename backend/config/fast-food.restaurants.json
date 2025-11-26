@@ -4,6 +4,11 @@
         "name": "Fast Food A",
         "address": "123 Main St, Sydney",
         "phone": "02-9876-5432",
+        "location": {
+            "lat": -33.8688,
+            "lng": 151.2093,
+            "label": "Sydney CBD"
+        },
         "permissions": {
             "food": {
                 "add_food": true,
@@ -31,6 +36,11 @@
         "name": "Fast Food B",
         "address": "456 Queen St, Melbourne",
         "phone": "03-8765-4321",
+        "location": {
+            "lat": -37.8136,
+            "lng": 144.9631,
+            "label": "Melbourne CBD"
+        },
         "permissions": {
             "food": {
                 "add_food": true,
@@ -58,6 +68,11 @@
         "name": "Fast Food C",
         "address": "789 King St, Brisbane",
         "phone": "07-7654-3210",
+        "location": {
+            "lat": -27.4698,
+            "lng": 153.0251,
+            "label": "Brisbane CBD"
+        },
         "permissions": {
             "food": {
                 "add_food": true,

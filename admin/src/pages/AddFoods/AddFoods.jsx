@@ -4,6 +4,7 @@ import { assets } from '../../assets/assets'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog'
+import { useNavigate } from 'react-router-dom'
 
 const AddFoods = ({url}) => {
 
@@ -17,12 +18,17 @@ const AddFoods = ({url}) => {
     const [confirmDialog, setConfirmDialog] = useState({
         isOpen: false
     });
+    const navigate = useNavigate();
 
     const onChangeHandler = (event) =>{
         const name  = event.target.name;
         const value = event.target.value;
         
         setData(data => ({...data,[name]:value}))
+    }
+
+    const handleBack = () => {
+        navigate('/list-food')
     }
 
     const onSubmitHandler = async (event) =>{
@@ -111,7 +117,12 @@ const AddFoods = ({url}) => {
                     <input onChange={onChangeHandler} value={data.stock} type="number" name='stock' placeholder='0' min="0" required/>
                 </div>
             </div>
-            <button type='submit' className='add-btn'>ADD</button>
+            <div className='button-group'>
+                <button type='button' className='back-btn' onClick={handleBack}>
+                    🔙 Back
+                </button>
+                <button type='submit' className='add-btn'>ADD FOOD</button>
+            </div>
         </form>
 
         <ConfirmDialog

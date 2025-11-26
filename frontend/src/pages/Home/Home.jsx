@@ -124,6 +124,8 @@ const Home = () => {
       <div className="home-content">
         <div className="home-sidebar">
           <Filter 
+            priceRange={priceRange}
+            searchTerm={searchTerm}
             setPriceRange = {setPriceRange}
             setSearchTerm = {setSearchTerm}
           />

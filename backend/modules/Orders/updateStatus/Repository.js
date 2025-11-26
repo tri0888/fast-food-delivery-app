@@ -7,7 +7,11 @@ class OrderRepository {
     }
 
     async updateStatus(orderId, status, extra = {}) {
-        return await orderModel.findByIdAndUpdate(orderId, { status, ...extra }, { new: true })
+        return await orderModel.findByIdAndUpdate(
+            orderId,
+            { $set: { status, ...extra } },
+            { new: true }
+        )
     }
 
     async restoreStock(items) {

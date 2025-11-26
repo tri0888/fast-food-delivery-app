@@ -1,9 +1,10 @@
 import orderRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
+import { markDroneFlying, releaseDroneToIdle } from '../droneTracking/droneTrackingService.js'
 
 const STATUS_TRANSITIONS = {
     'Pending Confirmation': ['Confirmed', 'Cancelled'],
-    'Confirmed': ['Out for delivery', 'Cancelled'],
+    'Confirmed': ['Out for delivery'],
     'Out for delivery': [],
     'Delivered': [],
     'Cancelled': []
@@ -36,17 +37,36 @@ class OrderService {
             throw new AppError('Cannot advance order before payment authorization', 400)
         }
 
+        if (status === 'Out for delivery') {
+            const droneUpdate = await markDroneFlying(orderId)
+            if (!droneUpdate) {
+                throw new AppError('No idle drone available yet. Please wait for a returning drone.', 409)
+            }
+        }
+
         if (status === 'Cancelled') {
             const items = order.food_items || []
             if (items.length > 0) {
                 await orderRepository.restoreStock(items)
             }
 
-            return await orderRepository.updateStatus(orderId, 'Cancelled', {
+            const droneAssigned = order.droneTracking?.assignedDrone
+
+            const updatedOrder = await orderRepository.updateStatus(orderId, 'Cancelled', {
                 paymentStatus: 'failed',
                 stripePaymentIntent: null,
-                stripeSessionId: null
+                stripeSessionId: null,
+                ...(droneAssigned ? {
+                    'droneTracking.assignedDrone': null,
+                    'droneTracking.status': 'cancelled',
+                    'droneTracking.adminStatus': 'cancelled',
+                    'droneTracking.awaitingSince': null
+                } : {})
             })
+            if (droneAssigned) {
+                await releaseDroneToIdle(droneAssigned.toString())
+            }
+            return updatedOrder
         }
 
         return await orderRepository.updateStatus(orderId, status)

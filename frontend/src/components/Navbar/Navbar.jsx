@@ -8,7 +8,7 @@ import { StoreContext } from './../context/StoreContext';
 const Navbar = ({setShowLogin}) => {
 
   const [menu, setMenu]                       = useState('home');
-  const {getTotalCartAmount, token, setToken, selectedRestaurant} = useContext(StoreContext);
+  const {getTotalCartAmount, token, setToken, selectedRestaurant, userProfile} = useContext(StoreContext);
   const navigate                              = useNavigate();
 
   const logout = () => {
@@ -40,6 +40,9 @@ const Navbar = ({setShowLogin}) => {
       </ul>
       <div className="navbar-right">
           <img src={assets.search_icon} alt="" />
+          {token && userProfile?.name && (
+            <span className='navbar-user-label'>👋 {userProfile.name}</span>
+          )}
           <div className="navbar-search-icon">
               <Link to='/cart'><img src={assets.basket_icon} alt="" /></Link>
               <div className={getTotalCartAmount()===0?'':'dot'}></div>

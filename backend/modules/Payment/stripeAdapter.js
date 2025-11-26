@@ -14,6 +14,8 @@ const ensureStripeClient = () => {
     return stripe
 }
 
+const trimTrailingSlashes = (value = '') => value.replace(/\/+$/, '')
+
 class StripeAdapter {
     async createCheckoutSession({ referenceId, orderIdsParam, rawOrderIds, items = [], frontendUrl, deliveryFee = 2, metadata = {} }) {
         
@@ -53,9 +55,10 @@ class StripeAdapter {
                 quantity: 1
             })
         }
+        const normalizedFrontend = trimTrailingSlashes(frontendUrl)
         const orderIdQuery = orderIdsParam ? `&orderId=${orderIdsParam}` : ''
-        const successUrl = `${frontendUrl}/verify?success=true${orderIdQuery}&session_id={CHECKOUT_SESSION_ID}`
-        const cancelUrl = `${frontendUrl}/verify?success=false${orderIdQuery}&session_id={CHECKOUT_SESSION_ID}`
+        const successUrl = `${normalizedFrontend}/verify?success=true${orderIdQuery}&session_id={CHECKOUT_SESSION_ID}`
+        const cancelUrl = `${normalizedFrontend}/verify?success=false${orderIdQuery}&session_id={CHECKOUT_SESSION_ID}`
 
         const finalMetadata = { ...metadata }
         if (rawOrderIds) {

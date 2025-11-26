@@ -12,6 +12,7 @@ process.on('uncaughtException', err => {
 // config
 dotenv.config({path: "./.env"})
 import app from "./app.js"
+import { hydrateReturningDrones } from './modules/Orders/droneTracking/droneTrackingService.js'
 
 
 //db connection
@@ -21,10 +22,14 @@ const DB = process.env.NODE_ENV === "docker"
 // connectDB();
 mongoose
     .connect(DB)
-    .then(() => {
+    .then(async () => {
         console.log('DB connected') ;
-    }
-)
+        try {
+            await hydrateReturningDrones()
+        } catch (error) {
+            console.error('Unable to hydrate drone fleet timers', error)
+        }
+    })
 
 const port = process.env.PORT || 4000
 const server = app.listen(port, () => {

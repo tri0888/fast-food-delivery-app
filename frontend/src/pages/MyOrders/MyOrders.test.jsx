@@ -5,6 +5,20 @@ import { StoreContext } from '../../components/context/StoreContext';
 import axios from 'axios';
 
 vi.mock('axios');
+vi.mock('react-leaflet', () => ({
+  MapContainer: ({ children }) => <div data-testid="mock-map">{children}</div>,
+  TileLayer: () => null,
+  Marker: () => null,
+  Polyline: () => null
+}));
+vi.mock('leaflet', () => {
+  const divIcon = (config) => config;
+  return {
+    __esModule: true,
+    default: { divIcon },
+    divIcon
+  };
+});
 vi.mock('../../assets/assets.js', () => ({
   assets: {
     parcel_icon: 'parcel.png'

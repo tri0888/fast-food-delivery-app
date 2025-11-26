@@ -41,8 +41,8 @@ const Verify = () => {
             const response = await axios.post(url+"/api/order/verify",
                                               payload);
             if(response.data.success){
-                toast.success('Payment verified successfully.');
-                navigate('/myorders');
+                toast.success('Payment verified successfully. Redirecting to My Orders...');
+                navigate('/myorders', { replace: true });
             }
             else{
                 toast.info('Payment cancelled. You were not charged.');

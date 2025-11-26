@@ -12,6 +12,7 @@ import userRouter from './routes/userRoute.js';
 import orderRouter from './routes/orderRoute.js';
 import cartRouter from './routes/cartRoute.js';
 import restaurantRouter from './routes/restaurantRoute.js';
+import droneRouter from './routes/droneRoute.js';
 import { handleStripeWebhook } from './modules/Payment/stripeWebhook/Controller.js';
 
 //app config
@@ -49,6 +50,7 @@ app.use('/api/user', userRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/restaurant', restaurantRouter)
+app.use('/api/drone', droneRouter)
 app.get("/", (req, res) => {
     res.send("API working")
 })

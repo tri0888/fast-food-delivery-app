@@ -4,6 +4,7 @@ import { StoreContext } from './../../components/context/StoreContext';
 import axios from 'axios';
 import { assets } from './../../assets/assets';
 import { toast } from 'react-toastify';
+import DroneTracker from '../../components/DroneTracker/DroneTracker';
 
 const STATUS_LABELS = {
     'Pending Confirmation': 'Pending confirmation',
@@ -20,11 +21,20 @@ const PAYMENT_LABELS = {
     failed: 'Failed'
 }
 
+const DRONE_STATUS_LABELS = {
+    'awaiting-drone': 'Awaiting drone',
+    'preparing': 'Preparing',
+    'flying': 'Flying',
+    'delivered': 'Delivered',
+    'cancelled': 'Cancelled'
+}
+
 const MyOrders = () => {
 
 const {url, token}    = useContext(StoreContext);
 const [data, setData] = useState([]);
 const [restaurantMap, setRestaurantMap] = useState({});
+const [expandedOrderId, setExpandedOrderId] = useState(null);
 
 const fetchOrders = async () =>{
     const response = await axios.post(url+'/api/order/userorders',
@@ -66,6 +76,10 @@ const markAsReceived = async (orderId) => {
     }
 }
 
+const toggleTracking = (orderId) => {
+    setExpandedOrderId(prev => prev === orderId ? null : orderId)
+}
+
 useEffect(()=>{
     if(token){
         fetchOrders();
@@ -81,6 +95,10 @@ useEffect(() => {
         <h2>My Orders</h2>
         <div className="container">
             {data.map((order, index) => {
+                const customerName = [order.address?.firstName, order.address?.lastName]
+                    .filter(Boolean)
+                    .join(' ')
+                    .trim() || 'Customer'
                 return (
                     <div key={index} className="my-orders-order">
                         <img src={assets.parcel_icon} alt="" />
@@ -95,6 +113,9 @@ useEffect(() => {
                             <span className='order-restaurant-label'>
                                 Restaurant: {restaurantMap[order.res_id]?.name || 'Unknown restaurant'}
                             </span>
+                            <span className='order-customer-label'>
+                                Customer: {customerName}
+                            </span>
                         </div>
                         <div className='order-payment-state'>
                             <p>${order.amount}.00</p>
@@ -108,12 +129,24 @@ useEffect(() => {
                             const label = STATUS_LABELS[normalized] || normalized
                             return <p><span>&#x25cf;</span><b>{label}</b></p>
                         })()}
-                        {order.status === 'Out for delivery' && order.paymentStatus === 'authorized' ? (
-                            <button onClick={() => markAsReceived(order._id)}>
-                                Confirm delivery
+                        <div className='order-actions'>
+                            <button className='track-btn' onClick={() => toggleTracking(order._id)}>
+                                {expandedOrderId === order._id ? 'Hide tracking' : 'Track order'}
                             </button>
-                        ) : (
-                            <button onClick={fetchOrders}>Track order</button>
+                            {order.status === 'Out for delivery' && order.paymentStatus === 'authorized' && (
+                                <button className='confirm-btn' onClick={() => markAsReceived(order._id)}>
+                                    Confirm delivery
+                                </button>
+                            )}
+                        </div>
+                        {order.droneTracking && (
+                            <p className='drone-status-chip'>
+                                Drone: {DRONE_STATUS_LABELS[order.droneTracking.status] || 'Awaiting drone'}
+                                {order.droneTracking.status === 'awaiting-drone' && <span className='drone-status-chip__note'>&nbsp;- None drone available</span>}
+                            </p>
+                        )}
+                        {expandedOrderId === order._id && (
+                            <DroneTracker tracking={order.droneTracking} />
                         )}
                     </div>
                 )

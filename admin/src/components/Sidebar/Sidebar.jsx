@@ -31,10 +31,18 @@ const Sidebar = () => {
     return (
       <div className='sidebar'>
         <div className="sidebar-options">
-          <NavLink to='/restaurants' className="sidebar-option">
-            <img src={assets.order_icon} alt="" />
-            <p>Restaurants</p>
-          </NavLink>
+            <NavLink to='/drones' className="sidebar-option">
+              <img src={assets.order_icon} alt="" />
+              <p>Drones</p>
+            </NavLink>
+            {/* <NavLink to='/drones/add' className="sidebar-option">
+              <img src={assets.order_icon} alt="" />
+              <p>Add Drone</p>
+            </NavLink> */}
+            <NavLink to='/restaurants' className="sidebar-option">
+              <img src={assets.order_icon} alt="" />
+              <p>Restaurants</p>
+            </NavLink>
         </div>
       </div>
     );
@@ -51,6 +59,10 @@ const Sidebar = () => {
         <NavLink to='/orders' className="sidebar-option">
           <img src={assets.order_icon} alt="" />
           <p>Orders</p>
+        </NavLink>
+        <NavLink to='/drones' className="sidebar-option">
+          <img src={assets.order_icon} alt="" />
+          <p>Drones</p>
         </NavLink>
         <NavLink to='/list-user' className="sidebar-option">
           <img src={assets.order_icon} alt="" />

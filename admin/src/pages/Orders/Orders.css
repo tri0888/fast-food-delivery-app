@@ -23,6 +23,17 @@
     margin-bottom: 10px;
 }
 
+.order-item-drone {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #374151;
+}
+
+.order-item-drone__note {
+    color: #b45309;
+    font-size: 11px;
+}
+
 .order-item select{
     background-color: #ffe8e4;
     border: 1px solid tomato;

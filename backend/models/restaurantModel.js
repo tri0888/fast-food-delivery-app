@@ -14,6 +14,11 @@ const restaurantSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    location: {
+        lat: { type: Number, default: null },
+        lng: { type: Number, default: null },
+        label: { type: String, trim: true }
+    },
     permissions: {
         food: {
             add_food: { type: Boolean, default: true },

@@ -2,11 +2,60 @@ import crypto from 'crypto'
 import orderRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
 import stripeAdapter from '../../Payment/stripeAdapter.js'
+import { attachDroneToOrder } from '../droneTracking/droneTrackingService.js'
 
 const DELIVERY_FEE = 2
+const checkoutLocks = new Map()
+const checkoutResultCache = new Map()
+const CHECKOUT_CACHE_TTL_MS = Number(process.env.CHECKOUT_CACHE_TTL_MS || 5000)
+
+const rememberCheckoutResult = (key, value) => {
+    checkoutResultCache.set(key, { value, expiresAt: Date.now() + CHECKOUT_CACHE_TTL_MS })
+}
+
+const readCheckoutCache = (key) => {
+    const cached = checkoutResultCache.get(key)
+    if (!cached) {
+        return null
+    }
+    if (cached.expiresAt <= Date.now()) {
+        checkoutResultCache.delete(key)
+        return null
+    }
+    return cached.value
+}
 
 class OrderService {
     async placeOrder(userId, items, amount, address, frontendUrl) {
+        const lockKey = userId ? userId.toString() : ''
+        if (!lockKey) {
+            throw new AppError('User context is required', 400)
+        }
+
+        const cachedResult = readCheckoutCache(lockKey)
+        if (cachedResult) {
+            return cachedResult
+        }
+
+        const inFlight = checkoutLocks.get(lockKey)
+        if (inFlight) {
+            return inFlight
+        }
+
+        const checkoutPromise = this._executePlaceOrder(userId, items, amount, address, frontendUrl)
+            .then((result) => {
+                rememberCheckoutResult(lockKey, result)
+                return result
+            })
+            .finally(() => {
+                checkoutLocks.delete(lockKey)
+            })
+
+        checkoutLocks.set(lockKey, checkoutPromise)
+        return checkoutPromise
+    }
+
+    async _executePlaceOrder(userId, items, amount, address, frontendUrl) {
         const user = await orderRepository.findUserById(userId)
         if (!user) {
             throw new AppError('User not found', 404)
@@ -127,6 +176,8 @@ class OrderService {
             const orderIds = createdOrders.map((order) => order._id.toString())
             const orderIdsValue = orderIds.join(',')
             const encodedOrderIds = encodeURIComponent(orderIdsValue)
+
+            await Promise.all(createdOrders.map((order) => attachDroneToOrder(order)))
 
             const { url: sessionUrl, sessionId, paymentIntentId } = await stripeAdapter.createCheckoutSession({
                 referenceId: checkoutId,

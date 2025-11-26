@@ -6,6 +6,7 @@ import Food from '../models/foodModel.js';
 import Orders from '../models/orderModel.js';
 import User from '../models/userModel.js';
 import Restaurant from '../models/restaurantModel.js';
+import Drone from '../models/droneModel.js';
 
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -40,6 +41,9 @@ const users = JSON.parse(
 const restaurants = JSON.parse(
   fs.readFileSync(`${__dirname}/fast-food.restaurants.json`, 'utf-8')
 );
+const drones = JSON.parse(
+  fs.readFileSync(`${__dirname}/fast-food.drones.json`, 'utf-8')
+);
 // const superadmin = JSON.parse(
 //   fs.readFileSync(`${__dirname}/superadmin.json`, 'utf-8')
 // );
@@ -48,6 +52,7 @@ const restaurants = JSON.parse(
 const importData = async () => {
   try {
     await Restaurant.create(restaurants);
+    await Drone.create(drones);
     await Food.create(foods);
     await Orders.create(orders);
     await User.create(users);
@@ -67,6 +72,7 @@ const deleteData = async () => {
     await Food.deleteMany();
     await User.deleteMany();
     await Restaurant.deleteMany();
+    await Drone.deleteMany();
 
     console.log('Data successfully deleted!');
   } catch (err) {

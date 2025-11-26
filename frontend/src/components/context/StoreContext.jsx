@@ -10,6 +10,7 @@ const StoreContextProvider = (props) => {
     const [cartItems, setCartItems]       = useState({});
     const url = import.meta.env.VITE_API_URL || "http://localhost:4000";
     const [token,setToken]                = useState("");
+    const [userProfile, setUserProfile]   = useState(null);
 
     const [food_list, setFoodList] = useState([]);
     const [selectedRestaurant, setSelectedRestaurant] = useState(null);
@@ -123,6 +124,43 @@ const StoreContextProvider = (props) => {
         }
     }    
 
+    const decodeBase64 = (value) => {
+        if (typeof window !== 'undefined' && typeof window.atob === 'function') {
+            return window.atob(value)
+        }
+        if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
+            return globalThis.atob(value)
+        }
+        if (typeof globalThis !== 'undefined' && typeof globalThis.Buffer === 'function') {
+            return globalThis.Buffer.from(value, 'base64').toString('binary')
+        }
+        return ''
+    }
+
+    const decodeTokenPayload = (jwtToken) => {
+        if (!jwtToken) {
+            return null
+        }
+
+        try {
+            const base64Url = jwtToken.split('.')[1]
+            if (!base64Url) {
+                return null
+            }
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+            const jsonPayload = decodeURIComponent(
+                decodeBase64(base64)
+                    .split('')
+                    .map((char) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            )
+            return JSON.parse(jsonPayload)
+        } catch (error) {
+            console.warn('Failed to decode token payload', error)
+            return null
+        }
+    }
+
     useEffect(()=>{
         async function loadData(){
             // Load selected restaurant from localStorage
@@ -141,6 +179,24 @@ const StoreContextProvider = (props) => {
         loadData();
        
     },[])
+
+    useEffect(() => {
+        if (!token) {
+            setUserProfile(null)
+            return
+        }
+        const payload = decodeTokenPayload(token)
+        if (!payload) {
+            setUserProfile(null)
+            return
+        }
+        setUserProfile({
+            id: payload.id || payload._id || '',
+            name: payload.name || '',
+            role: payload.role || 'user',
+            restaurantId: payload.restaurantId || null
+        })
+    }, [token])
 
     useEffect(() => {
         if (catalog.length === 0) {
@@ -176,7 +232,8 @@ const StoreContextProvider = (props) => {
                           isRestaurantLocked,
                           selectedRestaurant,
                           setSelectedRestaurant,
-                          allFoodsMap: catalogMap}
+                          allFoodsMap: catalogMap,
+                          userProfile}
 
     return (
         <StoreContext.Provider value={contextValue}>

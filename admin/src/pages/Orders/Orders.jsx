@@ -9,7 +9,7 @@ import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
 const STATUS_FLOW = {
   'Pending Confirmation': ['Confirmed', 'Cancelled'],
-  'Confirmed': ['Out for delivery', 'Cancelled'],
+  'Confirmed': ['Out for delivery'],
   'Out for delivery': ['Delivered'],
   'Delivered': [],
   'Cancelled': []
@@ -22,6 +22,16 @@ const STATUS_LABELS = {
   'Out for delivery': 'Out for delivery',
   'Delivered': 'Delivered',
   'Cancelled': 'Cancelled'
+}
+
+const DRONE_STATUS_LABELS = {
+  'awaiting-drone': 'Awaiting drone',
+  'preparing': 'Preparing',
+  'flying': 'Flying',
+  'delivered': 'Delivered',
+  'returning': 'Returning to base',
+  'idle': 'Idle',
+  'cancelled': 'Cancelled'
 }
 
 const getStatusLabel = (status) => STATUS_LABELS[status] || status
@@ -118,7 +128,6 @@ const Orders = ({url}) => {
         toast.error(response.data.message || 'Failed to update order status');
       }
     } catch (error) {
-      console.log(error);
       const errorMessage = error.response?.data?.message || 'Failed to update order status';
       toast.error(errorMessage);
     }
@@ -156,6 +165,11 @@ const Orders = ({url}) => {
                 <p>{order.address.city+" ,"+ order.address.state+" ,"+order.address.country+" ,"+order.address.zipcode}</p>
               </div>
               <p className='order-item-phone'>{order.address.phone}</p>
+              <p className='order-item-drone'>
+                Drone: {DRONE_STATUS_LABELS[order?.droneTracking?.adminStatus || order?.droneTracking?.status || 'awaiting-drone']}
+                {order?.droneTracking?.assignedDrone?.name && ` · ${order.droneTracking.assignedDrone.name}`}
+                {order?.droneTracking?.status === 'awaiting-drone' && <span className='order-item-drone__note'>&nbsp;(None available yet)</span>}
+              </p>
             </div>
             <p>Items: {(order.food_items || order.items || []).length}</p>
             <p>${order.amount}</p>
@@ -164,12 +178,17 @@ const Orders = ({url}) => {
               {ALL_STATUSES.map((statusOption) => {
                 const normalizedStatus = order.status === 'Food Processing' ? 'Pending Confirmation' : order.status
                 const allowed = STATUS_FLOW[normalizedStatus] || []
+                const isCurrent = statusOption === normalizedStatus
+                const isAllowedOption = allowed.includes(statusOption)
+                if (!isCurrent && !isAllowedOption) {
+                  return null
+                }
+
                 const paymentReady = ['authorized', 'captured'].includes(order.paymentStatus)
-                const transitionRequested = statusOption !== normalizedStatus
                 const requiresPayment = statusOption !== 'Cancelled'
-                const transitionBlocked = transitionRequested && requiresPayment && !paymentReady
+                const transitionBlocked = !isCurrent && requiresPayment && !paymentReady
                 const isDeliveryStatus = statusOption === 'Delivered'
-                const isDisabled = isDeliveryStatus || (transitionRequested && (!allowed.includes(statusOption) || transitionBlocked))
+                const isDisabled = isCurrent || isDeliveryStatus || transitionBlocked
                 const label = getStatusLabel(statusOption)
                 return (
                   <option key={statusOption} value={statusOption} disabled={isDisabled}>

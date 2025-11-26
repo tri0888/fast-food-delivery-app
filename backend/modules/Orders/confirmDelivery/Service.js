@@ -1,5 +1,6 @@
 import orderRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
+import { markDroneDelivered } from '../droneTracking/droneTrackingService.js'
 
 class ConfirmDeliveryService {
     async confirm(orderId, userId) {
@@ -29,6 +30,7 @@ class ConfirmDeliveryService {
         }
 
         await orderRepository.markDelivered(orderId)
+        await markDroneDelivered(orderId)
 
         return { success: true }
     }
