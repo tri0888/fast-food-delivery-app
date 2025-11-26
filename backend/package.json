@@ -7,6 +7,7 @@
     "dev": "nodemon server.js",
     "server": "nodemon server.js",
     "start": "nodemon server.js",
+    "resetdb": "cd config/ && node import-data.js --delete && node import-data.js --import",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
