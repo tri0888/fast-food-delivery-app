@@ -1,1 +1,5 @@
-{}
+{
+  "scripts": {
+    "resetdb": "cd backend/config/ && node import-data.js --delete && node import-data.js --import"
+  }
+}
