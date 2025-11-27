@@ -3,6 +3,7 @@ import { listRestaurants } from '../modules/Restaurants/listRestaurants/Controll
 import { addRestaurant, editRestaurant } from '../modules/Restaurants/addRestaurants/Controller.js'
 import { getRestaurant } from '../modules/Restaurants/getRestaurant/Controller.js'
 import { togglePermission } from '../modules/Restaurants/togglePermission/Controller.js'
+import { deleteRestaurant } from '../modules/Restaurants/deleteRestaurant/Controller.js'
 import { getPermissions } from '../modules/Restaurants/getPermissions/Controller.js'
 import authMiddleware, { restrictTo, filterByRestaurant } from '../middleware/auth.js'
 
@@ -38,5 +39,9 @@ restaurantRouter
 restaurantRouter
     .route("/permissions")
     .get(restrictTo('admin', 'superadmin'), getPermissions)
+
+restaurantRouter
+    .route('/delete/:restaurantId')
+    .delete(restrictTo('superadmin'), deleteRestaurant)
 
 export default restaurantRouter

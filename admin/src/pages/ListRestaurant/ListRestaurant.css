@@ -83,6 +83,22 @@
     background-color: #218838;
 }
 
+.delete-btn {
+    border: none;
+    padding: 10px 16px;
+    background-color: #dc3545;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: background-color .2s ease;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
 @media (max-width:600px){
     .restaurants-table-format{
         grid-template-columns: 1fr;

@@ -3,12 +3,18 @@ import './ListRestaurant.css';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
 const ListRestaurant = ({ url }) => {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
   const [permissions, setPermissions] = useState(null);
   const role = sessionStorage.getItem('role');
+  const [deleteDialog, setDeleteDialog] = useState({
+    isOpen: false,
+    restaurantId: null,
+    message: ''
+  });
 
   const fetchRestaurants = async () => {
     const token = sessionStorage.getItem('token');
@@ -56,6 +62,36 @@ const ListRestaurant = ({ url }) => {
     navigate(`/restaurants/${restaurantId}/permissions`);
   };
 
+  const requestDelete = (restaurant) => {
+    setDeleteDialog({
+      isOpen: true,
+      restaurantId: restaurant._id,
+      message: `Delete "${restaurant.name}" and all related data? This action cannot be undone.`
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const token = sessionStorage.getItem('token');
+    if (!deleteDialog.restaurantId) return;
+    try {
+      const response = await axios.delete(`${url}/api/restaurant/delete/${deleteDialog.restaurantId}`, { headers: { token } });
+      if (response.data.success) {
+        toast.success('Restaurant deleted successfully');
+        fetchRestaurants();
+      } else {
+        toast.error(response.data.message || 'Failed to delete restaurant');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete restaurant');
+    } finally {
+      setDeleteDialog({ isOpen: false, restaurantId: null, message: '' });
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ isOpen: false, restaurantId: null, message: '' });
+  };
+
   return (
     <div className='superadmin list flex-col'>
       <div className='superadmin-header'>
@@ -82,11 +118,23 @@ const ListRestaurant = ({ url }) => {
                 {role === 'superadmin' && (
                   <button onClick={() => handleManagePermissions(restaurant._id)} className='manage-btn'>⚙️ Manage Permissions</button>
                 )}
+                {role === 'superadmin' && (
+                  <button onClick={() => requestDelete(restaurant)} className='delete-btn'>🗑 Delete</button>
+                )}
               </div>
             </div>
           ))
         )}
       </div>
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        title='Delete Restaurant'
+        message={deleteDialog.message}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        confirmText='Delete'
+        cancelText='Cancel'
+      />
     </div>
   );
 };
