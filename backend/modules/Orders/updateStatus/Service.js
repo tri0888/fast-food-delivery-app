@@ -1,6 +1,6 @@
 import orderRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
-import { markDroneFlying, releaseDroneToIdle } from '../droneTracking/droneTrackingService.js'
+import { dispatchDroneFlight, releaseDroneToIdle } from '../droneTracking/droneTrackingService.js'
 
 const STATUS_TRANSITIONS = {
     'Pending Confirmation': ['Confirmed', 'Cancelled'],
@@ -16,7 +16,7 @@ const normalizeStatus = (status) => {
 }
 
 class OrderService {
-    async updateOrderStatus(orderId, status) {
+    async updateOrderStatus(orderId, status, { droneId } = {}) {
 
         const order = await orderRepository.findOrderById(orderId)
         if (!order) {
@@ -38,10 +38,10 @@ class OrderService {
         }
 
         if (status === 'Out for delivery') {
-            const droneUpdate = await markDroneFlying(orderId)
-            if (!droneUpdate) {
-                throw new AppError('No idle drone available yet. Please wait for a returning drone.', 409)
+            if (!droneId) {
+                throw new AppError('Please select an idle drone for this order', 400)
             }
+            await dispatchDroneFlight({ order, droneId })
         }
 
         if (status === 'Cancelled') {

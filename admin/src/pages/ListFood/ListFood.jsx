@@ -138,7 +138,7 @@ const ListFood = ({url}) => {
               <div>{item.stock}</div>
               <div>
                 <a href={`/edit/${item._id}`} onClick={(e) => handleEditClick(e, item._id)} className='cursor' style={{marginRight:8}}>Edit</a>
-                <span onClick={()=> handleDeleteClick(item._id, item.name)} className='cursor delete-btn'>🗑️</span>
+                <span onClick={()=> handleDeleteClick(item._id, item.name)} className='cursor delete-btn-food'>🗑️</span>
               </div>
             </div>
           )

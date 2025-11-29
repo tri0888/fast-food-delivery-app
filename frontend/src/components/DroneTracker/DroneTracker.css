@@ -35,6 +35,32 @@
     margin-top: 4px;
 }
 
+.drone-tracker__metrics {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.drone-tracker__metrics div {
+    flex: 1;
+    min-width: 120px;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+.drone-tracker__metrics small {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.drone-tracker__metrics strong {
+    font-size: 16px;
+    color: #111827;
+}
+
 .drone-tracker__drone-name {
     align-self: flex-start;
     background: #eef2ff;

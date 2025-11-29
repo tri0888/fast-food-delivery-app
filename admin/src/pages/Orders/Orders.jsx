@@ -26,7 +26,6 @@ const STATUS_LABELS = {
 
 const DRONE_STATUS_LABELS = {
   'awaiting-drone': 'Awaiting drone',
-  'preparing': 'Preparing',
   'flying': 'Flying',
   'delivered': 'Delivered',
   'returning': 'Returning to base',
@@ -42,15 +41,20 @@ const PAYMENT_LABELS = {
   failed: 'Failed'
 }
 
+const INITIAL_DIALOG_STATE = {
+  isOpen: false,
+  orderId: null,
+  newStatus: '',
+  orderInfo: '',
+  droneId: '',
+  restaurantId: ''
+}
+
 const Orders = ({url}) => {
 
   const [orders, setOrders] = useState([])
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    orderId: null,
-    newStatus: '',
-    orderInfo: ''
-  });
+  const [confirmDialog, setConfirmDialog] = useState({ ...INITIAL_DIALOG_STATE })
+  const [droneSelection, setDroneSelection] = useState({ options: [], loading: false })
 
   const fetchAllOrders = async () => {
     const token = sessionStorage.getItem("token");
@@ -67,6 +71,34 @@ const Orders = ({url}) => {
       const errorMessage = error.response?.data?.message || 'Failed to fetch orders';
       toast.error(errorMessage);
     }
+  }
+
+  const resetConfirmDialog = () => {
+    setConfirmDialog({ ...INITIAL_DIALOG_STATE })
+    setDroneSelection({ options: [], loading: false })
+  }
+
+  const fetchIdleDrones = async (restaurantId) => {
+    const token = sessionStorage.getItem("token");
+    try {
+      setDroneSelection({ options: [], loading: true })
+      const response = await axios.get(`${url}/api/drone/list`, {
+        params: { res_id: restaurantId, status: 'idle' },
+        headers: { token }
+      })
+      const list = response.data?.data || []
+      setDroneSelection({ options: list, loading: false })
+      return list
+    } catch (error) {
+      setDroneSelection({ options: [], loading: false })
+      const errorMessage = error.response?.data?.message || 'Failed to load idle drones'
+      toast.error(errorMessage)
+      return []
+    }
+  }
+
+  const handleDroneSelectionChange = (event) => {
+    setConfirmDialog(prev => ({ ...prev, droneId: event.target.value }))
   }
 
   const statusHandler = async (event, orderId) => {
@@ -100,12 +132,25 @@ const Orders = ({url}) => {
 
     const orderInfo = `${currentOrder?.address.firstName} ${currentOrder?.address.lastName}`;
     const nextStatusLabel = getStatusLabel(newStatus === 'Food Processing' ? 'Pending Confirmation' : newStatus)
+
+    if (newStatus === 'Out for delivery') {
+      const idleDrones = await fetchIdleDrones(currentOrder?.res_id)
+      if (idleDrones.length === 0) {
+        toast.warning('No idle drone is available for this restaurant yet. Please try again once one returns.')
+        event.target.value = currentStatusKey;
+        return;
+      }
+    } else {
+      setDroneSelection({ options: [], loading: false })
+    }
     
     setConfirmDialog({
       isOpen: true,
       orderId: orderId,
       newStatus: newStatus,
-      orderInfo: `${orderInfo} → ${nextStatusLabel}`
+      orderInfo: `${orderInfo} → ${nextStatusLabel}`,
+      droneId: '',
+      restaurantId: currentOrder?.res_id
     });
 
     // Reset select về giá trị cũ
@@ -113,12 +158,21 @@ const Orders = ({url}) => {
   };
 
   const handleConfirmStatusChange = async () => {
-    const { orderId, newStatus, orderInfo } = confirmDialog;
+    const { orderId, newStatus, orderInfo, droneId } = confirmDialog;
     const token = sessionStorage.getItem("token");
+
+    if (newStatus === 'Out for delivery' && !droneId) {
+      toast.warning('Please select an idle drone to dispatch.');
+      return;
+    }
+    const payload = { orderId, status: newStatus }
+    if (newStatus === 'Out for delivery') {
+      payload.droneId = droneId
+    }
     
     try {
       const response = await axios.patch(`${url}/api/order/status`, 
-                                          {orderId, status: newStatus},
+                                          payload,
                                           {headers: {token}});
       
       if(response.data.success){
@@ -132,11 +186,11 @@ const Orders = ({url}) => {
       toast.error(errorMessage);
     }
     
-    setConfirmDialog({ isOpen: false, orderId: null, newStatus: '', orderInfo: '' });
+    resetConfirmDialog();
   };
 
   const handleCancelStatusChange = () => {
-    setConfirmDialog({ isOpen: false, orderId: null, newStatus: '', orderInfo: '' });
+    resetConfirmDialog();
   };
 
   useEffect(()=>{
@@ -209,7 +263,33 @@ const Orders = ({url}) => {
         onCancel={handleCancelStatusChange}
         confirmText="Confirm"
         cancelText="Cancel"
-      />
+        disableConfirm={confirmDialog.newStatus === 'Out for delivery' && (droneSelection.loading || !confirmDialog.droneId)}
+      >
+        {confirmDialog.newStatus === 'Out for delivery' && (
+          <div className='drone-select-panel'>
+            {droneSelection.loading ? (
+              <p className='drone-select-panel__loading'>Loading idle drones…</p>
+            ) : (
+              <>
+                <label htmlFor='drone-select'>Select an idle drone</label>
+                <select
+                  id='drone-select'
+                  value={confirmDialog.droneId}
+                  onChange={handleDroneSelectionChange}
+                >
+                  <option value=''>-- Choose drone --</option>
+                  {droneSelection.options.map((drone) => (
+                    <option key={drone._id} value={drone._id}>
+                      {drone.name} · {(drone.res_id?.name) || 'Restaurant'}
+                    </option>
+                  ))}
+                </select>
+                <small>The drone will start flying immediately after confirmation.</small>
+              </>
+            )}
+          </div>
+        )}
+      </ConfirmDialog>
     </div>
   )
 }

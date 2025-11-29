@@ -1,53 +1,64 @@
 import droneModel from '../../../models/droneModel.js'
 import orderModel from '../../../models/orderModel.js'
 import restaurantModel from '../../../models/restaurantModel.js'
+import AppError from '../../../utils/appError.js'
 
-const MIN_CUSTOMER_DISTANCE_KM = Number(process.env.DRONE_CUSTOMER_DISTANCE_MIN_KM || 2)
-const MAX_CUSTOMER_DISTANCE_KM = Number(process.env.DRONE_CUSTOMER_DISTANCE_MAX_KM || 5)
 const MIN_DURATION_SECONDS     = Number(process.env.DRONE_ANIMATION_MIN_SECONDS || 30)
-const FIXED_ANIMATION_SECONDS  = Number(process.env.DRONE_ANIMATION_SECONDS || 30)
-
-const computeAnimationSeconds = (distanceKm = MIN_CUSTOMER_DISTANCE_KM) => {
-    const droneSpeedKmh = Number(process.env.DRONE_SPEED_KMH || 60)
-    const seconds = (distanceKm / Math.max(1, droneSpeedKmh)) * 3600
-    return Math.round(Math.max(MIN_DURATION_SECONDS, seconds))
-}
-
-// Toggle the option you prefer: comment out the line you are NOT using.
-const DRONE_ANIMATION_SECONDS =
-    // computeAnimationSeconds(MAX_CUSTOMER_DISTANCE_KM)
-    FIXED_ANIMATION_SECONDS
+const DEFAULT_FLIGHT_SECONDS   = Number(process.env.DRONE_ANIMATION_SECONDS || 180)
+const DEFAULT_DRONE_SPEED_KMH  = Number(process.env.DRONE_SPEED_KMH || 100)
 
 const returnTimers = new Map()
 
 const statusHistoryEntry = (status) => ({ status, at: new Date() })
-
 const toRadians = (deg) => (deg * Math.PI) / 180
-const toDegrees = (rad) => (rad * 180) / Math.PI
 
-const randomCustomerDestination = (restaurantLocation) => {
-    const base = restaurantLocation || { lat: 0, lng: 0, label: 'Unknown' }
-    const distance = MIN_CUSTOMER_DISTANCE_KM + Math.random() * (MAX_CUSTOMER_DISTANCE_KM - MIN_CUSTOMER_DISTANCE_KM)
-    const bearing = Math.random() * 2 * Math.PI
-    const earthRadiusKm = 6371
+const hasCoordinates = (coords) => typeof coords?.lat === 'number' && typeof coords?.lng === 'number'
 
-    const lat1 = toRadians(base.lat || 0)
-    const lon1 = toRadians(base.lng || 0)
+const haversineDistanceKm = (start, end) => {
+    if (!hasCoordinates(start) || !hasCoordinates(end)) {
+        return null
+    }
+    const R = 6371
+    const dLat = toRadians(end.lat - start.lat)
+    const dLon = toRadians(end.lng - start.lng)
+    const lat1 = toRadians(start.lat)
+    const lat2 = toRadians(end.lat)
 
-    const lat2 = Math.asin(
-        Math.sin(lat1) * Math.cos(distance / earthRadiusKm) +
-        Math.cos(lat1) * Math.sin(distance / earthRadiusKm) * Math.cos(bearing)
-    )
+    const a = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return Number((R * c).toFixed(3))
+}
 
-    const lon2 = lon1 + Math.atan2(
-        Math.sin(bearing) * Math.sin(distance / earthRadiusKm) * Math.cos(lat1),
-        Math.cos(distance / earthRadiusKm) - Math.sin(lat1) * Math.sin(lat2)
-    )
+const computeFlightMetrics = (restaurantLocation, customerLocation) => {
+    const distanceKm = haversineDistanceKm(restaurantLocation, customerLocation)
+    const speedKmh = DEFAULT_DRONE_SPEED_KMH
 
+    if (!distanceKm || distanceKm <= 0) {
+        return {
+            distanceKm: null,
+            durationSec: Math.max(MIN_DURATION_SECONDS, DEFAULT_FLIGHT_SECONDS),
+            speedKmh
+        }
+    }
+
+    const seconds = Math.round((distanceKm / Math.max(0.1, speedKmh)) * 3600)
     return {
-        lat: Number(toDegrees(lat2).toFixed(6)),
-        lng: Number(toDegrees(lon2).toFixed(6)),
-        label: 'Customer drop-off'
+        distanceKm,
+        durationSec: Math.max(MIN_DURATION_SECONDS, seconds),
+        speedKmh
+    }
+}
+
+const normalizeCoords = (coords, fallbackLabel) => {
+    if (!hasCoordinates(coords)) {
+        return null
+    }
+    return {
+        lat: Number(coords.lat),
+        lng: Number(coords.lng),
+        label: coords.label || fallbackLabel || 'Location',
+        confirmed: Boolean(coords.confirmed),
+        confirmedAt: coords.confirmedAt ? new Date(coords.confirmedAt) : null
     }
 }
 
@@ -58,15 +69,15 @@ const resolveRestaurantLocation = async (restaurantId) => {
     }
 
     const { location = {}, name, address } = restaurant
-    if (typeof location?.lat === 'number' && typeof location?.lng === 'number') {
-        return { lat: location.lat, lng: location.lng, label: location.label || name || 'Restaurant' }
+    const normalized = normalizeCoords(location, name || address || 'Restaurant')
+    if (normalized) {
+        return normalized
     }
 
     return { lat: 0, lng: 0, label: address || name || 'Restaurant' }
 }
 
 const buildTrackingUpdate = (overrides = {}) => ({
-    'droneTracking.animationDurationSec': DRONE_ANIMATION_SECONDS,
     'droneTracking.lastUpdated': new Date(),
     ...overrides
 })
@@ -81,34 +92,23 @@ const applyOrderUpdate = async (orderId, setUpdate, historyStatus) => {
     return orderModel.findByIdAndUpdate(orderId, updateDoc, { new: true })
 }
 
-const updateAwaitingState = async (order, restaurantCoords, customerCoords) => {
-    await applyOrderUpdate(order._id, {
-        'droneTracking.status': 'awaiting-drone',
-        'droneTracking.adminStatus': 'awaiting-drone',
-        'droneTracking.awaitingSince': order.droneTracking?.awaitingSince || new Date(),
-        'droneTracking.restaurantLocation': restaurantCoords,
-        'droneTracking.customerLocation': customerCoords
-    }, 'awaiting-drone')
-}
-
-const markPreparingState = async (orderId, droneId, restaurantCoords, customerCoords) => {
-    return applyOrderUpdate(orderId, {
-        'droneTracking.assignedDrone': droneId,
-        'droneTracking.status': 'preparing',
-        'droneTracking.adminStatus': 'preparing',
-        'droneTracking.awaitingSince': null,
-        'droneTracking.restaurantLocation': restaurantCoords,
-        'droneTracking.customerLocation': customerCoords
-    }, 'preparing')
+const ensureCustomerLocation = (orderDoc) => {
+    if (!orderDoc) {
+        return null
+    }
+    const fromTracking = normalizeCoords(orderDoc.droneTracking?.customerLocation, 'Customer drop-off')
+    const fromAddress = normalizeCoords(orderDoc.address?.location, 'Customer drop-off')
+    return fromTracking || fromAddress
 }
 
 const scheduleReturnTimer = (droneId, eta) => {
+    const key = droneId.toString()
     const delay = Math.max(0, eta - Date.now())
-    if (returnTimers.has(droneId)) {
-        clearTimeout(returnTimers.get(droneId))
+    if (returnTimers.has(key)) {
+        clearTimeout(returnTimers.get(key))
     }
-    const handler = setTimeout(() => finalizeDroneReturn(droneId).catch(() => {}), delay)
-    returnTimers.set(droneId, handler)
+    const handler = setTimeout(() => finalizeDroneReturn(key).catch(() => {}), delay)
+    returnTimers.set(key, handler)
 }
 
 const resetDroneToIdle = async (droneId) => {
@@ -127,96 +127,67 @@ const resetDroneToIdle = async (droneId) => {
     )
 }
 
-export const attachDroneToOrder = async (orderInput) => {
-    const order = typeof orderInput?.toObject === 'function' ? orderInput : await orderModel.findById(orderInput)
-    if (!order) {
-        return null
+export const dispatchDroneFlight = async ({ order, droneId }) => {
+    const orderDoc = typeof order?.toObject === 'function' ? order : await orderModel.findById(order)
+    if (!orderDoc) {
+        throw new AppError('Order not found', 404)
     }
 
-    const restaurantCoords = await resolveRestaurantLocation(order.res_id)
-    const customerCoords = order.droneTracking?.customerLocation || randomCustomerDestination(restaurantCoords)
+    const customerLocation = ensureCustomerLocation(orderDoc)
+    if (!customerLocation || !customerLocation.confirmed) {
+        throw new AppError('Customer location has not been confirmed on the map yet', 422)
+    }
+
+    const drone = await droneModel.findById(droneId)
+    if (!drone) {
+        throw new AppError('Drone not found', 404)
+    }
+
+    if (drone.status !== 'idle' || drone.currentOrder) {
+        throw new AppError('Selected drone is not idle', 409)
+    }
+
+    if (drone.res_id.toString() !== orderDoc.res_id.toString()) {
+        throw new AppError('Drone belongs to another restaurant', 400)
+    }
+
+    const restaurantCoords = await resolveRestaurantLocation(orderDoc.res_id)
+    const { distanceKm, durationSec, speedKmh } = computeFlightMetrics(restaurantCoords, customerLocation)
     const now = new Date()
 
-    const drone = await droneModel.findOneAndUpdate(
-        { res_id: order.res_id, status: 'idle', currentOrder: null },
-        { status: 'preparing', currentOrder: order._id, lastStatusChange: now, returnETA: null },
-        { new: true }
-    )
-
-    if (!drone) {
-        await updateAwaitingState(order, restaurantCoords, customerCoords)
-        return null
-    }
-
-    return markPreparingState(order._id, drone._id, restaurantCoords, customerCoords)
-}
-
-export const ensureDroneForOrder = async (orderId) => {
-    const order = await orderModel.findById(orderId)
-    if (!order) {
-        return null
-    }
-
-    if (order.droneTracking?.assignedDrone) {
-        return order
-    }
-
-    return attachDroneToOrder(order)
-}
-
-export const markDroneFlying = async (orderId) => {
-    const order = await ensureDroneForOrder(orderId)
-    if (!order || !order.droneTracking?.assignedDrone) {
-        return null
-    }
-    await droneModel.findByIdAndUpdate(order.droneTracking.assignedDrone, {
+    await droneModel.findByIdAndUpdate(droneId, {
         status: 'flying',
-        lastStatusChange: new Date()
+        currentOrder: orderDoc._id,
+        lastStatusChange: now,
+        returnETA: null
     })
-    return applyOrderUpdate(orderId, {
+
+    const confirmedCustomerLocation = {
+        ...customerLocation,
+        confirmed: true,
+        confirmedAt: customerLocation.confirmedAt || now
+    }
+
+    return applyOrderUpdate(orderDoc._id, {
+        'droneTracking.assignedDrone': droneId,
         'droneTracking.status': 'flying',
-        'droneTracking.adminStatus': 'flying'
+        'droneTracking.adminStatus': 'flying',
+        'droneTracking.awaitingSince': null,
+        'droneTracking.restaurantLocation': restaurantCoords,
+        'droneTracking.customerLocation': confirmedCustomerLocation,
+        'droneTracking.animationDurationSec': durationSec,
+        'droneTracking.flightDistanceKm': distanceKm,
+        'droneTracking.speedKmh': speedKmh
     }, 'flying')
 }
 
 const finalizeDroneReturn = async (droneId) => {
     returnTimers.delete(droneId)
-    const drone = await droneModel.findOneAndUpdate(
+    return droneModel.findOneAndUpdate(
         { _id: droneId },
         { status: 'idle', currentOrder: null, lastStatusChange: new Date(), returnETA: null },
         { new: true }
     )
-
-    if (!drone) {
-        return null
-    }
-
-    return assignDroneToPendingOrder(drone)
-}
-
-const assignDroneToPendingOrder = async (drone) => {
-    const pendingOrder = await orderModel.findOne({
-        res_id: drone.res_id,
-        status: { $nin: ['Cancelled'] },
-        'droneTracking.status': 'awaiting-drone'
-    }).sort({ 'droneTracking.awaitingSince': 1, createdAt: 1 })
-
-    if (!pendingOrder) {
-        return null
-    }
-
-    const restaurantCoords = pendingOrder.droneTracking?.restaurantLocation || await resolveRestaurantLocation(pendingOrder.res_id)
-    const customerCoords = pendingOrder.droneTracking?.customerLocation || randomCustomerDestination(restaurantCoords)
-
-    await markPreparingState(pendingOrder._id, drone._id, restaurantCoords, customerCoords)
-    await droneModel.findByIdAndUpdate(drone._id, {
-        status: 'preparing',
-        currentOrder: pendingOrder._id,
-        lastStatusChange: new Date(),
-        returnETA: null
-    })
-
-    return orderModel.findById(pendingOrder._id)
 }
 
 export const markDroneDelivered = async (orderId) => {
@@ -225,7 +196,7 @@ export const markDroneDelivered = async (orderId) => {
         return null
     }
 
-    const flightDurationSec = order.droneTracking?.animationDurationSec || DRONE_ANIMATION_SECONDS
+    const flightDurationSec = order.droneTracking?.animationDurationSec || DEFAULT_FLIGHT_SECONDS
     const returnDurationSec = flightDurationSec
 
     await applyOrderUpdate(orderId, {

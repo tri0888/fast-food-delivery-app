@@ -24,6 +24,7 @@ export const createMockFood = (overrides = {}) => {
     category: 'Salad',
     isAvailable: true,
     stock: 10,
+    res_id: overrides.res_id || new mongoose.Types.ObjectId(),
     ...overrides,
   };
 };
@@ -65,7 +66,7 @@ export const createMockOrder = (userId, overrides = {}) => {
   const foodId = new mongoose.Types.ObjectId().toString();
   return {
     userId,
-    res_id: new mongoose.Types.ObjectId(),
+    res_id: overrides.res_id || new mongoose.Types.ObjectId(),
     food_items: [
       {
         foodId,
@@ -86,6 +87,13 @@ export const createMockOrder = (userId, overrides = {}) => {
       zipcode: '12345',
       country: 'Test Country',
       phone: '1234567890',
+      location: {
+        lat: 10.78,
+        lng: 106.7,
+        label: '123 Test St, Test City',
+        confirmed: true,
+        confirmedAt: new Date().toISOString()
+      }
     },
     status: 'Pending Confirmation',
     paymentStatus: 'pending',

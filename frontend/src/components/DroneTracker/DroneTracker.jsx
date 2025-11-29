@@ -8,8 +8,7 @@ import { toast } from 'react-toastify'
 // ----- Setup helpers -----
 const DRONE_STEPS = [
     { value: 'awaiting-drone', label: 'Awaiting drone', description: 'Waiting for an idle drone' },
-    { value: 'preparing', label: 'Preparing', description: 'Drone is preparing at the restaurant' },
-    { value: 'flying', label: 'Flying', description: 'Drone is en route to you' },
+    { value: 'flying', label: 'En route', description: 'Drone is headed to your pin' },
     { value: 'delivered', label: 'Delivered', description: 'Package delivered' }
 ]
 
@@ -138,11 +137,9 @@ const DroneTracker = ({ tracking, enableNotifications = true }) => {
     }, [currentStatus, enableNotifications])
 
     const stepsSpan = Math.max(1, DRONE_STEPS.length - 1)
-    const perStep = 1 / stepsSpan
-    let progressUnits = activeIndex * perStep
+    let progressUnits = activeIndex / stepsSpan
     if (currentStatus === 'flying') {
-        const completedSteps = Math.max(0, activeIndex - 1) * perStep
-        progressUnits = completedSteps + flightProgress * perStep
+        progressUnits = flightProgress
     } else if (currentStatus === 'delivered') {
         progressUnits = 1
     }
@@ -181,6 +178,12 @@ const DroneTracker = ({ tracking, enableNotifications = true }) => {
     const awaitingMessage = currentStatus === 'awaiting-drone'
         ? 'All drones are currently busy. We will dispatch one as soon as it returns.'
         : ''
+    
+    const flightDistanceKm = tracking.flightDistanceKm
+    const flightDurationMinutes = tracking.animationDurationSec
+        ? Math.round((tracking.animationDurationSec / 60) * 10) / 10
+        : null
+    const speedKmh = tracking.speedKmh
 
     return (
         <div className="drone-tracker">
@@ -192,6 +195,20 @@ const DroneTracker = ({ tracking, enableNotifications = true }) => {
                     {etaTimestamp && (
                         <p className="drone-tracker__eta">ETA: {formatEta(etaTimestamp)}</p>
                     )}
+                    <div className="drone-tracker__metrics">
+                        <div>
+                            <small>Distance</small>
+                            <strong>{flightDistanceKm ? `${flightDistanceKm.toFixed(2)} km` : 'Pending'}</strong>
+                        </div>
+                        <div>
+                            <small>Speed</small>
+                            <strong>{speedKmh ? `${speedKmh} km/h` : 'Pending'}</strong>
+                        </div>
+                        <div>
+                            <small>Flight time</small>
+                            <strong>{flightDurationMinutes ? `${flightDurationMinutes} min` : 'Pending'}</strong>
+                        </div>
+                    </div>
                 </div>
                 {tracking.assignedDrone?.name && (
                     <p className="drone-tracker__drone-name">{tracking.assignedDrone.name}</p>

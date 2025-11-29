@@ -2,9 +2,9 @@ import restaurantService from './Service.js'
 
 const addRestaurant = async (req, res, next) => {
     try {
-        const { name, address, phone, adminEmail, adminPassword } = req.body
+        const { name, address, phone, adminEmail, adminPassword, location } = req.body
         
-        const restaurant = await restaurantService.addRestaurant(name, address, phone, adminEmail, adminPassword)
+        const restaurant = await restaurantService.addRestaurant(name, address, phone, adminEmail, adminPassword, location)
         
         res.json({
             success: true,
@@ -18,7 +18,7 @@ const addRestaurant = async (req, res, next) => {
 
 const editRestaurant = async (req, res, next) => {
     try {
-        const { id, name, address, phone } = req.body
+        const { id, name, address, phone, location } = req.body
         const user = req.user
         
         // If admin, verify they're editing their own restaurant
@@ -37,7 +37,7 @@ const editRestaurant = async (req, res, next) => {
             }
         }
         
-        const restaurant = await restaurantService.editRestaurant(id, name, address, phone)
+        const restaurant = await restaurantService.editRestaurant(id, name, address, phone, location)
         
         if (!restaurant) {
             return res.json({

@@ -45,13 +45,13 @@
     width: 50px;
 }
 
-.delete-btn {
+.delete-btn-food {
     color: #ff4d4d;
     font-size: 16px;
     transition: transform 0.2s;
 }
 
-.delete-btn:hover {
+.delete-btn-food:hover {
     transform: scale(1.2);
     cursor: pointer;
 }

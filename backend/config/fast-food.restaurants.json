@@ -2,12 +2,12 @@
     {
         "_id": "64a1bcde9012345678900001",
         "name": "Fast Food A",
-        "address": "123 Main St, Sydney",
-        "phone": "02-9876-5432",
+        "address": "273 An Dương Vương, Phường 2, Quận 5, Thành phố Hồ Chí Minh, Việt Nam",
+        "phone": "+84 28 0000 0001",
         "location": {
-            "lat": -33.8688,
-            "lng": 151.2093,
-            "label": "Sydney CBD"
+            "lat": 10.760105355966674,
+            "lng":  106.68227619808634,
+            "label": "Cơ sở A - An Dương Vương"
         },
         "permissions": {
             "food": {
@@ -34,12 +34,12 @@
     {
         "_id": "64a1bcde9012345678900002",
         "name": "Fast Food B",
-        "address": "456 Queen St, Melbourne",
-        "phone": "03-8765-4321",
+        "address": "105 Bà Huyện Thanh Quan, Phường 7, Quận 3, Thành phố Hồ Chí Minh, Việt Nam",
+        "phone": "+84 28 0000 0002",
         "location": {
-            "lat": -37.8136,
-            "lng": 144.9631,
-            "label": "Melbourne CBD"
+            "lat": 10.779347137941857,
+            "lng": 106.68422706162944,
+            "label": "Cơ sở B - Bà Huyện Thanh Quan"
         },
         "permissions": {
             "food": {
@@ -66,12 +66,12 @@
     {
         "_id": "64a1bcde9012345678900003",
         "name": "Fast Food C",
-        "address": "789 King St, Brisbane",
-        "phone": "07-7654-3210",
+        "address": "4 Tôn Đức Thắng, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh, Việt Nam",
+        "phone": "+84 28 0000 0003",
         "location": {
-            "lat": -27.4698,
-            "lng": 153.0251,
-            "label": "Brisbane CBD"
+            "lat": 10.78327936783656,
+            "lng": 106.70622722103266,
+            "label": "Cơ sở C - Tôn Đức Thắng"
         },
         "permissions": {
             "food": {

@@ -2,6 +2,16 @@ import mongoose from 'mongoose';
 import foodModel from '../../models/foodModel.js';
 import { createMockFood } from '../helpers.js';
 
+const buildFoodData = (overrides = {}) => ({
+  name: 'Test Food',
+  description: 'Test Description',
+  price: 10.99,
+  image: 'test.jpg',
+  category: 'Salad',
+  res_id: new mongoose.Types.ObjectId(),
+  ...overrides,
+});
+
 describe('Food Model', () => {
   describe('Schema Validation', () => {
     it('should create a valid food with all required fields', () => {
@@ -18,13 +28,7 @@ describe('Food Model', () => {
     });
 
     it('should have default values for optional fields', () => {
-      const food = new foodModel({
-        name: 'Test Food',
-        description: 'Test Description',
-        price: 10.99,
-        image: 'test.jpg',
-        category: 'Salad',
-      });
+      const food = new foodModel(buildFoodData());
 
       expect(food.isAvailable).toBe(true);
       expect(food.stock).toBe(0);
@@ -33,12 +37,7 @@ describe('Food Model', () => {
     });
 
     it('should fail validation when name is missing', () => {
-      const food = new foodModel({
-        description: 'Test Description',
-        price: 10.99,
-        image: 'test.jpg',
-        category: 'Salad',
-      });
+      const food = new foodModel({ ...buildFoodData(), name: undefined });
 
       const validationError = food.validateSync();
       expect(validationError).toBeDefined();
@@ -47,12 +46,7 @@ describe('Food Model', () => {
     });
 
     it('should fail validation when description is missing', () => {
-      const food = new foodModel({
-        name: 'Test Food',
-        price: 10.99,
-        image: 'test.jpg',
-        category: 'Salad',
-      });
+      const food = new foodModel({ ...buildFoodData(), description: undefined });
 
       const validationError = food.validateSync();
       expect(validationError).toBeDefined();
@@ -60,12 +54,7 @@ describe('Food Model', () => {
     });
 
     it('should fail validation when price is missing', () => {
-      const food = new foodModel({
-        name: 'Test Food',
-        description: 'Test Description',
-        image: 'test.jpg',
-        category: 'Salad',
-      });
+      const food = new foodModel({ ...buildFoodData(), price: undefined });
 
       const validationError = food.validateSync();
       expect(validationError).toBeDefined();
@@ -73,12 +62,7 @@ describe('Food Model', () => {
     });
 
     it('should fail validation when image is missing', () => {
-      const food = new foodModel({
-        name: 'Test Food',
-        description: 'Test Description',
-        price: 10.99,
-        category: 'Salad',
-      });
+      const food = new foodModel({ ...buildFoodData(), image: undefined });
 
       const validationError = food.validateSync();
       expect(validationError).toBeDefined();
@@ -86,12 +70,7 @@ describe('Food Model', () => {
     });
 
     it('should fail validation when category is missing', () => {
-      const food = new foodModel({
-        name: 'Test Food',
-        description: 'Test Description',
-        price: 10.99,
-        image: 'test.jpg',
-      });
+      const food = new foodModel({ ...buildFoodData(), category: undefined });
 
       const validationError = food.validateSync();
       expect(validationError).toBeDefined();
@@ -99,27 +78,13 @@ describe('Food Model', () => {
     });
 
     it('should allow custom stock value', () => {
-      const food = new foodModel({
-        name: 'Test Food',
-        description: 'Test Description',
-        price: 10.99,
-        image: 'test.jpg',
-        category: 'Salad',
-        stock: 50,
-      });
+      const food = new foodModel(buildFoodData({ stock: 50 }));
 
       expect(food.stock).toBe(50);
     });
 
     it('should allow isAvailable to be set to false', () => {
-      const food = new foodModel({
-        name: 'Test Food',
-        description: 'Test Description',
-        price: 10.99,
-        image: 'test.jpg',
-        category: 'Salad',
-        isAvailable: false,
-      });
+      const food = new foodModel(buildFoodData({ isAvailable: false }));
 
       expect(food.isAvailable).toBe(false);
     });

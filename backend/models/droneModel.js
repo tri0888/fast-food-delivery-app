@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const DRONE_STATUSES = ['idle', 'preparing', 'flying', 'delivered', 'returning']
+const DRONE_STATUSES = ['idle', 'flying', 'returning']
 
 const drone = new mongoose.Schema({name             : {type     : String,
                                                        required : [true, 'Drone must include a name']},

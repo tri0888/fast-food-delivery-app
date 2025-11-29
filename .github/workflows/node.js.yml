@@ -5,6 +5,13 @@ on:
     branches: [ "CI/CD" ]
   pull_request:
     branches: [ "CI/CD" ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to CI/CD manually'
+        default: 'CI/CD'
+        required: true
+        type: string
 
 jobs:
   # --- 1. TEST & BUILD CODE (GỘP 3 JOB THÀNH 1) ---
@@ -20,6 +27,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && format('refs/heads/{0}', github.event.inputs.branch) || github.ref }}
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -53,6 +62,8 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && format('refs/heads/{0}', github.event.inputs.branch) || github.ref }}
       - uses: docker/setup-buildx-action@v3
       
       - name: Login to Docker Hub
@@ -76,9 +87,11 @@ jobs:
     needs: build-push-docker-image
     runs-on: self-hosted
     # CHỈ CHẠY KHI PUSH VÀO BRANCH CI/CD (không chạy khi PR)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/CI/CD'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/CI/CD') || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4 
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && format('refs/heads/{0}', github.event.inputs.branch) || github.ref }}
 
       - name: Deploy Application
         env:

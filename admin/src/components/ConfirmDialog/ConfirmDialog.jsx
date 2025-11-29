@@ -8,7 +8,9 @@ const ConfirmDialog = ({
   onConfirm, 
   onCancel,
   confirmText = "Xóa",
-  cancelText = "Hủy"
+  cancelText = "Hủy",
+  children,
+  disableConfirm = false
 }) => {
   if (!isOpen) return null;
 
@@ -20,12 +22,13 @@ const ConfirmDialog = ({
         </div>
         <div className="confirm-dialog-body">
           <p>{message}</p>
+          {children}
         </div>
         <div className="confirm-dialog-footer">
           <button className="confirm-btn-cancel" onClick={onCancel}>
             {cancelText}
           </button>
-          <button className="confirm-btn-delete" onClick={onConfirm}>
+          <button className="confirm-btn-delete" onClick={onConfirm} disabled={disableConfirm}>
             {confirmText}
           </button>
         </div>

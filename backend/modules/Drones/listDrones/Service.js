@@ -2,13 +2,12 @@ import droneRepository from '../repository.js'
 
 const DRONE_STATUS_LABELS = {
     idle: 'Idle',
-    preparing: 'Preparing',
     flying: 'Flying',
     delivered: 'Delivered',
     returning: 'Returning'
 }
 
-const DRONE_CUSTOMER_STEPS = ['awaiting-drone', 'preparing', 'flying', 'delivered']
+const DRONE_CUSTOMER_STEPS = ['awaiting-drone', 'flying', 'delivered']
 
 const computeCustomerProgress = (status) => {
     const index = DRONE_CUSTOMER_STEPS.indexOf(status)

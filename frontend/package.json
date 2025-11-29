@@ -14,6 +14,7 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.7",
     "axios": "^1.7.2",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",

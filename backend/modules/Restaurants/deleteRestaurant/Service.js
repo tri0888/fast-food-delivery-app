@@ -14,6 +14,11 @@ class DeleteRestaurantService {
                 throw new AppError('Restaurant not found', 404)
             }
 
+            const orderCount = await deleteRestaurantRepository.countOrdersByRestaurant(restaurantId)
+            if (orderCount > 0) {
+                throw new AppError(`Cannot delete this restaurant because ${orderCount} order(s) are still linked to it.`, 400)
+            }
+
             const [foodDocs, droneDocs] = await Promise.all([
                 deleteRestaurantRepository.getFoodIdsByRestaurant(restaurantId),
                 deleteRestaurantRepository.getDronesByRestaurant(restaurantId)
@@ -23,8 +28,7 @@ class DeleteRestaurantService {
                 await Promise.all(droneDocs.map((drone) => releaseDroneToIdle(drone._id.toString())))
             }
 
-            const [ordersResult, foodsResult, usersResult] = await Promise.all([
-                deleteRestaurantRepository.deleteOrdersByRestaurant(restaurantId),
+            const [foodsResult, usersResult] = await Promise.all([
                 deleteRestaurantRepository.deleteFoodsByRestaurant(restaurantId),
                 deleteRestaurantRepository.deleteUsersByRestaurant(restaurantId)
             ])
@@ -42,7 +46,6 @@ class DeleteRestaurantService {
                 success: true,
                 restaurantId,
                 deleted: {
-                    orders: ordersResult?.deletedCount || 0,
                     foods: foodsResult?.deletedCount || 0,
                     drones: dronesResult?.deletedCount || 0,
                     users: usersResult?.deletedCount || 0

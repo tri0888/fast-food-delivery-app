@@ -7,7 +7,7 @@ export const deleteRestaurant = async (req, res, next) => {
 
         res.json({
             success: true,
-            message: 'Restaurant and related data deleted successfully',
+            message: 'Restaurant deleted successfully',
             data: result
         })
     } catch (error) {

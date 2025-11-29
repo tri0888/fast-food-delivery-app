@@ -7,7 +7,6 @@ import './DroneTracker.css'
 // ----- Setup helpers -----
 const ADMIN_STEPS = [
   { value: 'awaiting-drone', label: 'Awaiting drone', description: 'Waiting for available drone' },
-  { value: 'preparing', label: 'Preparing', description: 'Drone is loading at the restaurant' },
   { value: 'flying', label: 'Flying to customer', description: 'Package en route to customer' },
   { value: 'delivered', label: 'Package delivered', description: 'Customer drop-off complete' },
   { value: 'returning', label: 'Returning to base', description: 'Heading back to restaurant' }

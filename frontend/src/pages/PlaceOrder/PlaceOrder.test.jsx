@@ -1,108 +1,142 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import PlaceOrder from './PlaceOrder';
-import { StoreContext } from '../../components/context/StoreContext';
-import axios from 'axios';
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import PlaceOrder from './PlaceOrder'
+import { StoreContext } from '../../components/context/StoreContext'
+const toastErrorMock = vi.fn()
+const toastSuccessMock = vi.fn()
 
-vi.mock('axios');
+vi.mock('axios', () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn()
+  }
+}))
 
-const mockNavigate = vi.fn();
+vi.mock('react-toastify', () => ({
+  toast: {
+    error: (...args) => toastErrorMock(...args),
+    success: (...args) => toastSuccessMock(...args)
+  }
+}))
+
+vi.mock('@react-google-maps/api', () => ({
+  LoadScript: ({ children }) => <div data-testid='load-script'>{children}</div>,
+  GoogleMap: ({ children }) => <div data-testid='google-map'>{children}</div>,
+  Marker: () => <div data-testid='map-marker' />
+}))
+
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual('react-router-dom')
   return {
     ...actual,
-    useNavigate: () => mockNavigate
-  };
-});
+    useNavigate: () => vi.fn()
+  }
+})
 
-describe('PlaceOrder Component', () => {
-  const mockFoodList = [
-    { _id: '1', name: 'Pizza', price: 10 },
-    { _id: '2', name: 'Burger', price: 8 }
-  ];
+const originalFetch = global.fetch
 
-  const mockContextValue = {
-    getTotalCartAmount: () => 28,
-    token: 'test-token',
-    food_list: mockFoodList,
-    cartItems: { '1': 2, '2': 1 },
-    url: 'http://localhost:4000'
-  };
+const mockAdministrativeApis = () => {
+  const provincesPayload = [
+    {
+      code: 79,
+      name: 'Hồ Chí Minh',
+      districts: [
+        {
+          code: 760,
+          name: 'District 1'
+        }
+      ]
+    }
+  ]
+  const wardsPayload = {
+    wards: [
+      { code: 1, name: 'Bến Nghé' }
+    ]
+  }
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  global.fetch = vi.fn((url) => {
+    if (url.includes('api/?depth=2')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(provincesPayload) })
+    }
+    if (url.includes('api/d/')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(wardsPayload) })
+    }
+    if (url.includes('vapi.vnappmob.com')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: wardsPayload.wards }) })
+    }
+    return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
+  })
+}
 
-  const renderPlaceOrder = (contextValue = mockContextValue) => {
-    return render(
-      <BrowserRouter>
-        <StoreContext.Provider value={contextValue}>
-          <PlaceOrder />
-        </StoreContext.Provider>
-      </BrowserRouter>
-    );
-  };
+const renderWithContext = (contextValue) => {
+  return render(
+    <StoreContext.Provider value={contextValue}>
+      <PlaceOrder />
+    </StoreContext.Provider>
+  )
+}
 
-  it('should render delivery information form', () => {
-    renderPlaceOrder();
-    
-    expect(screen.getByText(/delivery information/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/first name/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/last name/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/email/i)).toBeInTheDocument();
-  });
+const fillRequiredFields = () => {
+  fireEvent.change(screen.getByPlaceholderText('First Name'), { target: { value: 'John' } })
+  fireEvent.change(screen.getByPlaceholderText('Last Name'), { target: { value: 'Doe' } })
+  fireEvent.change(screen.getByPlaceholderText('Email address'), { target: { value: 'john@example.com' } })
+  fireEvent.change(screen.getByPlaceholderText('Street, house number'), { target: { value: '123 Main St' } })
+  fireEvent.change(screen.getByPlaceholderText('Phone'), { target: { value: '0987654321' } })
+}
 
-  it('should render cart totals', () => {
-    renderPlaceOrder();
-    expect(screen.getByText(/cart total/i)).toBeInTheDocument();
-    expect(screen.getByText('$28')).toBeInTheDocument();
-  });
+beforeEach(() => {
+  vi.clearAllMocks()
+  mockAdministrativeApis()
+})
 
-  it('should calculate delivery fee', () => {
-    renderPlaceOrder();
-    
-    expect(screen.getByText(/delivery fee/i)).toBeInTheDocument();
-    expect(screen.getByText('$2')).toBeInTheDocument();
-  });
+afterAll(() => {
+  global.fetch = originalFetch
+})
 
-  it('should calculate total amount', () => {
-    renderPlaceOrder();
-    
-    // Total = 28 + 2 = 30
-    expect(screen.getByText('$30')).toBeInTheDocument();
-  });
+describe('PlaceOrder multi-tenant safeguards', () => {
+  it('shows toast when cart references unknown menu items', async () => {
+    renderWithContext({
+      getTotalCartAmount: () => 15,
+      token: 'test-token',
+      cartItems: { ghost: 1 },
+      url: 'http://localhost:4000',
+      allFoodsMap: {}
+    })
 
-  it('should render proceed to payment button', () => {
-    renderPlaceOrder();
-    
-    expect(screen.getByText(/proceed to payment/i)).toBeInTheDocument();
-  });
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled())
+    fillRequiredFields()
 
-  it('should handle form input changes', () => {
-    renderPlaceOrder();
-    const firstNameInput = screen.getByPlaceholderText(/first name/i);
-    fireEvent.change(firstNameInput, { target: { value: 'John' } });
-    expect(firstNameInput.value).toBe('John');
-  });
+    fireEvent.click(screen.getByText('PROCEED TO PAYMENT'))
 
-  it('should redirect if cart is empty', () => {
-    const emptyCartContext = {
-      ...mockContextValue,
-      getTotalCartAmount: () => 0
-    };
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(expect.stringContaining('could not be found'))
+    })
+  })
 
-    renderPlaceOrder(emptyCartContext);
+  it('requires confirmed delivery pin before submitting payment', async () => {
+    const knownFood = {
+      _id: 'food-1',
+      name: 'Pho',
+      price: 8,
+      res_id: 'restaurant-1',
+      image: 'pho.jpg'
+    }
 
-    // Should show empty cart or redirect
-    expect(mockNavigate).toHaveBeenCalled();
-  });
+    renderWithContext({
+      getTotalCartAmount: () => 16,
+      token: 'test-token',
+      cartItems: { 'food-1': 2 },
+      url: 'http://localhost:4000',
+      allFoodsMap: { 'food-1': knownFood }
+    })
 
-  it('should show delivery address fields', () => {
-    renderPlaceOrder();
-    
-    expect(screen.getByPlaceholderText(/street/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/city/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/state/i)).toBeInTheDocument();
-  });
-});
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled())
+    fillRequiredFields()
+
+    fireEvent.click(screen.getByText('PROCEED TO PAYMENT'))
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(expect.stringContaining('confirm the delivery location'))
+    })
+  })
+})

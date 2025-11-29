@@ -117,6 +117,12 @@ Browse the menu, add items to the cart, and place an order.
 Pay using dummy visa card
 Use the admin panel to manage orders, menu items.
 
+## Maps Configuration & Cost Control
+- Customer checkout uses Google Maps only after the shopper confirms the written address, so the script loads and geocoding requests fire on-demand instead of on every visit.
+- To keep credentials outside the backend, edit `frontend/src/pages/PlaceOrder/PlaceOrder.jsx` and replace `EMBEDDED_GOOGLE_MAPS_KEY` with a browser-restricted API key (URL restricted + geocoding/maps JavaScript enabled). Add a daily quota limit in the Google Cloud console to cap spend.
+- The admin drone tracker relies on the open-source Leaflet + OpenStreetMap tiles, so monitoring flights does not consume Google Maps quotas. Only the checkout view uses Google Maps where precision is required.
+- If you need further savings, disable unnecessary Google APIs (e.g., Places) and rely on the manual marker confirmation already built into the checkout map.
+
 ## Screenshots
 ![1](https://github.com/DulanjaliSenarathna/mern-food-delivery-app/assets/59603716/b3d604f0-ae0e-4e29-9b95-51f6327c3952)
 ![2](https://github.com/DulanjaliSenarathna/mern-food-delivery-app/assets/59603716/0cb56d94-a715-48bd-9a7d-05c876a05b2c)

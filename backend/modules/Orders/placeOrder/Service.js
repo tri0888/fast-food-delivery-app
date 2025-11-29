@@ -2,12 +2,32 @@ import crypto from 'crypto'
 import orderRepository from './Repository.js'
 import AppError from '../../../utils/appError.js'
 import stripeAdapter from '../../Payment/stripeAdapter.js'
-import { attachDroneToOrder } from '../droneTracking/droneTrackingService.js'
 
 const DELIVERY_FEE = 2
+const hasValidCoordinates = (location) => (
+    typeof location?.lat === 'number' &&
+    typeof location?.lng === 'number' &&
+    isFinite(location.lat) &&
+    isFinite(location.lng)
+)
 const checkoutLocks = new Map()
 const checkoutResultCache = new Map()
 const CHECKOUT_CACHE_TTL_MS = Number(process.env.CHECKOUT_CACHE_TTL_MS || 5000)
+const buildAwaitingHistoryEntry = () => ({ status: 'awaiting-drone', at: new Date() })
+const buildAddressLabel = (address = {}) => [
+    address.street,
+    address.city,
+    address.state,
+    address.country,
+    address.zipcode
+].filter(Boolean).join(', ')
+const buildTrackingSeed = (customerLocation) => ({
+    status: 'awaiting-drone',
+    adminStatus: 'awaiting-drone',
+    awaitingSince: new Date(),
+    customerLocation,
+    history: [buildAwaitingHistoryEntry()]
+})
 
 const rememberCheckoutResult = (key, value) => {
     checkoutResultCache.set(key, { value, expiresAt: Date.now() + CHECKOUT_CACHE_TTL_MS })
@@ -64,6 +84,24 @@ class OrderService {
         if (!address) {
             throw new AppError('Please provide delivery information', 400)
         }
+
+        const submittedLocation = address.location
+        if (!hasValidCoordinates(submittedLocation)) {
+            throw new AppError('Please drop the delivery pin on the map before checkout', 422)
+        }
+        if (!submittedLocation.confirmed) {
+            throw new AppError('Please confirm the delivery location on the map', 422)
+        }
+
+        const normalizedLocation = {
+            lat: Number(submittedLocation.lat),
+            lng: Number(submittedLocation.lng),
+            label: submittedLocation.label || buildAddressLabel(address) || 'Customer drop-off',
+            confirmed: true,
+            confirmedAt: submittedLocation.confirmedAt ? new Date(submittedLocation.confirmedAt) : new Date()
+        }
+
+        const normalizedAddress = { ...address, location: normalizedLocation }
 
         if (!Array.isArray(items) || items.length === 0) {
             throw new AppError('Order must contain at least one item', 400)
@@ -162,10 +200,11 @@ class OrderService {
             userId,
             res_id: group.restaurantId,
             amount: group.amount,
-            address,
+            address: normalizedAddress,
             food_items: group.items,
             status: 'Pending Confirmation',
-            paymentStatus: 'pending'
+            paymentStatus: 'pending',
+            droneTracking: buildTrackingSeed(normalizedLocation)
         }))
 
         const checkoutId = `chk_${crypto.randomBytes(8).toString('hex')}`
@@ -176,8 +215,6 @@ class OrderService {
             const orderIds = createdOrders.map((order) => order._id.toString())
             const orderIdsValue = orderIds.join(',')
             const encodedOrderIds = encodeURIComponent(orderIdsValue)
-
-            await Promise.all(createdOrders.map((order) => attachDroneToOrder(order)))
 
             const { url: sessionUrl, sessionId, paymentIntentId } = await stripeAdapter.createCheckoutSession({
                 referenceId: checkoutId,

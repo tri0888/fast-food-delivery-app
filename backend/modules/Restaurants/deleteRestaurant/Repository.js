@@ -23,8 +23,9 @@ class DeleteRestaurantRepository {
         return foodModel.deleteMany({ res_id: restaurantId }, { session })
     }
 
-    deleteOrdersByRestaurant(restaurantId, session) {
-        return orderModel.deleteMany({ res_id: restaurantId }, { session })
+    countOrdersByRestaurant(restaurantId, session) {
+        const query = orderModel.countDocuments({ res_id: restaurantId })
+        return session ? query.session(session) : query
     }
 
     deleteUsersByRestaurant(restaurantId, session) {

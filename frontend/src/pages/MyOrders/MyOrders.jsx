@@ -23,9 +23,9 @@ const PAYMENT_LABELS = {
 
 const DRONE_STATUS_LABELS = {
     'awaiting-drone': 'Awaiting drone',
-    'preparing': 'Preparing',
     'flying': 'Flying',
     'delivered': 'Delivered',
+    'returning': 'Returning',
     'cancelled': 'Cancelled'
 }
 

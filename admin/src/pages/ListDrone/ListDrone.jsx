@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './ListDrone.css'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -7,18 +7,14 @@ import DroneTracker from '../../components/DroneTracker/DroneTracker'
 
 const DRONE_STATUS_LABELS = {
   idle: 'Idle',
-  preparing: 'Preparing',
   flying: 'Flying',
   delivered: 'Delivered',
   returning: 'Returning',
   cancelled: 'Cancelled'
 }
 
-const DRONE_STEPS = ['awaiting-drone', 'preparing', 'flying', 'delivered']
-
 const CUSTOMER_STATUS_LABELS = {
   'awaiting-drone': 'Awaiting drone',
-  preparing: 'Preparing',
   flying: 'Flying',
   delivered: 'Delivered',
   cancelled: 'Cancelled'
@@ -51,25 +47,14 @@ const formatCoords = (location = {}) => {
   return `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`
 }
 
-const computeProgress = (status = 'awaiting-drone') => {
-  const index = DRONE_STEPS.indexOf(status)
-  if (index === -1) return 0
-  const span = Math.max(1, DRONE_STEPS.length - 1)
-  return Math.round((index / span) * 100)
-}
-
 const ListDrone = ({ url }) => {
   const [drones, setDrones] = useState([])
   const [selectedDroneId, setSelectedDroneId] = useState(null)
+  const [userHasInteracted, setUserHasInteracted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const navigate = useNavigate()
   const role = sessionStorage.getItem('role')
-
-  const selectedDrone = useMemo(() => {
-    if (!selectedDroneId) return null
-    return drones.find((drone) => drone._id === selectedDroneId) || null
-  }, [drones, selectedDroneId])
 
   const fetchDrones = async () => {
     setLoading(true)
@@ -79,9 +64,6 @@ const ListDrone = ({ url }) => {
       if (response.data.success) {
         setDrones(response.data.data || [])
         setLastUpdated(new Date().toISOString())
-        if (!selectedDroneId && response.data.data?.length) {
-          setSelectedDroneId(response.data.data[0]._id)
-        }
       } else {
         toast.error(response.data.message || 'Failed to fetch drones')
       }
@@ -98,21 +80,30 @@ const ListDrone = ({ url }) => {
   }, [])
 
   useEffect(() => {
-    if (!selectedDroneId && drones.length) {
-      setSelectedDroneId(drones[0]._id)
+    if (!drones.length) {
+      if (selectedDroneId !== null) {
+        setSelectedDroneId(null)
+      }
       return
     }
 
-    if (selectedDroneId && drones.length) {
+    if (selectedDroneId) {
       const stillExists = drones.some((drone) => drone._id === selectedDroneId)
       if (!stillExists) {
-        setSelectedDroneId(drones[0]._id)
+        setSelectedDroneId(userHasInteracted ? null : drones[0]._id)
       }
+      return
     }
-  }, [drones, selectedDroneId])
 
-  const tracking = selectedDrone?.currentOrder?.droneTracking
-  const customerProgress = computeProgress(tracking?.status)
+    if (!userHasInteracted) {
+      setSelectedDroneId(drones[0]._id)
+    }
+  }, [drones, selectedDroneId, userHasInteracted])
+
+  const handleToggle = (id) => {
+    setUserHasInteracted(true)
+    setSelectedDroneId((prev) => (prev === id ? null : id))
+  }
 
   return (
     <div className='drone-monitor'>
@@ -135,125 +126,111 @@ const ListDrone = ({ url }) => {
       </div>
 
       <div className='drone-monitor__body'>
-        <div className='drone-table'>
-          <div className='drone-table__head'>
-            <span>Drone</span>
-            <span>Status</span>
-            <span>Current Order</span>
-            <span>Updated</span>
-            <span>Return ETA</span>
-          </div>
-          <div className='drone-table__list'>
-            {drones.length === 0 && !loading && (
-              <div className='drone-table__empty'>No drones found.</div>
-            )}
-            {drones.map((drone) => (
-              <button
-                type='button'
-                key={drone._id}
-                className={`drone-row ${selectedDroneId === drone._id ? 'drone-row--active' : ''}`}
-                onClick={() => setSelectedDroneId(drone._id)}
-              >
-                <div>
-                  <p className='drone-row__name'>{drone.name}</p>
-                  <small>{drone.res_id?.name || 'No restaurant'}</small>
-                </div>
-                <span className={`chip chip--${drone.status}`}>
-                  {DRONE_STATUS_LABELS[drone.status] || drone.status}
-                </span>
-                <div>
-                  <p>{formatOrderId(drone.activeOrderId)}</p>
-                  <small>
-                    {typeof drone.customerProgress === 'number' && !Number.isNaN(drone.customerProgress)
-                      ? `${drone.customerProgress}% progress`
-                      : drone.statusLabel || 'Idle'}
-                  </small>
-                </div>
-                <div>
-                  <p>{formatRelativeTime(drone.lastStatusChange)}</p>
-                  <small>Status age</small>
-                </div>
-                <div>
-                  <p>{drone.returnETA ? new Date(drone.returnETA).toLocaleTimeString() : '--'}</p>
-                  <small>Return ETA</small>
-                </div>
-              </button>
-            ))}
-          </div>
+        <div className='drone-summary__head'>
+          <span>Drone</span>
+          <span>Status</span>
+          <span>Current Order</span>
+          <span>Updated</span>
+          <span>Return ETA</span>
         </div>
+        <div className='drone-accordion'>
+          {drones.length === 0 && !loading && <div className='drone-table__empty'>No drones found.</div>}
+          {drones.map((drone) => {
+            const isExpanded = selectedDroneId === drone._id
+            const tracking = drone.currentOrder?.droneTracking
+            return (
+              <div key={drone._id} className={`drone-card ${isExpanded ? 'drone-card--open' : ''}`}>
+                <button type='button' className='drone-card__header' onClick={() => handleToggle(drone._id)}>
+                  <div className='drone-card__summary'>
+                    <div>
+                      <p className='drone-row__name'>{drone.name}</p>
+                      <small>{drone.res_id?.name || 'No restaurant'}</small>
+                    </div>
+                    <span className={`chip chip--${drone.status}`}>
+                      {DRONE_STATUS_LABELS[drone.status] || drone.status}
+                    </span>
+                    <div>
+                      <p>{formatOrderId(drone.activeOrderId)}</p>
+                      <small>
+                        {typeof drone.customerProgress === 'number' && !Number.isNaN(drone.customerProgress)
+                          ? `${drone.customerProgress}% progress`
+                          : drone.statusLabel || 'Idle'}
+                      </small>
+                    </div>
+                    <div>
+                      <p>{formatRelativeTime(drone.lastStatusChange)}</p>
+                      <small>Status age</small>
+                    </div>
+                    <div>
+                      <p>{drone.returnETA ? new Date(drone.returnETA).toLocaleTimeString() : '--'}</p>
+                      <small>Return ETA</small>
+                    </div>
+                  </div>
+                  <span className={`drone-card__chevron ${isExpanded ? 'drone-card__chevron--open' : ''}`} aria-hidden='true'>▾</span>
+                </button>
 
-        <div className='drone-detail-card'>
-          {selectedDrone ? (
-            <>
-              <div className='drone-detail-card__header'>
-                <div>
-                  <h4>{selectedDrone.name}</h4>
-                  <p>{selectedDrone.res_id?.name || 'Unassigned restaurant'}</p>
-                </div>
-                <span className={`chip chip--${selectedDrone.status}`}>
-                  {DRONE_STATUS_LABELS[selectedDrone.status] || selectedDrone.status}
-                </span>
+                {isExpanded && (
+                  <div className='drone-card__body'>
+                    {drone.currentOrder && tracking ? (
+                      <>
+                        <div className='drone-card__grid'>
+                          <div>
+                            <small>Order</small>
+                            <p>{formatOrderId(drone.currentOrder._id)}</p>
+                          </div>
+                          <div>
+                            <small>Customer status</small>
+                            <p>{CUSTOMER_STATUS_LABELS[tracking.status] || tracking.status || 'waiting'}</p>
+                          </div>
+                          <div>
+                            <small>Admin status</small>
+                            <p>{ADMIN_STATUS_LABELS[tracking.adminStatus] || tracking.adminStatus || 'waiting'}</p>
+                          </div>
+                          <div>
+                            <small>Amount</small>
+                            <p>${drone.currentOrder.amount?.toFixed(2) || '--'}</p>
+                          </div>
+                        </div>
+
+                        <DroneTracker tracking={tracking} droneStatus={drone.status} returnETA={drone.returnETA} />
+
+                        <div className='drone-card__locations'>
+                          <div>
+                            <small>Restaurant</small>
+                            <p>{tracking.restaurantLocation?.label || drone.res_id?.name || 'N/A'}</p>
+                            <span>{formatCoords(tracking.restaurantLocation)}</span>
+                          </div>
+                          <div>
+                            <small>Customer</small>
+                            <p>{tracking.customerLocation?.label || 'Delivery address'}</p>
+                            <span>{formatCoords(tracking.customerLocation)}</span>
+                          </div>
+                        </div>
+
+                        {tracking.history?.length ? (
+                          <div className='drone-card__history'>
+                            <small>Recent updates</small>
+                            <ul>
+                              {[...tracking.history].reverse().map((entry, index) => (
+                                <li key={`${entry.status}-${index}`}>
+                                  <strong>{entry.status}</strong>
+                                  <span>{new Date(entry.at).toLocaleTimeString()}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <p className='drone-detail__empty'>No tracking history yet.</p>
+                        )}
+                      </>
+                    ) : (
+                      <p className='drone-detail__empty'>This drone is currently idle.</p>
+                    )}
+                  </div>
+                )}
               </div>
-
-              {selectedDrone.currentOrder ? (
-                <>
-                  <div className='drone-detail__grid'>
-                    <div>
-                      <small>Order</small>
-                      <p>{formatOrderId(selectedDrone.currentOrder._id)}</p>
-                    </div>
-                    <div>
-                      <small>Customer status</small>
-                      <p>{CUSTOMER_STATUS_LABELS[tracking?.status] || tracking?.status || 'waiting'}</p>
-                    </div>
-                    <div>
-                      <small>Admin status</small>
-                      <p>{ADMIN_STATUS_LABELS[tracking?.adminStatus] || tracking?.adminStatus || 'waiting'}</p>
-                    </div>
-                    <div>
-                      <small>Amount</small>
-                      <p>${selectedDrone.currentOrder.amount?.toFixed(2) || '--'}</p>
-                    </div>
-                  </div>
-
-                  <DroneTracker tracking={tracking} droneStatus={selectedDrone.status} returnETA={selectedDrone.returnETA} />
-
-                  <div className='drone-detail__locations'>
-                    <div>
-                      <small>Restaurant</small>
-                      <p>{tracking?.restaurantLocation?.label || selectedDrone.res_id?.name || 'N/A'}</p>
-                      <span>{formatCoords(tracking?.restaurantLocation)}</span>
-                    </div>
-                    <div>
-                      <small>Customer</small>
-                      <p>{tracking?.customerLocation?.label || 'Delivery address'}</p>
-                      <span>{formatCoords(tracking?.customerLocation)}</span>
-                    </div>
-                  </div>
-
-                  {tracking?.history?.length ? (
-                    <div className='drone-detail__history'>
-                      <small>Recent updates</small>
-                      <ul>
-                        {[...tracking.history].reverse().map((entry, index) => (
-                          <li key={`${entry.status}-${index}`}>
-                            <strong>{entry.status}</strong>
-                            <span>{new Date(entry.at).toLocaleTimeString()}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <p className='drone-detail__empty'>No tracking history yet.</p>
-                  )}
-                </>
-              ) : (
-                <p className='drone-detail__empty'>This drone is currently idle.</p>
-              )}
-            </>
-          ) : (
-            <p className='drone-detail__empty'>Select a drone to inspect its tracking data.</p>
-          )}
+            )
+          })}
         </div>
       </div>
     </div>

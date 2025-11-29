@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const ORDER_STATUSES         = ['Pending Confirmation', 'Confirmed', 'Out for delivery', 'Delivered', 'Cancelled']
 const PAYMENT_STATUSES       = ['pending', 'authorized', 'captured', 'failed']
-const DRONE_CUSTOMER_STATUS  = ['awaiting-drone', 'preparing', 'flying', 'delivered', 'cancelled']
+const DRONE_CUSTOMER_STATUS  = ['awaiting-drone', 'flying', 'delivered', 'cancelled']
 const DRONE_ADMIN_STATUSES   = [...DRONE_CUSTOMER_STATUS, 'idle', 'returning']
 const DEFAULT_FLIGHT_SECONDS = Number(process.env.DRONE_ANIMATION_SECONDS || 180)
 
@@ -19,9 +19,11 @@ const orderItemSchema = new mongoose.Schema({foodId   : {type     : mongoose.Sch
                                              image    : {type     : String }
                                         }, { _id: false })
 
-const coordinatesSchema = new mongoose.Schema({lat   : {type : Number, default : null},
-                                               lng   : {type : Number, default : null},
-                                               label : {type : String, trim : true}}, {_id: false})
+const coordinatesSchema = new mongoose.Schema({lat        : {type : Number, default : null},
+                                               lng        : {type : Number, default : null},
+                                               label      : {type : String, trim : true},
+                                               confirmed  : {type : Boolean, default : false},
+                                               confirmedAt: {type : Date, default : null}}, {_id: false})
 
 const droneHistorySchema = new mongoose.Schema({status : {type : String},
                                                 at     : {type : Date, default : Date.now}}, {_id: false})
@@ -40,6 +42,8 @@ const droneTrackingSchema = new mongoose.Schema({assignedDrone        : {type   
                                                  customerLocation     : {type : coordinatesSchema, default : undefined},
                                                  animationDurationSec : {type : Number,
                                                                          default : DEFAULT_FLIGHT_SECONDS},
+                                                 flightDistanceKm     : {type : Number, default : null},
+                                                 speedKmh             : {type : Number, default : null},
                                                  returnDurationSec    : {type : Number,
                                                                          default : null},
                                                  lastUpdated          : {type : Date, default : () => new Date()},
