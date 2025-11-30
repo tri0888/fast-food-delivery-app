@@ -9,6 +9,11 @@ class FoodService {
             throw new AppError('Food not found', 400)
         }
 
+        const orderCount = await foodRepository.countOrdersWithFood(food._id)
+        if (orderCount > 0) {
+            throw new AppError('Cannot delete this food because existing orders contain it.', 400)
+        }
+
         fs.unlink(`uploads/${food.image}`,()=>{})
 
         await foodRepository.deleteById(id)

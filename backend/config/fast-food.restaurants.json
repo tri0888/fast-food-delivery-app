@@ -1,0 +1,98 @@
+[
+    {
+        "_id": "64a1bcde9012345678900001",
+        "name": "Fast Food A",
+        "address": "273 An Dương Vương, Phường 2, Quận 5, Thành phố Hồ Chí Minh, Việt Nam",
+        "phone": "+84 28 0000 0001",
+        "location": {
+            "lat": 10.760105355966674,
+            "lng":  106.68227619808634,
+            "label": "Cơ sở A - An Dương Vương"
+        },
+        "permissions": {
+            "food": {
+                "add_food": true,
+                "edit_food": true,
+                "list_food": true,
+                "remove_food": true
+            },
+            "orders": {
+                "list": true,
+                "update_status": true
+            },
+            "users": {
+                "add_user": true,
+                "edit_user": true,
+                "get_all_users": true,
+                "toggle_cart_lock": true
+            },
+            "restaurant": {
+                "edit_restaurant": true
+            }
+        }
+    },
+    {
+        "_id": "64a1bcde9012345678900002",
+        "name": "Fast Food B",
+        "address": "105 Bà Huyện Thanh Quan, Phường 7, Quận 3, Thành phố Hồ Chí Minh, Việt Nam",
+        "phone": "+84 28 0000 0002",
+        "location": {
+            "lat": 10.779347137941857,
+            "lng": 106.68422706162944,
+            "label": "Cơ sở B - Bà Huyện Thanh Quan"
+        },
+        "permissions": {
+            "food": {
+                "add_food": true,
+                "edit_food": true,
+                "list_food": true,
+                "remove_food": true
+            },
+            "orders": {
+                "list": true,
+                "update_status": true
+            },
+            "users": {
+                "add_user": true,
+                "edit_user": true,
+                "get_all_users": true,
+                "toggle_cart_lock": true
+            },
+            "restaurant": {
+                "edit_restaurant": true
+            }
+        }
+    },
+    {
+        "_id": "64a1bcde9012345678900003",
+        "name": "Fast Food C",
+        "address": "4 Tôn Đức Thắng, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh, Việt Nam",
+        "phone": "+84 28 0000 0003",
+        "location": {
+            "lat": 10.78327936783656,
+            "lng": 106.70622722103266,
+            "label": "Cơ sở C - Tôn Đức Thắng"
+        },
+        "permissions": {
+            "food": {
+                "add_food": true,
+                "edit_food": true,
+                "list_food": true,
+                "remove_food": true
+            },
+            "orders": {
+                "list": true,
+                "update_status": true
+            },
+            "users": {
+                "add_user": true,
+                "edit_user": true,
+                "get_all_users": true,
+                "toggle_cart_lock": true
+            },
+            "restaurant": {
+                "edit_restaurant": true
+            }
+        }
+    }
+]

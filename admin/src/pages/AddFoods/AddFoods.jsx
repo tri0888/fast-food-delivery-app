@@ -4,6 +4,7 @@ import { assets } from '../../assets/assets'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog'
+import { useNavigate } from 'react-router-dom'
 
 const AddFoods = ({url}) => {
 
@@ -17,12 +18,17 @@ const AddFoods = ({url}) => {
     const [confirmDialog, setConfirmDialog] = useState({
         isOpen: false
     });
+    const navigate = useNavigate();
 
     const onChangeHandler = (event) =>{
         const name  = event.target.name;
         const value = event.target.value;
         
         setData(data => ({...data,[name]:value}))
+    }
+
+    const handleBack = () => {
+        navigate('/list-food')
     }
 
     const onSubmitHandler = async (event) =>{
@@ -39,20 +45,26 @@ const AddFoods = ({url}) => {
         formData.append('image', image)
         formData.append('stock', Number(data.stock))
         const token = sessionStorage.getItem("token");
-        const response = await axios.post(`${url}/api/food/add`, 
-                                          formData, 
-                                          {headers: { token }});
+        
+        try {
+            const response = await axios.post(`${url}/api/food/add`, 
+                                              formData, 
+                                              {headers: { token }});
 
-        if(response.data.success){
-            setData({name        : '',
-                     description : '',
-                     price       : '',
-                     category    : 'Salad',
-                     stock       : ''})
-            setImage(false);
-            toast.success(response.data.message)
-        }else{
-            toast.error(response.data.message)
+            if(response.data.success){
+                setData({name        : '',
+                         description : '',
+                         price       : '',
+                         category    : 'Salad',
+                         stock       : ''})
+                setImage(false);
+                toast.success(response.data.message)
+            }else{
+                toast.error(response.data.message)
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to add food';
+            toast.error(errorMessage);
         }
         
         setConfirmDialog({ isOpen: false });
@@ -105,7 +117,12 @@ const AddFoods = ({url}) => {
                     <input onChange={onChangeHandler} value={data.stock} type="number" name='stock' placeholder='0' min="0" required/>
                 </div>
             </div>
-            <button type='submit' className='add-btn'>ADD</button>
+            <div className='button-group'>
+                <button type='button' className='back-btn' onClick={handleBack}>
+                    🔙 Back
+                </button>
+                <button type='submit' className='add-btn'>ADD FOOD</button>
+            </div>
         </form>
 
         <ConfirmDialog

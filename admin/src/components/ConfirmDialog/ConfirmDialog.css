@@ -77,3 +77,9 @@
 .confirm-btn-delete:hover {
   background: #e63946;
 }
+
+.confirm-btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f87171;
+}

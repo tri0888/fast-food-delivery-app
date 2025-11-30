@@ -1,8 +1,8 @@
 import foodModel from '../../../models/foodModel.js'
 
 class FoodRepository {
-    async findAll() {
-        return await foodModel.find({})
+    async findAll(filter = {}) {
+        return await foodModel.find(filter)
     }
 }
 

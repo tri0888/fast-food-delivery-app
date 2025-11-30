@@ -4,7 +4,7 @@
   "email": "tri@gmail.com",
   "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO",
   "role": "user",
-  "isCartLock": false,
+  "cartLocks": {},
   "cartData": {}
 },
 {
@@ -13,15 +13,45 @@
   "email": "abc@gmail.com",
   "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO",
   "role": "user",
-  "isCartLock": false,
+  "cartLocks": {},
   "cartData": {}
 },
 {
   "_id": "68ceb619bc52975e535cd91d",
-  "name": "Admin",
-  "email": "admin@gmail.com",
+  "res_id": "64a1bcde9012345678900001",
+  "name": "Admin1",
+  "email": "admin1@gmail.com",
   "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO",
   "role": "admin",
-  "isCartLock": false,
+  "cartLocks": {},
+  "cartData": {}
+},
+{
+  "_id": "68ceb619bc52975e535cd91e",
+  "res_id": "64a1bcde9012345678900002",
+  "name": "Admin2",
+  "email": "admin2@gmail.com",
+  "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO",
+  "role": "admin",
+  "cartLocks": {},
+  "cartData": {}
+},
+{
+  "_id": "68ceb619bc52975e535cd91f",
+  "res_id": "64a1bcde9012345678900003",
+  "name": "Admin3",
+  "email": "admin3@gmail.com",
+  "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO",
+  "role": "admin",
+  "cartLocks": {},
+  "cartData": {}
+},
+{
+  "_id": "68ceb619bc52975e535cd920",
+  "name": "SuperAdmin",
+  "email": "superadmin@gmail.com",
+  "password": "$2b$10$YwHbbQRu1dpk2MWyJZswCOqBwQWCMpNbmB6vhokT0KVbrVnmqZHPO",
+  "role": "superadmin",
+  "cartLocks": {},
   "cartData": {}
 }]

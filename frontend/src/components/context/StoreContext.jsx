@@ -6,26 +6,32 @@ export const StoreContext = createContext(null)
 
 const StoreContextProvider = (props) => {
 
-    const [isCartLocked, setIsCartLocked] = useState(false);
+    const [lockedRestaurants, setLockedRestaurants] = useState({});
     const [cartItems, setCartItems]       = useState({});
-    const url                             = "http://localhost:4000";
+    const url = import.meta.env.VITE_API_URL || "http://localhost:4000";
     const [token,setToken]                = useState("");
+    const [userProfile, setUserProfile]   = useState(null);
 
     const [food_list, setFoodList] = useState([]);
+    const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+    const [catalog, setCatalog] = useState([]);
+    const [catalogMap, setCatalogMap] = useState({});
 
     const loadCartData = async (token) =>{        
-        const response = await axios.get(url+"/api/cart/get",                                        
+        const response = await axios.get(url+"/api/cart/get",
                                          {headers:{token}})
         setCartItems(response.data.cartData);
-        setIsCartLocked(response.data.isCartLocked || false);
+        setLockedRestaurants(response.data.lockedRestaurants || {});
     }
 
     const addToCart = async (itemId) => {
-        if (isCartLocked) return toast.error("Cart is locked by admin");
-        
         // Find the food item to check stock
-        const foodItem = food_list.find(item => item._id === itemId);
+        const foodItem = food_list.find(item => item._id === itemId) || catalogMap[itemId];
         if (!foodItem) return toast.error("Product not found");
+        
+        if (isRestaurantLocked(foodItem.res_id)) {
+            return toast.error("This restaurant has temporarily locked ordering");
+        }
         
         // Check if adding one more would exceed stock
         const currentQuantity = cartItems[itemId] || 0;
@@ -47,8 +53,6 @@ const StoreContextProvider = (props) => {
     }
 
     const removeFromCart = async (itemId, removeCompletely = false) => {
-        if (isCartLocked) return toast.error("Cart is locked by admin");
-        
         if (removeCompletely) {
             setCartItems((prev) => {
                 const newCart = { ...prev };
@@ -81,14 +85,14 @@ const StoreContextProvider = (props) => {
 
     const getTotalCartAmount = () => {
         let totalAmount = 0;
-        for (const item in cartItems) {
-            if (cartItems[item] > 0) {
-                let itemInfo = food_list.find((product) => product._id === item);
+        for (const itemId in cartItems) {
+            const quantity = cartItems[itemId];
+            if (quantity > 0) {
+                const itemInfo = catalogMap[itemId] || food_list.find((product) => product._id === itemId);
                 if (itemInfo) {
-                    totalAmount += itemInfo.price * cartItems[item];
+                    totalAmount += itemInfo.price * quantity;
                 }
             }
-
         }
 
         return totalAmount;
@@ -98,23 +102,75 @@ const StoreContextProvider = (props) => {
         try {
             const response = await axios.get(url+"/api/food/list");
             const data = response && response.data && response.data.data;
+            let foodData = [];
+            
             if (Array.isArray(data)) {
-                setFoodList(data);
+                foodData = data;
             } else if (data) {
-                // sometimes backend wraps data incorrectly
-                setFoodList(Array.isArray(data) ? data : [data]);
-            } else {
-                setFoodList([]);
+                foodData = [data];
             }
+
+            setCatalog(foodData);
+            const lookup = foodData.reduce((acc, item) => {
+                acc[item._id] = item;
+                return acc;
+            }, {});
+            setCatalogMap(lookup);
         } catch (err) {
             console.error('Failed to fetch food list', err);
+            setCatalog([]);
+            setCatalogMap({});
             setFoodList([]);
         }
     }    
 
+    const decodeBase64 = (value) => {
+        if (typeof window !== 'undefined' && typeof window.atob === 'function') {
+            return window.atob(value)
+        }
+        if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
+            return globalThis.atob(value)
+        }
+        if (typeof globalThis !== 'undefined' && typeof globalThis.Buffer === 'function') {
+            return globalThis.Buffer.from(value, 'base64').toString('binary')
+        }
+        return ''
+    }
+
+    const decodeTokenPayload = (jwtToken) => {
+        if (!jwtToken) {
+            return null
+        }
+
+        try {
+            const base64Url = jwtToken.split('.')[1]
+            if (!base64Url) {
+                return null
+            }
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+            const jsonPayload = decodeURIComponent(
+                decodeBase64(base64)
+                    .split('')
+                    .map((char) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            )
+            return JSON.parse(jsonPayload)
+        } catch (error) {
+            console.warn('Failed to decode token payload', error)
+            return null
+        }
+    }
+
     useEffect(()=>{
         async function loadData(){
+            // Load selected restaurant from localStorage
+            const savedRestaurant = localStorage.getItem('selectedRestaurant');
+            if (savedRestaurant) {
+                const restaurant = JSON.parse(savedRestaurant);
+                setSelectedRestaurant(restaurant);
+            }
             await fetchFoodList();
+            
             if(localStorage.getItem("token")){
                 setToken(localStorage.getItem("token"));
                 await loadCartData(localStorage.getItem("token"))
@@ -123,6 +179,45 @@ const StoreContextProvider = (props) => {
         loadData();
        
     },[])
+
+    useEffect(() => {
+        if (!token) {
+            setUserProfile(null)
+            return
+        }
+        const payload = decodeTokenPayload(token)
+        if (!payload) {
+            setUserProfile(null)
+            return
+        }
+        setUserProfile({
+            id: payload.id || payload._id || '',
+            name: payload.name || '',
+            role: payload.role || 'user',
+            restaurantId: payload.restaurantId || null
+        })
+    }, [token])
+
+    useEffect(() => {
+        if (catalog.length === 0) {
+            setFoodList([]);
+            return;
+        }
+
+        if (selectedRestaurant) {
+            const filtered = catalog.filter(food => String(food.res_id) === String(selectedRestaurant._id));
+            setFoodList(filtered);
+        } else {
+            setFoodList(catalog);
+        }
+    }, [selectedRestaurant, catalog])
+
+    const isRestaurantLocked = (restaurantId) => {
+        if (!restaurantId) {
+            return false;
+        }
+        return Boolean(lockedRestaurants[String(restaurantId)]);
+    }
 
     const contextValue = {food_list,
                           cartItems,
@@ -133,7 +228,12 @@ const StoreContextProvider = (props) => {
                           url,
                           token,
                           setToken,
-                          isCartLocked}
+                          lockedRestaurants,
+                          isRestaurantLocked,
+                          selectedRestaurant,
+                          setSelectedRestaurant,
+                          allFoodsMap: catalogMap,
+                          userProfile}
 
     return (
         <StoreContext.Provider value={contextValue}>

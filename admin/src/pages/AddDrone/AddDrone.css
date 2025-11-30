@@ -1,0 +1,63 @@
+.add-drone {
+    width: 70%;
+    margin-left: max(5vw, 25px);
+    margin-top: 40px;
+    color: #374151;
+}
+
+.add-drone form {
+    gap: 20px;
+}
+
+.add-drone-field {
+    width: max(40%, 320px);
+}
+
+.add-drone-field input,
+.add-drone-field select {
+    padding: 10px;
+    border: 1px solid #cbd5f5;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.add-drone-field p {
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.back-btn {
+    max-width: 140px;
+    border: 1px solid #d1d5db;
+    padding: 10px 20px;
+    background-color: #f9fafb;
+    color: #374151;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.back-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.add-btn {
+    max-width: 160px;
+    border: none;
+    padding: 10px 24px;
+    background-color: #10b981;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.add-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

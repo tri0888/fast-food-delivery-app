@@ -8,12 +8,16 @@ const userSchema = new mongoose.Schema({name       : {type     : String,
                                         password   : {type     : String,
                                                       required : [true, "An user must have a password"]},
                                         role       : {type: String,
-                                                      enum: ['user', 'admin'],
+                                                      enum: ['user', 'admin', 'superadmin'],
                                                       default: 'user'},
+                                        res_id     : {type: mongoose.Schema.ObjectId,
+                                                      ref: 'Restaurant'},
                                         cartData   : {type    : Object, 
                                                       default : {}},
-                                        isCartLock : {type    : Boolean, 
-                                                      default : false}},
+                                        cartLocks  : {type    : Map,
+                                                      of       : Boolean,
+                                                      default  : {}}
+                                        },
                                         {minimize  : false})
 
 const userModel = mongoose.model.user || mongoose.model("user", userSchema);

@@ -7,8 +7,11 @@ class OrderRepository {
     }
 
     async findOrdersByUserId(userId) {
-        return await orderModel.find({ userId })
+        return await orderModel
+            .find({ userId })
+            .populate('droneTracking.assignedDrone', 'name status res_id')
     }
+
 }
 
 export default new OrderRepository()

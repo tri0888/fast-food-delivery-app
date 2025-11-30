@@ -3,7 +3,9 @@ import foodService from './Service.js'
 
 const listFood = async (req, res, next) => {
     try {
-        const foods = await foodService.getAllFoods()        
+        // Pass restaurant filter from middleware
+        const filter = req.restaurantFilter || {};
+        const foods = await foodService.getAllFoods(filter)        
         res.json({success : true,
                   data    : foods})
 

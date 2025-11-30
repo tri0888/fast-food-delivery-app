@@ -6,6 +6,27 @@
     font-size: 16px;
 }
 
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.back-btn {
+    max-width: 120px;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    background-color: #f8f8f8;
+    color: #6c757d;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.back-btn:hover {
+    background-color: #e8e8e8;
+}
+
 .add form{
     gap: 20px;
 }
@@ -33,10 +54,16 @@
 }
 
 .add-btn{
-    max-width: 120px;
+    max-width: 150px;
     border: none;
-    padding: 10px;
-    background-color: black;
+    padding: 10px 20px;
+    background-color: #28a745;
     color: white;
     cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+.add-btn:hover {
+    background-color: #218838;
 }

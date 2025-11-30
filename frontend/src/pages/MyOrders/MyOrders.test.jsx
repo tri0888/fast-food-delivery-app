@@ -1,0 +1,150 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import MyOrders from './MyOrders';
+import { StoreContext } from '../../components/context/StoreContext';
+import axios from 'axios';
+
+vi.mock('axios');
+vi.mock('react-leaflet', () => ({
+  MapContainer: ({ children }) => <div data-testid="mock-map">{children}</div>,
+  TileLayer: () => null,
+  Marker: () => null,
+  Polyline: () => null
+}));
+vi.mock('leaflet', () => {
+  const divIcon = (config) => config;
+  return {
+    __esModule: true,
+    default: { divIcon },
+    divIcon
+  };
+});
+vi.mock('../../assets/assets.js', () => ({
+  assets: {
+    parcel_icon: 'parcel.png'
+  }
+}));
+
+describe('MyOrders Component', () => {
+  const mockToken = 'test-token';
+  const mockOrders = [
+    {
+      _id: '1',
+      food_items: [{ name: 'Pizza', quantity: 2 }],
+      amount: 30,
+      status: 'Food Processing'
+    },
+    {
+      _id: '2',
+      food_items: [{ name: 'Burger', quantity: 1 }],
+      amount: 15,
+      status: 'Delivered'
+    }
+  ];
+
+  const mockContextValue = {
+    url: 'http://localhost:4000',
+    token: mockToken
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    axios.post.mockResolvedValue({ data: { data: [] } });
+    axios.get.mockResolvedValue({ data: { data: [] } });
+  });
+
+  it('should render my orders heading', async () => {
+    render(
+      <StoreContext.Provider value={mockContextValue}>
+        <MyOrders />
+      </StoreContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/my orders/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should fetch orders on mount', async () => {
+    render(
+      <StoreContext.Provider value={mockContextValue}>
+        <MyOrders />
+      </StoreContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(axios.post).toHaveBeenCalledWith(
+        expect.stringContaining('/api/order/userorders'),
+        {},
+        expect.objectContaining({ headers: { token: mockToken } })
+      );
+    });
+  });
+
+  it('should display orders after fetching', async () => {
+    axios.post.mockResolvedValueOnce({ data: { data: mockOrders } });
+    render(
+      <StoreContext.Provider value={mockContextValue}>
+        <MyOrders />
+      </StoreContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/pizza/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should display order status', async () => {
+    axios.post.mockResolvedValueOnce({ data: { data: mockOrders } });
+    render(
+      <StoreContext.Provider value={mockContextValue}>
+        <MyOrders />
+      </StoreContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/pending confirmation/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should render track order button', async () => {
+    axios.post.mockResolvedValueOnce({ data: { data: mockOrders } });
+    render(
+      <StoreContext.Provider value={mockContextValue}>
+        <MyOrders />
+      </StoreContext.Provider>
+    );
+
+    await waitFor(() => {
+      const buttons = screen.getAllByRole('button', { name: /track order/i });
+      expect(buttons.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should handle empty orders list', async () => {
+    const { container } = render(
+      <StoreContext.Provider value={mockContextValue}>
+        <MyOrders />
+      </StoreContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.my-orders')).toBeInTheDocument();
+    });
+  });
+
+  it('should show restaurant label when restaurant data is available', async () => {
+    axios.post.mockResolvedValueOnce({ data: { data: [{ _id: 'order1', res_id: 'res1', food_items: [{ name: 'Banh mi', quantity: 1 }], amount: 12, status: 'Confirmed' }] } });
+    axios.get.mockResolvedValueOnce({ data: { data: [{ _id: 'res1', name: 'Saigon Bites' }] } });
+
+    render(
+      <StoreContext.Provider value={mockContextValue}>
+        <MyOrders />
+      </StoreContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Restaurant: Saigon Bites/i)).toBeInTheDocument();
+    });
+  });
+});

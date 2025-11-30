@@ -1,0 +1,49 @@
+name: mern-app
+
+services:
+  mongo:
+    image: mongo:8.0
+    # BỎ PORTS ĐỂ BẢO MẬT (Chỉ backend gọi được mongo nội bộ)
+    # ports: 
+    #   - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern-app
+
+  api:
+    image: ${DOCKERHUB_USERNAME}/fast-food-app:backend-latest
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      - NODE_ENV=docker
+    # Import sample data nếu DB rỗng, sau đó chạy server
+    command: sh -c "node config/import-data.js --import && node server.js" 
+    ports:
+      - 5000:4000
+    networks:
+      - mern-app
+    depends_on:
+      - mongo
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/fast-food-app:frontend-latest
+    restart: unless-stopped
+    ports:
+      - 3000:80 # Map cổng 3000 máy chủ vào cổng 80 của Nginx
+    networks:
+      - mern-app
+
+  admin:
+    image: ${DOCKERHUB_USERNAME}/fast-food-app:admin-latest
+    restart: unless-stopped
+    ports:
+      - 3001:80 # Map cổng 3001 máy chủ vào cổng 80 của Nginx
+    networks:
+      - mern-app
+
+volumes:
+  mongo_data:
+networks:
+  mern-app:
+    driver: bridge

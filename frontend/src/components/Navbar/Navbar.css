@@ -23,6 +23,13 @@
     gap: 40px;
 }
 
+.navbar-user-label{
+    font-size: 15px;
+    font-weight: 600;
+    color: #49557e;
+    white-space: nowrap;
+}
+
 .navbar button{
     background: transparent;
     font-size: 16px;
@@ -133,6 +140,10 @@ background-color: #fff4f2;
 
     .navbar-right{
         gap: 20px;
+    }
+
+    .navbar-user-label{
+        display: none;
     }
 
     .navbar-right img{

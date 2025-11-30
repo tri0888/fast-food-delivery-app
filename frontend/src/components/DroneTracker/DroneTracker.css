@@ -1,0 +1,189 @@
+.drone-tracker {
+    border: 1px solid var(--border-color, #e3e3e3);
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+    margin-top: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.drone-tracker__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.drone-tracker__label {
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.drone-tracker__hint {
+    color: #b45309;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.drone-tracker__eta {
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.drone-tracker__metrics {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.drone-tracker__metrics div {
+    flex: 1;
+    min-width: 120px;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+.drone-tracker__metrics small {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.drone-tracker__metrics strong {
+    font-size: 16px;
+    color: #111827;
+}
+
+.drone-tracker__drone-name {
+    align-self: flex-start;
+    background: #eef2ff;
+    color: #312e81;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.drone-tracker__steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.drone-step {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    opacity: 0.5;
+}
+
+.drone-step--active {
+    opacity: 1;
+}
+
+.drone-step__bullet {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #a5b4fc;
+    margin-top: 4px;
+}
+
+.drone-step--active .drone-step__bullet {
+    background: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.drone-step__copy strong {
+    display: block;
+    font-size: 14px;
+}
+
+.drone-step__copy small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.drone-tracker__progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.drone-tracker__progress-bar {
+    flex: 1;
+    background: #eef2ff;
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.drone-tracker__progress-value {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #3b82f6);
+    transition: width 0.6s ease;
+}
+
+.drone-tracker__map {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.drone-map {
+    width: 100%;
+    height: 280px;
+}
+
+.drone-tracker__map-hint {
+    padding: 24px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.drone-marker {
+    background: transparent;
+    border: none !important;
+    text-align: center;
+}
+
+.drone-marker span {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.drone-marker--restaurant span {
+    background: #dc2626;
+}
+
+.drone-marker--customer span {
+    background: #16a34a;
+}
+
+.drone-marker--drone span {
+    background: #2563eb;
+}
+
+.drone-tracker__empty {
+    padding: 16px;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    color: #6b7280;
+    background: #f9fafb;
+}

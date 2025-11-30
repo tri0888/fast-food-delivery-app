@@ -1,0 +1,111 @@
+.superadmin {
+    width: 70%;
+    margin-left: max(5vw, 25px);
+    margin-top: 50px;
+}
+
+.superadmin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.superadmin-header p {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.add-restaurant-btn {
+    border: none;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color .2s ease;
+}
+
+.add-restaurant-btn:hover {
+    background-color: #218838;
+}
+
+.restaurants-table {
+    width: 100%;
+}
+
+.restaurants-table-format {
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 1.2fr 1.2fr;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    border: 1px solid #cacaca;
+    font-size: 13px;
+}
+
+.restaurants-table-format.title {
+    background-color: #f9f9f9;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}
+
+.restaurant-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.edit-link {
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.manage-btn {
+    border: none;
+    padding: 10px 16px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: background-color .2s ease;
+}
+
+.manage-btn:hover {
+    background-color: #218838;
+}
+
+.delete-btn {
+    border: none;
+    padding: 10px 16px;
+    background-color: #dc3545;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: background-color .2s ease;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+@media (max-width:600px){
+    .restaurants-table-format{
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .restaurants-table-format.title{
+        display: none;
+    }
+}
