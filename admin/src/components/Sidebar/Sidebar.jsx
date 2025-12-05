@@ -31,6 +31,10 @@ const Sidebar = () => {
     return (
       <div className='sidebar'>
         <div className="sidebar-options">
+            <NavLink to='/orders' className="sidebar-option">
+              <img src={assets.order_icon} alt="" />
+              <p>Orders</p>
+            </NavLink>
             <NavLink to='/drones' className="sidebar-option">
               <img src={assets.order_icon} alt="" />
               <p>Drones</p>

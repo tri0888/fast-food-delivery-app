@@ -6,6 +6,8 @@ import { assets } from './../../assets/assets';
 import { toast } from 'react-toastify';
 import DroneTracker from '../../components/DroneTracker/DroneTracker';
 
+const CUSTOMER_NOTIFICATION_KEY = 'customerSeenFlightNotifications'
+
 const STATUS_LABELS = {
     'Pending Confirmation': 'Pending confirmation',
     'Confirmed': 'Confirmed',
@@ -36,11 +38,47 @@ const [data, setData] = useState([]);
 const [restaurantMap, setRestaurantMap] = useState({});
 const [expandedOrderId, setExpandedOrderId] = useState(null);
 
+const processTransientNotifications = (ordersList = []) => {
+    if (typeof window === 'undefined') return
+    try {
+        const seen = new Set()
+        const stored = window.sessionStorage.getItem(CUSTOMER_NOTIFICATION_KEY)
+        if (stored) {
+            JSON.parse(stored).forEach((id) => seen.add(id))
+        }
+
+        let flushed = false
+        ordersList.forEach((order) => {
+            const notifications = order?.droneTracking?.notifications || []
+            notifications.forEach((notification) => {
+                if (!notification?.id) return
+                if (seen.has(notification.id)) return
+                toast.info(notification.message, { autoClose: 15000 })
+                seen.add(notification.id)
+                flushed = true
+            })
+        })
+
+        if (flushed) {
+            window.sessionStorage.setItem(CUSTOMER_NOTIFICATION_KEY, JSON.stringify(Array.from(seen)))
+        }
+    } catch (error) {
+        console.error('Unable to process flight notifications', error)
+    }
+}
+
 const fetchOrders = async () =>{
-    const response = await axios.post(url+'/api/order/userorders',
-                                      {},
-                                      {headers:{token}})
-    setData(response.data.data);
+    try {
+        const response = await axios.post(url+'/api/order/userorders',
+                                          {},
+                                          {headers:{token}})
+        const ordersList = response.data?.data || []
+        setData(ordersList)
+        processTransientNotifications(ordersList)
+    } catch (error) {
+        const message = error.response?.data?.message || 'Unable to load your orders'
+        toast.error(message)
+    }
 }
 
 const fetchRestaurants = async () => {

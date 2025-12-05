@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'react-toastify'
 import { MapContainer, Marker, Polyline, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -82,9 +83,16 @@ const DroneTracker = ({ tracking, droneStatus, returnETA }) => {
   const [returnProgress, setReturnProgress] = useState(currentAdminStatus === 'returning' ? 0 : 0)
   const flightFrameRef = useRef(null)
   const returnFrameRef = useRef(null)
+  const oneThirdShownRef = useRef(false)
+  const twoThirdShownRef = useRef(false)
 
   // ----- Animation: flight leg -----
   useEffect(() => {
+    // reset transient notification markers whenever the flight restarts
+    if (currentAdminStatus !== 'flying') {
+      oneThirdShownRef.current = false
+      twoThirdShownRef.current = false
+    }
     if (currentAdminStatus !== 'flying') {
       if (flightFrameRef.current) {
         cancelAnimationFrame(flightFrameRef.current)
@@ -101,6 +109,19 @@ const DroneTracker = ({ tracking, droneStatus, returnETA }) => {
       const elapsed = Date.now() - startTime
       const ratio = clamp(elapsed / durationMs)
       setFlightProgress(ratio)
+      // show transient progress notifications at 1/3 and 2/3
+      try {
+        if (ratio >= (1/3) && !oneThirdShownRef.current) {
+          oneThirdShownRef.current = true
+          toast.info('Drone is about one-third of the way to the customer', { autoClose: 15000 })
+        }
+        if (ratio >= (2/3) && !twoThirdShownRef.current) {
+          twoThirdShownRef.current = true
+          toast.info('Drone is about two-thirds of the way to the customer', { autoClose: 15000 })
+        }
+      } catch (e) {
+        // swallow toast errors in animation loop
+      }
       if (ratio < 1) {
         flightFrameRef.current = requestAnimationFrame(animate)
       }

@@ -15,8 +15,28 @@ const normalizeStatus = (status) => {
     return status
 }
 
+const normalizeId = (value) => {
+    if (!value) return null
+    if (typeof value === 'string') return value
+    if (typeof value === 'object') {
+        if (value._id) {
+            return typeof value._id === 'string' ? value._id : value._id.toString()
+        }
+        if (value.id) {
+            return typeof value.id === 'string' ? value.id : value.id.toString()
+        }
+        if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
+            return value.toString()
+        }
+    }
+    if (typeof value.toString === 'function') {
+        return value.toString()
+    }
+    return null
+}
+
 class OrderService {
-    async updateOrderStatus(orderId, status, { droneId } = {}) {
+    async updateOrderStatus(orderId, status, { droneId, user } = {}) {
 
         const order = await orderRepository.findOrderById(orderId)
         if (!order) {
@@ -28,6 +48,23 @@ class OrderService {
         }
 
         const currentStatus = normalizeStatus(order.status)
+
+        if (user?.role === 'superadmin') {
+            throw new AppError('Superadmin accounts have read-only access to order statuses', 403)
+        }
+
+        if (user?.role === 'admin') {
+            const adminRestaurantId = normalizeId(user.res_id)
+            if (!adminRestaurantId) {
+                throw new AppError('Admin must be assigned to a restaurant to update order statuses', 403)
+            }
+
+            const orderRestaurantId = normalizeId(order.res_id)
+            if (!orderRestaurantId || orderRestaurantId !== adminRestaurantId) {
+                throw new AppError('You can only update orders that belong to your restaurant', 403)
+            }
+        }
+
         const allowedStatuses = STATUS_TRANSITIONS[currentStatus] || []
         if (!allowedStatuses.includes(status)) {
             throw new AppError('Invalid status transition', 400)
@@ -65,6 +102,15 @@ class OrderService {
             })
             if (droneAssigned) {
                 await releaseDroneToIdle(droneAssigned.toString())
+                try {
+                    // clear any pending progress notifications for this order
+                    const { clearTimersForOrder } = await import('../droneTracking/droneTrackingService.js')
+                    if (typeof clearTimersForOrder === 'function') {
+                        await clearTimersForOrder(orderId)
+                    }
+                } catch (e) {
+                    // ignore
+                }
             }
             return updatedOrder
         }

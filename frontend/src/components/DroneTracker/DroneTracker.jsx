@@ -79,6 +79,8 @@ const DroneTracker = ({ tracking, enableNotifications = true }) => {
     const animationFrameRef = useRef(null)
     const arrivalToastRef = useRef(false)
     const deliveredToastRef = useRef(false)
+    const oneThirdToastRef = useRef(false)
+    const twoThirdToastRef = useRef(false)
 
     // ----- Animation: flight leg -----
     useEffect(() => {
@@ -89,6 +91,8 @@ const DroneTracker = ({ tracking, enableNotifications = true }) => {
             }
             setFlightProgress(currentStatus === 'delivered' ? 1 : 0)
             arrivalToastRef.current = false
+            oneThirdToastRef.current = false
+            twoThirdToastRef.current = false
             if (currentStatus === 'awaiting-drone') {
                 deliveredToastRef.current = false
             }
@@ -97,11 +101,23 @@ const DroneTracker = ({ tracking, enableNotifications = true }) => {
 
         const durationMs = animationDurationSec * 1000
         const startTime = statusChangeTime || Date.now()
+        const firstThreshold = 1 / 3
+        const secondThreshold = 2 / 3
 
         const animate = () => {
             const elapsed = Date.now() - startTime
             const ratio = clamp(elapsed / durationMs)
             setFlightProgress(ratio)
+            if (enableNotifications) {
+                if (ratio >= firstThreshold && !oneThirdToastRef.current) {
+                    oneThirdToastRef.current = true
+                    toast.info('Your drone completed one-third of the route ✈️', { autoClose: 15000 })
+                }
+                if (ratio >= secondThreshold && !twoThirdToastRef.current) {
+                    twoThirdToastRef.current = true
+                    toast.info('Your drone is two-thirds of the way there 🚀', { autoClose: 15000 })
+                }
+            }
             if (ratio < 1) {
                 animationFrameRef.current = requestAnimationFrame(animate)
             } else if (!arrivalToastRef.current) {

@@ -47,7 +47,9 @@ const droneTrackingSchema = new mongoose.Schema({assignedDrone        : {type   
                                                  returnDurationSec    : {type : Number,
                                                                          default : null},
                                                  lastUpdated          : {type : Date, default : () => new Date()},
-                                                 history              : {type : [droneHistorySchema], default : []}
+                                                 history              : {type : [droneHistorySchema], default : []},
+                                                 // Transient progress notifications (1/3, 2/3)
+                                                 notifications        : {type: [Object], default: []}
                                                 }, {_id: false})
 
 const orderSchema = new mongoose.Schema({

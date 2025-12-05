@@ -26,7 +26,7 @@ orderRouter
     .get(authMiddleware, restrictTo('admin', 'superadmin'), filterByRestaurant, checkPermission('orders', 'list'), listOrders)
 orderRouter
     .route("/status")
-    .patch(authMiddleware, restrictTo('admin', 'superadmin'), filterByRestaurant, checkPermission('orders', 'update_status'), updateStatus)
+    .patch(authMiddleware, restrictTo('admin'), filterByRestaurant, checkPermission('orders', 'update_status'), updateStatus)
 
 export default orderRouter
 

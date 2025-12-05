@@ -8,6 +8,7 @@ const DEFAULT_FLIGHT_SECONDS   = Number(process.env.DRONE_ANIMATION_SECONDS || 1
 const DEFAULT_DRONE_SPEED_KMH  = Number(process.env.DRONE_SPEED_KMH || 100)
 
 const returnTimers = new Map()
+const flightProgressTimers = new Map()
 
 const statusHistoryEntry = (status) => ({ status, at: new Date() })
 const toRadians = (deg) => (deg * Math.PI) / 180
@@ -181,6 +182,67 @@ export const dispatchDroneFlight = async ({ order, droneId }) => {
     }, 'flying')
 }
 
+    // schedule transient progress notifications for this flight
+    try {
+        scheduleProgressNotifications(orderDoc._id.toString(), durationSec)
+    } catch (e) {
+        // non-fatal
+        console.error('scheduleProgressNotifications failed', e)
+    }
+
+const pushTransientNotification = async (orderId, notification) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+    const doc = { id, ...notification, createdAt: new Date(), expiresAt: new Date(Date.now() + 15000) }
+    await orderModel.findByIdAndUpdate(orderId, { $push: { 'droneTracking.notifications': doc } })
+
+    // schedule removal in 15s
+    const cleanup = setTimeout(async () => {
+        try {
+            await orderModel.findByIdAndUpdate(orderId, { $pull: { 'droneTracking.notifications': { id } } })
+        } catch (e) {
+            console.error('Failed to cleanup notification', e)
+        }
+    }, 15000)
+
+    // keep reference so we can clear if order is cancelled/delivered
+    const key = orderId.toString()
+    const arr = flightProgressTimers.get(key) || []
+    arr.push(cleanup)
+    flightProgressTimers.set(key, arr)
+}
+
+const clearFlightProgressTimers = (orderId) => {
+    const key = orderId.toString()
+    const arr = flightProgressTimers.get(key) || []
+    for (const t of arr) clearTimeout(t)
+    flightProgressTimers.delete(key)
+}
+
+// ensure timers cleared when finalizing delivery or cancelling
+export const clearTimersForOrder = async (orderId) => {
+    clearFlightProgressTimers(orderId)
+}
+
+// schedule 1/3 and 2/3 notifications after dispatch
+const scheduleProgressNotifications = (orderId, durationSec) => {
+    try {
+        const key = orderId.toString()
+        clearFlightProgressTimers(key)
+
+        const t1 = setTimeout(() => {
+            pushTransientNotification(orderId, { message: 'Drone is about 1/3 of the way to the drop-off', level: 'info', forCustomer: true, forAdmin: true }).catch(() => {})
+        }, Math.round((durationSec * 1000) / 3))
+
+        const t2 = setTimeout(() => {
+            pushTransientNotification(orderId, { message: 'Drone is about 2/3 of the way to the drop-off', level: 'info', forCustomer: true, forAdmin: true }).catch(() => {})
+        }, Math.round((durationSec * 1000) * 2 / 3))
+
+        flightProgressTimers.set(key, [t1, t2])
+    } catch (e) {
+        console.error('Failed to schedule progress notifications', e)
+    }
+}
+
 const finalizeDroneReturn = async (droneId) => {
     returnTimers.delete(droneId)
     return droneModel.findOneAndUpdate(
@@ -213,6 +275,8 @@ export const markDroneDelivered = async (orderId) => {
     })
 
     scheduleReturnTimer(order.droneTracking.assignedDrone.toString(), eta)
+    // clear any in-flight progress timers for this order
+    try { clearTimersForOrder(orderId) } catch (e) { console.error(e) }
     return order
 }
 
