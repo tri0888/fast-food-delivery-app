@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import './ListDrone.css'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -26,6 +26,8 @@ const ADMIN_STATUS_LABELS = {
   idle: 'Idle'
 }
 
+const FLYPATH_OPTIONS = ['low', 'medium', 'high']
+
 const formatOrderId = (orderId = '') => {
   if (!orderId) return '--'
   return `#${String(orderId).slice(-6).toUpperCase()}`
@@ -47,12 +49,22 @@ const formatCoords = (location = {}) => {
   return `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`
 }
 
+const formatFlyPath = (value) => {
+  if (!value || typeof value !== 'string') return '—'
+  const trimmed = value.trim()
+  if (!trimmed) return '—'
+  return trimmed.length > 1
+    ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
+    : trimmed.toUpperCase()
+}
+
 const ListDrone = ({ url }) => {
   const [drones, setDrones] = useState([])
   const [selectedDroneId, setSelectedDroneId] = useState(null)
   const [userHasInteracted, setUserHasInteracted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
+  const [filters, setFilters] = useState({ flypath: 'all' })
   const navigate = useNavigate()
   const role = sessionStorage.getItem('role')
 
@@ -79,8 +91,13 @@ const ListDrone = ({ url }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const filteredDrones = useMemo(() => {
+    if (filters.flypath === 'all') return drones
+    return drones.filter((drone) => (drone.flypath || '').toLowerCase() === filters.flypath)
+  }, [drones, filters.flypath])
+
   useEffect(() => {
-    if (!drones.length) {
+    if (!filteredDrones.length) {
       if (selectedDroneId !== null) {
         setSelectedDroneId(null)
       }
@@ -88,21 +105,27 @@ const ListDrone = ({ url }) => {
     }
 
     if (selectedDroneId) {
-      const stillExists = drones.some((drone) => drone._id === selectedDroneId)
+      const stillExists = filteredDrones.some((drone) => drone._id === selectedDroneId)
       if (!stillExists) {
-        setSelectedDroneId(userHasInteracted ? null : drones[0]._id)
+        setSelectedDroneId(userHasInteracted ? null : filteredDrones[0]._id)
       }
       return
     }
 
     if (!userHasInteracted) {
-      setSelectedDroneId(drones[0]._id)
+      setSelectedDroneId(filteredDrones[0]._id)
     }
-  }, [drones, selectedDroneId, userHasInteracted])
+  }, [filteredDrones, selectedDroneId, userHasInteracted])
 
   const handleToggle = (id) => {
     setUserHasInteracted(true)
     setSelectedDroneId((prev) => (prev === id ? null : id))
+  }
+
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target
+    setFilters((prev) => ({ ...prev, [name]: value }))
+    setUserHasInteracted(false)
   }
 
   return (
@@ -114,6 +137,24 @@ const ListDrone = ({ url }) => {
           {lastUpdated && <small>Last refresh: {new Date(lastUpdated).toLocaleTimeString()}</small>}
         </div>
         <div className='drone-monitor__actions'>
+          {role === 'superadmin' && (
+            <div className='drone-filter'>
+              <label htmlFor='flypath-filter'>Fly path</label>
+              <select
+                id='flypath-filter'
+                name='flypath'
+                value={filters.flypath}
+                onChange={handleFilterChange}
+              >
+                <option value='all'>All paths</option>
+                {FLYPATH_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {formatFlyPath(option)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <button className='ghost-btn' onClick={fetchDrones} disabled={loading}>
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
@@ -129,13 +170,20 @@ const ListDrone = ({ url }) => {
         <div className='drone-summary__head'>
           <span>Drone</span>
           <span>Status</span>
+          <span>Fly path</span>
           <span>Current Order</span>
           <span>Updated</span>
           <span>Return ETA</span>
         </div>
         <div className='drone-accordion'>
-          {drones.length === 0 && !loading && <div className='drone-table__empty'>No drones found.</div>}
-          {drones.map((drone) => {
+          {filteredDrones.length === 0 && !loading && (
+            <div className='drone-table__empty'>
+              {filters.flypath === 'all'
+                ? 'No drones found.'
+                : `No drones with ${formatFlyPath(filters.flypath)} path.`}
+            </div>
+          )}
+          {filteredDrones.map((drone) => {
             const isExpanded = selectedDroneId === drone._id
             const tracking = drone.currentOrder?.droneTracking
             return (
@@ -149,6 +197,10 @@ const ListDrone = ({ url }) => {
                     <span className={`chip chip--${drone.status}`}>
                       {DRONE_STATUS_LABELS[drone.status] || drone.status}
                     </span>
+                    <div className='drone-flypath'>
+                      <p className='drone-flypath__value'>{formatFlyPath(drone.flypath)}</p>
+                      <small>Fly path</small>
+                    </div>
                     <div>
                       <p>{formatOrderId(drone.activeOrderId)}</p>
                       <small>

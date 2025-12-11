@@ -3,6 +3,7 @@ import './Orders.css'
 import axios from 'axios'
 import { toast } from 'react-toastify';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
+import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 const STATUS_FLOW = {
   'Pending Confirmation': ['Confirmed', 'Cancelled'],
@@ -30,6 +31,8 @@ const DRONE_STATUS_LABELS = {
   'cancelled': 'Cancelled'
 }
 
+const CHART_COLORS = ['#fb7185', '#f97316', '#facc15', '#34d399', '#38bdf8', '#a78bfa', '#f472b6', '#60a5fa', '#fbbf24', '#4ade80']
+
 const getStatusLabel = (status) => STATUS_LABELS[status] || status
 const PAYMENT_LABELS = {
   pending: 'Pending',
@@ -50,6 +53,18 @@ const formatCurrency = (value = 0) => {
     return currencyFormatter.format(0)
   }
   return currencyFormatter.format(amount)
+}
+
+const formatCompactCurrency = (value = 0) => {
+  const amount = Number(value) || 0
+  const absAmount = Math.abs(amount)
+  if (absAmount >= 1_000_000) {
+    return `$${(amount / 1_000_000).toFixed(1)}M`
+  }
+  if (absAmount >= 1_000) {
+    return `$${(amount / 1_000).toFixed(1)}K`
+  }
+  return `$${amount.toFixed(0)}`
 }
 
 const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' })
@@ -101,6 +116,7 @@ const Orders = ({url}) => {
   const [filters, setFilters] = useState({ term: '', status: 'all', restaurant: 'all', month: 'all' })
   const [confirmDialog, setConfirmDialog] = useState({ ...INITIAL_DIALOG_STATE })
   const [droneSelection, setDroneSelection] = useState({ options: [], loading: false })
+  const [restaurantsCatalog, setRestaurantsCatalog] = useState([])
   const role = sessionStorage.getItem('role') || ''
   const restaurantId = sessionStorage.getItem('restaurantId') || ''
 
@@ -199,6 +215,22 @@ const Orders = ({url}) => {
 
   const handleDroneSelectionChange = (event) => {
     setConfirmDialog(prev => ({ ...prev, droneId: event.target.value }))
+  }
+
+  const fetchRestaurantsCatalog = async () => {
+    if (role !== 'superadmin') return
+    const token = sessionStorage.getItem('token')
+    try {
+      const response = await axios.get(`${url}/api/restaurant/list`, { headers: { token } })
+      if (response.data.success) {
+        setRestaurantsCatalog(response.data.data || [])
+      } else {
+        toast.error(response.data.message || 'Failed to load restaurants')
+      }
+    } catch (error) {
+      console.error('Failed to fetch restaurants catalog', error)
+      toast.error(error.response?.data?.message || 'Failed to load restaurants')
+    }
   }
 
   const statusHandler = async (event, orderId) => {
@@ -305,13 +337,25 @@ const Orders = ({url}) => {
     resetConfirmDialog();
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchAllOrders()
+    if (role === 'superadmin') {
+      fetchRestaurantsCatalog()
+    }
   }, [])
 
   const restaurantOptions = useMemo(() => {
     if (role !== 'superadmin') return []
     const map = new Map()
+
+    restaurantsCatalog.forEach((restaurant) => {
+      if (!restaurant) return
+      const id = restaurant?._id?.toString?.() || restaurant?._id
+      if (!id) return
+      const name = restaurant?.name || 'Unnamed restaurant'
+      map.set(id, name)
+    })
+
     orders.forEach((order) => {
       const resId = extractRestaurantId(order?.res_id)
       if (!resId) return
@@ -320,10 +364,11 @@ const Orders = ({url}) => {
         map.set(resId, name)
       }
     })
+
     return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [orders, role])
+  }, [orders, restaurantsCatalog, role])
 
   const monthOptions = useMemo(() => {
     const map = new Map()
@@ -418,7 +463,72 @@ const Orders = ({url}) => {
     }
   }, [filteredOrders])
 
-  const summaryTitle = `Total revenue · ${selectedRestaurantLabel}`
+  const superadminRevenueOverview = useMemo(() => {
+    if (role !== 'superadmin') {
+      return { total: 0, totalOrders: 0, data: [] }
+    }
+
+    const totals = {}
+    let totalRevenue = 0
+    let totalOrders = 0
+
+    orders.forEach((order) => {
+      if (filters.month !== 'all' && getMonthKeyFromDate(order?.createdAt) !== filters.month) {
+        return
+      }
+
+      const amount = Number(order.amount) || 0
+      totalRevenue += amount
+      totalOrders += 1
+      const id = extractRestaurantId(order?.res_id) || 'unassigned'
+      const name = order?.res_id?.name || 'Unassigned restaurant'
+
+      if (!totals[id]) {
+        totals[id] = {
+          id,
+          name,
+          revenue: 0
+        }
+      }
+
+      totals[id].revenue += amount
+    })
+
+    restaurantsCatalog.forEach((restaurant) => {
+      if (!restaurant) return
+      const id = restaurant?._id?.toString?.() || restaurant?._id
+      if (!id) return
+      const name = restaurant?.name || 'Unnamed restaurant'
+      if (!totals[id]) {
+        totals[id] = {
+          id,
+          name,
+          revenue: 0
+        }
+      } else if (!totals[id].name || totals[id].name === 'Unassigned restaurant') {
+        totals[id].name = name
+      }
+    })
+
+    const data = Object.values(totals)
+      .sort((a, b) => b.revenue - a.revenue)
+      .map((entry) => ({ ...entry, revenue: Number(entry.revenue.toFixed(2)) }))
+
+    return { total: totalRevenue, totalOrders, data }
+  }, [orders, filters.month, restaurantsCatalog, role])
+
+  const hasSuperadminRevenueData = superadminRevenueOverview.data.length > 0
+
+  const shouldShowSuperadminFallback = role === 'superadmin' && filters.restaurant !== 'all' && filteredOrders.length === 0
+  const summaryTitle = shouldShowSuperadminFallback
+    ? 'Total revenue · All restaurants (Superadmin)'
+    : `Total revenue · ${selectedRestaurantLabel}`
+  const summaryValue = shouldShowSuperadminFallback
+    ? superadminRevenueOverview.total
+    : revenueStats.totalRevenue
+  const summaryOrders = shouldShowSuperadminFallback
+    ? superadminRevenueOverview.totalOrders
+    : revenueStats.totalOrders
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target
@@ -475,8 +585,8 @@ const Orders = ({url}) => {
       <div className='order-summary'>
         <div className='order-summary-card primary'>
           <p className='order-summary-label'>{summaryTitle}</p>
-          <p className='order-summary-value'>{formatCurrency(revenueStats.totalRevenue)}</p>
-          <p className='order-summary-sub'>{selectedMonthLabel} · {revenueStats.totalOrders} orders</p>
+          <p className='order-summary-value'>{formatCurrency(summaryValue)}</p>
+          <p className='order-summary-sub'>{selectedMonthLabel} · {summaryOrders} orders</p>
         </div>
         
         <div className='order-summary-card'>
@@ -488,6 +598,78 @@ const Orders = ({url}) => {
         </div>
         
       </div>
+
+      {role === 'superadmin' && (
+        <div className='order-analytics'>
+          <div className='order-analytics__header'>
+            <div>
+              Tổng doanh thu tất cả nhà hàng · {selectedMonthLabel}
+              <p className='order-analytics__sub'>Biểu đồ hiển thị doanh thu tổng hợp theo từng nhà hàng</p>
+            </div>
+            <span>{formatCurrency(superadminRevenueOverview.total)}</span>
+          </div>
+          <div className='order-analytics__grid'>
+            <div className='order-chart-card'>
+              <p className='order-chart-card__title'>Bar chart</p>
+              <p className='order-chart-card__subtitle'>Tổng doanh thu theo nhà hàng</p>
+              {hasSuperadminRevenueData ? (
+                <ResponsiveContainer width='100%' height={320}>
+                  <BarChart data={superadminRevenueOverview.data} margin={{ top: 12, right: 24, left: 0, bottom: 24 }}>
+                    <XAxis
+                      dataKey='name'
+                      tick={{ fontSize: 12 }}
+                      interval={0}
+                      angle={-25}
+                      textAnchor='end'
+                      height={70}
+                    />
+                    <YAxis tickFormatter={formatCompactCurrency} tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(value) => formatCurrency(value)} cursor={{ fill: 'rgba(251, 113, 133, 0.08)' }} />
+                    <Bar dataKey='revenue' radius={[8, 8, 0, 0]}>
+                      {superadminRevenueOverview.data.map((entry, index) => (
+                        <Cell key={`bar-${entry.id}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className='order-chart-card__empty'>Chưa có dữ liệu doanh thu để hiển thị.</p>
+              )}
+            </div>
+            <div className='order-chart-card'>
+              <p className='order-chart-card__title'>Pie chart</p>
+              <p className='order-chart-card__subtitle'>Tỷ trọng đóng góp của từng nhà hàng</p>
+              {hasSuperadminRevenueData ? (
+                <ResponsiveContainer width='100%' height={320}>
+                  <PieChart>
+                    <Pie
+                      data={superadminRevenueOverview.data}
+                      dataKey='revenue'
+                      nameKey='name'
+                      innerRadius={70}
+                      outerRadius={110}
+                      paddingAngle={2}
+                    >
+                      {superadminRevenueOverview.data.map((entry, index) => (
+                        <Cell key={`pie-${entry.id}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [formatCurrency(value), name]} />
+                    <Legend
+                      layout='vertical'
+                      align='right'
+                      verticalAlign='middle'
+                      formatter={(value, entry) => `${value} · ${formatCurrency(entry.payload.revenue)}`}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className='order-chart-card__empty'>Chưa có dữ liệu doanh thu để hiển thị.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {role === 'superadmin' && (
         <div className='order-breakdown'>

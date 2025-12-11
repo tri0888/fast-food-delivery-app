@@ -14,8 +14,9 @@ const drone = new mongoose.Schema({name             : {type     : String,
                                                        ref      : 'order',
                                                        default  : null},
                                    lastStatusChange : {type     : Date, default : () => new Date()},
-                                   returnETA        : {type     : Date, default : null}},
-                                  {timestamps: true})
+                                   returnETA        : {type     : Date, default : null},
+                                   flypath          :  {type: String, default: 'low'},
+                                  }, {timestamps: true})
                                                
 const droneModel = mongoose.models.drone || mongoose.model("drone", drone)
 

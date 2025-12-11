@@ -2,3 +2,6 @@
 coverage/
 *.lcov
 .nyc_output/
+
+e2e/
+playwright-report/
