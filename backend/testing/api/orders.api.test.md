@@ -1,0 +1,9 @@
+# orders.api.test
+
+| ID | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- |
+| API-ORD-001 | API `/api/food/list` trả danh sách món công khai | Không | 1. Chèn một document Food mẫu<br>2. Gửi `GET /api/food/list` | HTTP `200` với `{ success: true, data: [ { name: 'API burger', ... } ] }` | Food `{ name: 'API burger', price: 10 }` | Tự động (Jest) |
+| API-ORD-002 | `/api/order/userorders` chỉ trả đơn của người dùng đang đăng nhập | Không | 1. Tạo hai user và mỗi user một order<br>2. Đăng nhập user thứ nhất lấy token<br>3. Gửi `POST /api/order/userorders` với token đó | Phản hồi `success: true` với đúng một đơn có `userId` của token | Users `order-user@example.com`, `other@example.com` cùng dữ liệu Order | Tự động (Jest) |
+| API-ORD-003 | Admin có thể lấy toàn bộ đơn qua `/api/order/list` | Không | 1. Tạo admin và một order bất kỳ<br>2. Đăng nhập hoặc ký token cho admin<br>3. Gửi `GET /api/order/list` với token | Phản hồi `success: true` với mảng đơn (>=1) | Admin `{ email: 'admin-order@example.com', role: 'admin' }` | Tự động (Jest) |
+| API-ORD-004 | Admin cập nhật trạng thái đơn sang Delivered | Không | 1. Seed admin + order trạng thái `Food Processing`<br>2. Gửi `PATCH /api/order/status` với token admin và body `{ orderId, status: 'Delivered' }`<br>3. Đọc lại order từ DB | Nhận `success: true`, message `Status Updated`, trạng thái đổi thành `Delivered` | Order `_id`, payload `{ orderId, status: 'Delivered' }` | Tự động (Jest) |
+| API-ORD-005 | ID đơn không hợp lệ trả 404 | Không | 1. Tạo admin và ký token hợp lệ<br>2. Gửi `PATCH /api/order/status` với `orderId` giả | HTTP `404` với `{ status: 'fail', message: 'order not found' }` | `orderId: '000000000000000000000000'` | Tự động (Jest) |

@@ -1,0 +1,9 @@
+# products.api.test
+
+| ID | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- |
+| API-PROD-001 | Admin thêm món kèm ảnh upload | Không | 1. Tạo tài khoản admin và lấy token<br>2. Chuẩn bị form-data với field + file<br>3. Gọi `POST /api/food/add` kèm token | HTTP `200`, `{ success: true, data.name: 'API Product' }`; file được lưu | Các field: name, description, price 18, stock 4, category Burger; file `api-product.png` | Tự động (Jest) |
+| API-PROD-002 | Người không phải admin bị từ chối thêm món | Không | 1. Tạo tài khoản role `user`<br>2. Chuẩn bị payload giống test trên<br>3. Gửi `POST /api/food/add` với token user | HTTP `200` nhưng `{ success: false, message: 'Permission denied' }` | User role `user`, payload giống test 1 | Tự động (Jest) |
+| API-PROD-003A | Admin chỉnh sửa món thành công | Không | 1. Seed admin và 1 Food<br>2. Gửi `PATCH /api/food/edit` với token admin và dữ liệu mới<br>3. Gọi DB kiểm tra field đã cập nhật | HTTP `200`, `{ success: true }`; DB thể hiện name và price mới | Food `_id`, dữ liệu cập nhật (name='Edited Name', price=15, stock=5) | Tự động (Jest) |
+| API-PROD-003B | Admin xoá món sau khi chỉnh | API-PROD-003A | 1. Sử dụng cùng Food sau bước chỉnh sửa<br>2. Gửi `POST /api/food/remove` với token admin và `id` món<br>3. Truy vấn DB đảm bảo record bị xoá | HTTP `200`, `{ success: true }`; Food không còn trong DB | Food `_id` đã dùng ở 003A, body `{ id }` | Tự động (Jest) |
+| API-PROD-004 | Payload thiếu/không hợp lệ trả lỗi validate | Không | 1. Tạo admin lấy token<br>2. Gửi `POST /api/food/add` với name rỗng, price 0, stock -1 | HTTP `400` với `{ status: 'fail', message: '<validation>' }` | name '', price 0, stock -1 | Tự động (Jest) |

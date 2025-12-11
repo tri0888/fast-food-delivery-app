@@ -109,6 +109,34 @@ Start the admin app :
 npm run dev
 ```
 
+## Testing Taxonomy
+The repository standardizes tests into six categories (API, Data Integrity, Features, Security, Screen, Stress). Use the following helpers to run them quickly:
+
+```bash
+# Backend suites
+npm run test:api --prefix backend
+npm run test:data-integrity --prefix backend
+npm run test:features --prefix backend
+npm run test:security --prefix backend
+npm run test:stress --prefix backend
+
+# Screen / Playwright suites
+npm run test:screen --prefix frontend
+npm run test:screen --prefix admin
+```
+
+See `docs/testing/test-taxonomy-v2.md` for detailed coverage expectations.
+
+## White-box vs Black-box Testing
+We intentionally combine both methodologies:
+
+| Methodology | Suites | Purpose |
+|-------------|--------|---------|
+| **White-box** | `npm run test:data-integrity --prefix backend`, `npm run test:features --prefix backend` | Inspect internal models, repositories, and service-layer branches (e.g., schema defaults, stock reconciliation, guarded role transitions) to ensure every conditional path is asserted from the code’s point of view. |
+| **Black-box** | `npm run test:api --prefix backend`, `npm run test:security --prefix backend`, `npm run test:screen --prefix frontend`, `npm run test:screen --prefix admin`, `npm run test:stress --prefix backend` | Exercise the system strictly through its external contracts (HTTP endpoints, UI flows, and load entrypoints) to validate behavior without relying on implementation details. |
+
+The scenario matrix in `docs/testing/test-taxonomy-v2.md` enumerates the concrete cases covered under each category so we can tell when coverage is complete (and where to add new tests if a feature expands).
+
 ## Usage
 Access the customer-facing app at http://localhost:5173.
 Access the admin app at http://localhost:5174.

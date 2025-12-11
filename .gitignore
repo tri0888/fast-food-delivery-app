@@ -2,3 +2,7 @@
 coverage/
 *.lcov
 .nyc_output/
+playwright-report/
+test-results/
+frontend/e2e/test-results/
+frontend/e2e/.auth/*.json

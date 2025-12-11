@@ -10,15 +10,21 @@ class UserService {
     }
 
     async login(email, password) {
-        if (!email || !password) {
+        if (typeof email !== 'string' || typeof password !== 'string') {
             throw new AppError('Please provide email and password', 400)
         }
 
-        if (!validator.isEmail(email)) {
+        const normalizedEmail = email.trim()
+
+        if (!normalizedEmail || !password.trim()) {
+            throw new AppError('Please provide email and password', 400)
+        }
+
+        if (!validator.isEmail(normalizedEmail)) {
             throw new AppError('Please enter a valid email', 400)
         }
 
-        const user = await userRepository.findByEmail(email)
+        const user = await userRepository.findByEmail(normalizedEmail)
 
         if (!user) {
             throw new AppError('Incorrect Email', 401)
