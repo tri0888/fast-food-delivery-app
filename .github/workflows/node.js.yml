@@ -53,12 +53,12 @@ jobs:
             build_args: ""
           - name: frontend
             build_args: |
-              VITE_API_URL=http://13.236.148.198:5000
-              VITE_ADMIN_URL=http://13.236.148.198:3001
+              VITE_API_URL=http://3.104.65.69:5000
+              VITE_ADMIN_URL=http://3.104.65.69:3001
           - name: admin
             build_args: |
-              VITE_API_URL=http://13.236.148.198:5000
-              VITE_FRONTEND_URL=http://13.236.148.198:3000
+              VITE_API_URL=http://3.104.65.69:5000
+              VITE_FRONTEND_URL=http://3.104.65.69:3000
     
     steps:
       - uses: actions/checkout@v4
