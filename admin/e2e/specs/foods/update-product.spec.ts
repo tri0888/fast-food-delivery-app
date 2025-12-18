@@ -14,7 +14,7 @@ const mockFoods = [
 ]
 
 test.describe('Products · Update flow', () => {
-  test('admin can update an existing product', async ({ page }) => {
+  test('SCREEN-ADMIN-002 · admin can update an existing product', async ({ page }) => {
     let editPayload: string | undefined
     const capturedListResponses: string[] = []
 
@@ -76,7 +76,7 @@ test.describe('Products · Update flow', () => {
     expect(editPayload).toContain('25')
   })
 
-  test('shows error toast when backend rejects invalid edits', async ({ page }) => {
+  test('SCREEN-ADMIN-005 · shows error toast when backend rejects invalid edits', async ({ page }) => {
     let editPayload: string | undefined
 
     await page.route('**/api/**', async (route) => {

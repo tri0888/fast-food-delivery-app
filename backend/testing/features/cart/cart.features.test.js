@@ -3,6 +3,8 @@ import { connectInMemoryMongo, disconnectInMemoryMongo, resetDatabase } from '..
 import User from '../../../models/userModel.js'
 import Food from '../../../models/foodModel.js'
 import AppError from '../../../utils/appError.js'
+import { cartFeatureData } from '../test-data/cart.js'
+import { featureNullObjectId } from '../test-data/common.js'
 
 const { default: addToCartService } = await import('../../../modules/Carts/addToCart/Service.js')
 const { default: removeFromCartService } = await import('../../../modules/Carts/removeFromCart/Service.js')
@@ -22,27 +24,14 @@ describe('Features · Cart capability', () => {
   })
 
   const createUserWithCart = async (cartData = {}) => {
-    return User.create({
-      name: 'Cart User',
-      email: `cart+${Date.now()}@example.com`,
-      password: 'Password123!',
-      cartData
-    })
+    return User.create(cartFeatureData.buildUser({ cartData }))
   }
 
   const createFoodItem = async (overrides = {}) => {
-    return Food.create({
-      name: `Cart Food ${Date.now()}`,
-      description: 'Cart spec food',
-      price: 7,
-      image: 'cart-food.jpg',
-      category: 'Sides',
-      stock: 10,
-      ...overrides
-    })
+    return Food.create(cartFeatureData.buildFood(overrides))
   }
 
-  it('adds fresh items and increments existing ones', async () => {
+  it('FE-CART-001 · adds fresh items and increments existing ones', async () => {
     const food = await createFoodItem()
     const user = await createUserWithCart()
 
@@ -53,7 +42,7 @@ describe('Features · Cart capability', () => {
     expect(stored.cartData[food._id.toString()]).toBe(2)
   })
 
-  it('removes quantities and deletes entries when reaching zero', async () => {
+  it('FE-CART-002 · removes quantities and deletes entries when reaching zero', async () => {
     const food = await createFoodItem()
     const user = await createUserWithCart({ [food._id.toString()]: 2 })
 
@@ -66,7 +55,7 @@ describe('Features · Cart capability', () => {
     expect(stored.cartData[food._id.toString()]).toBeUndefined()
   })
 
-  it('supports removing an item entirely', async () => {
+  it('FE-CART-003 · supports removing an item entirely', async () => {
     const food = await createFoodItem()
     const user = await createUserWithCart({ [food._id.toString()]: 3 })
 
@@ -75,7 +64,7 @@ describe('Features · Cart capability', () => {
     expect(stored.cartData[food._id.toString()]).toBeUndefined()
   })
 
-  it('returns cart data + lock status', async () => {
+  it('FE-CART-004 · returns cart data + lock status', async () => {
     const food = await createFoodItem()
     const user = await createUserWithCart({ [food._id.toString()]: 1 })
     user.isCartLock = true
@@ -86,11 +75,15 @@ describe('Features · Cart capability', () => {
     expect(response.isCartLocked).toBe(true)
   })
 
-  it('rejects operations for missing users or foods', async () => {
-    const user = await createUserWithCart()
+  it('FE-CART-005 · rejects add-to-cart when user does not exist', async () => {
     const food = await createFoodItem()
 
-    await expect(addToCartService.createCart('000000000000000000000000', food._id.toString())).rejects.toBeInstanceOf(AppError)
-    await expect(addToCartService.createCart(user._id.toString(), '000000000000000000000000')).rejects.toBeInstanceOf(AppError)
+    await expect(addToCartService.createCart(featureNullObjectId, food._id.toString())).rejects.toBeInstanceOf(AppError)
+  })
+
+  it('FE-CART-006 · rejects add-to-cart when food does not exist', async () => {
+    const user = await createUserWithCart()
+
+    await expect(addToCartService.createCart(user._id.toString(), featureNullObjectId)).rejects.toBeInstanceOf(AppError)
   })
 })

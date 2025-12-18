@@ -14,7 +14,7 @@ const mockFoods = [
 ]
 
 test.describe('Products · Delete flow', () => {
-  test('admin can delete a product after confirming', async ({ page }) => {
+  test('SCREEN-ADMIN-003 · admin can delete a product after confirming', async ({ page }) => {
     let removePayload: string | undefined
 
     await page.route('**/api/**', async (route) => {

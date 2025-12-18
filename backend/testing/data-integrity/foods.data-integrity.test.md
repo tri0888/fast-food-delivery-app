@@ -1,13 +1,8 @@
 # foods.data-integrity.test
 
-| ID | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
-| --- | --- | --- | --- | --- | --- | --- |
-| DI-FOOD-001 | Schema Food áp giá trị mặc định | Không | 1. Chuẩn bị payload tối thiểu hợp lệ<br>2. Gọi `Food.create`<br>3. Đọc document trả về | Bản ghi có `isAvailable: true`, `stock: 0`, timestamp đầy đủ | `{ name: 'Data Burger', description: 'Integrity slice', price: 15, image: 'data-burger.jpg', category: 'Burger' }` | Tự động (Jest) |
-| DI-FOOD-002 | Giá trị override được giữ nguyên | Không | 1. Chuẩn bị payload với `stock: 7`, `isAvailable: false`<br>2. Gọi `Food.create`<br>3. Kiểm tra giá trị lưu | Document lưu y nguyên override | Payload cơ bản + override | Tự động (Jest) |
-| DI-FOOD-003A | Thiếu trường `name` khi tạo Food | Không | 1. Sao chép payload mẫu<br>2. Xoá thuộc tính `name`<br>3. Gọi `Food.create` | Promise reject với lỗi thiếu name | Payload thiếu `name` | Tự động (Jest) |
-| DI-FOOD-003B | Thiếu trường `description` khi tạo Food | Không | 1. Sao chép payload mẫu<br>2. Xoá `description`<br>3. Gọi `Food.create` | Promise reject lỗi thiếu description | Payload thiếu `description` | Tự động (Jest) |
-| DI-FOOD-003C | Thiếu trường `price` khi tạo Food | Không | 1. Xoá `price` khỏi payload<br>2. Gọi `Food.create` | Promise reject lỗi thiếu price | Payload thiếu `price` | Tự động (Jest) |
-| DI-FOOD-003D | Thiếu trường `image` khi tạo Food | Không | 1. Xoá `image` khỏi payload<br>2. Gọi `Food.create` | Promise reject lỗi thiếu image | Payload thiếu `image` | Tự động (Jest) |
-| DI-FOOD-003E | Thiếu trường `category` khi tạo Food | Không | 1. Xoá `category` khỏi payload<br>2. Gọi `Food.create` | Promise reject lỗi thiếu category | Payload thiếu `category` | Tự động (Jest) |
-| DI-FOOD-004A | Trường `name` rỗng bị từ chối | Không | 1. Tạo payload với `name: ''`<br>2. Gọi `Food.create` và bắt lỗi | Lỗi validate nêu `name` | Payload `name: ''` | Tự động (Jest) |
-| DI-FOOD-004B | Trường `description` rỗng bị từ chối | Không | 1. Tạo payload với `description: ''`<br>2. Gọi `Food.create` | Lỗi validate nêu `description` | Payload `description: ''` | Tự động (Jest) |
+| ID | Test level | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DAT_FOOD_DI_01 | Integration | Giá tiền không được để trống/null khi insert. | None | 1. Chuẩn bị payload thiếu `price`.<br>2. Gọi `Food.create(payload)`.<br>3. Bắt lỗi validate trả về. | Mongoose báo lỗi `price required`. | `TD-DI-FOODS-BASE` | PASS |
+| DAT_FOOD_DI_02 | Integration | Tên món <= 255 ký tự khi insert. | None | 1. Tạo chuỗi name 300 ký tự.<br>2. Gọi `Food.create` với name đó.<br>3. Quan sát validate. | Hệ thống chặn và báo lỗi độ dài. | `TD-DI-FOODS-LONG-NAME` | FAIL |
+| DAT_FOOD_DI_03 | Integration | Giá tiền không nhận `null`. | None | 1. Gọi `Food.create` với `price = null`.<br>2. Ghi nhận lỗi. | Schema từ chối vì `price` null. | `TD-DI-FOODS-BASE` | PASS |
+| DAT_FOOD_DI_04 | Integration | Tên món <= 255 ký tự khi update. | None | 1. Seed food hợp lệ.<br>2. Gọi `findByIdAndUpdate` với name 400 ký tự (`runValidators=true`).<br>3. Quan sát lỗi. | Update bị từ chối do vượt chiều dài. | `TD-DI-FOODS-BASE`, `TD-DI-FOODS-LONG-NAME` | FAIL |

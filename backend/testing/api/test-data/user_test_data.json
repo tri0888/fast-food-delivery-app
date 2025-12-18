@@ -1,0 +1,39 @@
+[
+  { 
+    "api": "user/register",
+    "name": "dai",
+    "email": "dai@gmail.com",
+    "password": "12345678",
+    "expected_message": "Register success"
+  },
+  { 
+    "api": "user/login",
+    "email": "tri@gmail.com",
+    "password": "1234",
+    "expected_message": "Login success"
+  },
+  {
+    "api": "user/login",
+    "email": "wrongtest.com",
+    "password": "1234",
+    "expected_message": "Please enter a valid email"
+  },
+  {
+    "api": "user/login",
+    "email": "wrong@test.com",
+    "password": "1234",
+    "expected_message": "Incorrect Email"
+  },
+  {
+    "api": "user/login",
+    "email": "tri@gmail.com",
+    "password": "wrong123",
+    "expected_message": "Incorrect Password"
+  },
+  {
+    "api": "user/login",
+    "email": "",
+    "password": "",
+    "expected_message": "Please provide email and password"
+  }
+]

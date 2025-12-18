@@ -7,6 +7,7 @@ const registerUser = async (req, res, next) => {
         const result = await userService.register(name, email, password)
         
         res.json({success : true,
+                  message : 'Register success',
                   token   : result.token})
 
     } catch (error) {

@@ -6,6 +6,7 @@ import editUserService from '../../../modules/Users/editUser/Service.js'
 import getAllUsersService from '../../../modules/Users/getAllUsers/Service.js'
 import toggleCartLockService from '../../../modules/Users/toggleCartLock/Service.js'
 import AppError from '../../../utils/appError.js'
+import { userFeatureData } from '../test-data/users.js'
 
 beforeAll(() => {
   process.env.JWT_SECRET = 'features-users-secret'
@@ -24,28 +25,33 @@ describe('Features · User management capability', () => {
     await resetDatabase()
   })
 
-  it('creates administrative users with hashed passwords', async () => {
-    const created = await addUserService.addUser('Ops Admin', 'ops.admin@example.com', 'Password123!', 'admin')
+  it('FE-USR-001 · creates administrative users with hashed passwords', async () => {
+    const created = await addUserService.addUser(
+      userFeatureData.admin.name,
+      userFeatureData.admin.email,
+      userFeatureData.admin.password,
+      userFeatureData.admin.role
+    )
 
     expect(created.name).toBe('Ops Admin')
     expect(created.role).toBe('admin')
     expect(created.password).toBeUndefined()
 
-    const stored = await User.findOne({ email: 'ops.admin@example.com' }).lean()
-    expect(stored.role).toBe('admin')
-    expect(stored.password).not.toBe('Password123!')
+    const stored = await User.findOne({ email: userFeatureData.admin.email }).lean()
+    expect(stored.role).toBe(userFeatureData.admin.role)
+    expect(stored.password).not.toBe(userFeatureData.admin.password)
   })
 
-  it('prevents duplicate registrations via admin create flow', async () => {
-    await addUserService.addUser('Ops Admin', 'dup@example.com', 'Password123!', 'admin')
-    await expect(addUserService.addUser('Other', 'dup@example.com', 'Password123!', 'user')).rejects.toBeInstanceOf(AppError)
+  it('FE-USR-002 · prevents duplicate registrations via admin create flow', async () => {
+    await addUserService.addUser('Ops Admin', userFeatureData.duplicateEmail, userFeatureData.admin.password, 'admin')
+    await expect(addUserService.addUser('Other', userFeatureData.duplicateEmail, userFeatureData.admin.password, 'user')).rejects.toBeInstanceOf(AppError)
   })
 
-  it('toggles cart lock state for a user account', async () => {
+  it('FE-USR-003 · toggles cart lock state for a user account', async () => {
     const user = await User.create({
-      name: 'Cart Lock',
-      email: 'cart.lock@example.com',
-      password: 'Password123!',
+      name: userFeatureData.cartLockUser.name,
+      email: userFeatureData.cartLockUser.email,
+      password: userFeatureData.cartLockUser.password,
       role: 'user',
       isCartLock: false
     })
@@ -57,27 +63,46 @@ describe('Features · User management capability', () => {
     expect(reverted.isCartLock).toBe(false)
   })
 
-  it('edits user role and enforces validations', async () => {
+  it('FE-USR-004 · updates role to admin and hashes new password', async () => {
     const user = await User.create({
-      name: 'Role Target',
-      email: 'role.target@example.com',
-      password: 'Password123!',
+      name: userFeatureData.roleTarget.name,
+      email: userFeatureData.roleTarget.email,
+      password: userFeatureData.roleTarget.password,
       role: 'user'
     })
 
     const updated = await editUserService.editUser(user._id.toString(), { role: 'admin', password: 'NewPassword456!' })
     expect(updated.role).toBe('admin')
+  })
+
+  it('FE-USR-005 · rejects roles outside enum', async () => {
+    const user = await User.create({
+      name: userFeatureData.roleTarget.name,
+      email: userFeatureData.roleTarget.email,
+      password: userFeatureData.roleTarget.password,
+      role: 'user'
+    })
 
     await expect(editUserService.editUser(user._id.toString(), { role: 'super-admin' })).rejects.toBeInstanceOf(AppError)
+  })
+
+  it('FE-USR-006 · rejects weak passwords on edit', async () => {
+    const user = await User.create({
+      name: userFeatureData.roleTarget.name,
+      email: userFeatureData.roleTarget.email,
+      password: userFeatureData.roleTarget.password,
+      role: 'user'
+    })
+
     await expect(editUserService.editUser(user._id.toString(), { password: '123' })).rejects.toBeInstanceOf(AppError)
   })
 
-  it('lists every user for admin dashboards', async () => {
-    const emails = ['list-1@example.com', 'list-2@example.com']
+  it('FE-USR-007 · lists every user for admin dashboards', async () => {
+    const emails = userFeatureData.listEmails
     await User.create(emails.map((email, idx) => ({
       name: `List User ${idx + 1}`,
       email,
-      password: 'Password123!',
+      password: userFeatureData.admin.password,
       role: idx === 0 ? 'admin' : 'user'
     })))
 

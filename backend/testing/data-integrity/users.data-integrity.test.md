@@ -1,10 +1,8 @@
 # users.data-integrity.test
 
-| ID | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
-| --- | --- | --- | --- | --- | --- | --- |
-| DI-USR-001 | Khi insert user, role/cart/lock nhận default | Không | 1. Chuẩn bị payload bắt buộc<br>2. Gọi `User.create`<br>3. Đọc kết quả | Document lưu `role: 'user'`, `cartData: {}`, `isCartLock: false` | `{ name: 'Integrity User', email: 'integrity+<ts>@example.com', password: 'Password123!' }` | Tự động (Jest) |
-| DI-USR-002 | `cartData` rỗng vẫn tồn tại khi đọc lại | Không | 1. Tạo user như trên<br>2. Gọi `User.findById().lean()` | Kết quả vẫn chứa key `cartData: {}` | Cùng payload như trên | Tự động (Jest) |
-| DI-USR-003 | Email phải duy nhất | Không | 1. Tạo user với email cố định<br>2. Gọi `User.create` lần hai cùng email | Lần insert thứ hai báo lỗi duplicate key | Email `unique@example.com` | Tự động (Jest) |
-| DI-USR-004A | Thiếu `name` khi tạo user | Không | 1. Clone payload mẫu<br>2. Xoá `name`<br>3. Gọi `User.create` | Nhận lỗi `must have name` | Payload thiếu `name` | Tự động (Jest) |
-| DI-USR-004B | Thiếu `email` khi tạo user | Không | 1. Xoá `email` khỏi payload<br>2. Gọi `User.create` | Nhận lỗi `must have email` | Payload thiếu `email` | Tự động (Jest) |
-| DI-USR-004C | Thiếu `password` khi tạo user | Không | 1. Xoá `password` khỏi payload<br>2. Gọi `User.create` | Nhận lỗi `must have password` | Payload thiếu `password` | Tự động (Jest) |
+| ID | Test level | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DAT_USER_DI_01 | Integration | Email unique constraint khi dùng `User.create`. | None | 1. Gọi `User.create` với email `unique@example.com`.<br>2. Gọi lại `User.create` với cùng email.<br>3. Bắt lỗi trả về. | Lần thứ hai bắn duplicate key error. | `TD-DI-USERS-BUILD` | PASS |
+| DAT_USER_DI_02 | Integration | Password lưu dạng hash sau register. | None | 1. Gọi register service tạo user mới.<br>2. Truy vấn `User.findOne` lấy field password.<br>3. So sánh với plaintext gửi lên. | Password trong DB là chuỗi bcrypt, khác plaintext. | `TD-DI-USERS-BUILD` | PASS |
+| DAT_USER_DI_03 | Integration | Email unique kiểm tra bằng raw insert. | None | 1. `User.collection.insertOne` với email `raw@example.com`.<br>2. Insert thêm bản ghi cùng email.<br>3. Theo dõi lỗi. | Insert lần 2 thất bại vì duplicate key. | `TD-DI-USERS-BUILD` | PASS |
+| DAT_USER_DI_04 | Integration | Kiểm tra mẫu password hash khi query hàng loạt. | DAT_USER_DI_02 | 1. Sử dụng `User.find` đọc nhiều document.<br>2. Duyệt từng password và so với regex bcrypt.<br>3. Đảm bảo không có plaintext. | Tất cả password khớp regex bcrypt, không rò plain text. | `TD-DI-USERS-BUILD` | PASS |

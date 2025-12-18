@@ -1,7 +1,6 @@
 # order-surface.security.test
 
-| ID | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
-| --- | --- | --- | --- | --- | --- | --- |
-| SEC-ORD-001 | Từ chối xem danh sách đơn đặc quyền khi thiếu token | Không | 1. Chuẩn bị request `GET /api/order/list` không header<br>2. Gửi request | HTTP `200` với `{ success: false, message: 'Not Authorized' }` | Không có token header | Tự động (Jest) |
-| SEC-ORD-002 | Phát hiện token giả ký bằng secret sai | Không | 1. Tạo admin thật và lấy `_id`<br>2. Ký JWT bằng secret sai<br>3. Gọi `/api/order/list` với token giả | Nhận `{ success: false }`, thông điệp lỗi chữ ký JWT | Dữ liệu admin, token giả | Tự động (Jest) |
-| SEC-ORD-003 | Ngăn user thường cập nhật trạng thái đơn | Không | 1. Seed user role `user` và order<br>2. Gọi `PATCH /api/order/status` với token user<br>3. Đọc lại order | Phản hồi `success: false`, lỗi permission; trạng thái DB giữ nguyên | Order `_id`, payload status `Delivered` | Tự động (Jest) |
+| ID | Test level | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SEC_ORDE_SEC_01 | Integration | IDOR: User A override body `userId` để lấy order của User B. | None | 1. Đăng nhập với token của User A.<br>2. Gọi `POST /api/order/userorders` nhưng set `userId` trong body = User B.<br>3. Quan sát status/response. | API trả `403 Forbidden` và không trả dữ liệu của User B. | `TD-SEC-ORDERS-EMAIL`, `TD-SEC-ORDERS-VICTIM-FIRST`, `TD-SEC-ORDERS-ADDRESS` | FAIL |
+| SEC_ORDE_SEC_02 | Integration | IDOR: User A gọi endpoint list với tham số `orderId` của B. | None | 1. Đăng nhập với token User A (role user).<br>2. Gọi `GET /api/order/list?orderId=<order của B>`.<br>3. Kiểm tra phản hồi. | Yêu cầu bị từ chối với `403`, không lộ dữ liệu nạn nhân. | `TD-SEC-ORDERS-EMAIL`, `TD-SEC-ORDERS-VICTIM-SECOND`, `TD-SEC-ORDERS-ADDRESS` | FAIL |

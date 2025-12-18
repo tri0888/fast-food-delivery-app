@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { paymentFeatureData } from '../test-data/payment.js'
 
 const checkoutCreateMock = jest.fn()
 const constructEventMock = jest.fn()
@@ -29,21 +30,14 @@ describe('Features · Payment module', () => {
     constructEventMock.mockReset()
   })
 
-  it('creates checkout sessions with delivery fees included', async () => {
-    checkoutCreateMock.mockResolvedValue({ url: 'https://stripe.test/session' })
+  it('FE-PAY-001 · creates checkout sessions with delivery fees included', async () => {
+    checkoutCreateMock.mockResolvedValue({ url: paymentFeatureData.checkout.sessionUrl })
 
-    const order = {
-      _id: 'order-feature-1',
-      items: [
-        { name: 'Feature Burger', price: 15, quantity: 2 },
-        { name: 'Feature Fries', price: 5, quantity: 1 }
-      ]
-    }
-    const frontendUrl = 'http://localhost:4173'
+    const { order, frontendUrl } = paymentFeatureData
 
     const sessionUrl = await stripeAdapter.createCheckoutSession(order, frontendUrl)
 
-    expect(sessionUrl).toBe('https://stripe.test/session')
+    expect(sessionUrl).toBe(paymentFeatureData.checkout.sessionUrl)
     expect(checkoutCreateMock).toHaveBeenCalledTimes(1)
 
     const payload = checkoutCreateMock.mock.calls[0][0]
@@ -56,20 +50,25 @@ describe('Features · Payment module', () => {
     expect(payload.cancel_url).toBe(`${frontendUrl}/verify?success=false&orderId=${order._id}`)
   })
 
-  it('verifies webhook payloads with configured secret', () => {
+  it('FE-PAY-002 · verifies webhook payloads with configured secret', () => {
     constructEventMock.mockReturnValue({ id: 'evt_feature' })
 
-    const event = stripeAdapter.verifyWebhook('raw-body', 'sig_header')
+    const event = stripeAdapter.verifyWebhook(paymentFeatureData.webhook.rawBody, paymentFeatureData.webhook.signature)
 
     expect(event).toEqual({ id: 'evt_feature' })
-    expect(constructEventMock).toHaveBeenCalledWith('raw-body', 'sig_header', 'whsec_feature_module')
+    expect(constructEventMock).toHaveBeenCalledWith(
+      paymentFeatureData.webhook.rawBody,
+      paymentFeatureData.webhook.signature,
+      'whsec_feature_module'
+    )
   })
 
-  it('throws when webhook secret is missing', () => {
+  it('FE-PAY-003 · throws when webhook secret is missing', () => {
     const originalSecret = process.env.STRIPE_WEBHOOK_SECRET
     delete process.env.STRIPE_WEBHOOK_SECRET
 
-    expect(() => stripeAdapter.verifyWebhook('raw', 'sig')).toThrow('Stripe webhook secret not configured')
+    expect(() => stripeAdapter.verifyWebhook(paymentFeatureData.webhook.invalidRaw, paymentFeatureData.webhook.invalidSignature))
+      .toThrow('Stripe webhook secret not configured')
 
     process.env.STRIPE_WEBHOOK_SECRET = originalSecret
   })

@@ -18,7 +18,7 @@ const pixelGif = Buffer.from(
 )
 
 test.describe('Cart · Remove item', () => {
-  test('customer can remove an item entirely from cart', async ({ page }) => {
+  test('SCREEN-FE-003 · customer can remove an item entirely from cart', async ({ page }) => {
     const removePayloads: unknown[] = []
 
     await page.addInitScript((token) => {

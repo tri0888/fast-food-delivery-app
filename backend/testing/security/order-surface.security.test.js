@@ -5,18 +5,9 @@ import { connectInMemoryMongo, disconnectInMemoryMongo, resetDatabase } from '..
 import app from '../../app.js'
 import User from '../../models/userModel.js'
 import Order from '../../models/orderModel.js'
+import { orderSecurityData } from './test-data/orders.js'
 
-const buildAddress = () => ({
-  firstName: 'Security',
-  lastName: 'Suite',
-  phone: '+84 900 000 000',
-  city: 'Ho Chi Minh',
-  state: 'District 1',
-  zipcode: '700000',
-  country: 'Vietnam'
-})
-
-describe('Security · privileged order surface', () => {
+describe('Security · Orders IDOR coverage (CSV aligned)', () => {
   beforeAll(async () => {
     process.env.JWT_SECRET = 'security-suite-secret'
     await connectInMemoryMongo()
@@ -30,11 +21,11 @@ describe('Security · privileged order surface', () => {
     await resetDatabase()
   })
 
-  const createAccount = async (role = 'user') => {
+  const createAccount = async (role = orderSecurityData.attackerProfile.role, tag = role) => {
     const user = await User.create({
       name: `${role}-tester`,
-      email: `${role}+${Date.now()}@example.com`,
-      password: 'Test1234!',
+      email: orderSecurityData.userEmail(tag),
+      password: orderSecurityData.accountPassword,
       role,
       cartData: {}
     })
@@ -43,53 +34,43 @@ describe('Security · privileged order surface', () => {
     return { user, token }
   }
 
-  it('rejects privileged order listing when no token is supplied', async () => {
-    const response = await request(app).get('/api/order/list')
+  it('SEC_ORDE_SEC_01 · user cannot override body userId to read another user orders', async () => {
+    const { user: attacker, token } = await createAccount('user', 'attacker')
+    const { user: victim } = await createAccount('user', 'victim')
 
-    expect(response.status).toBe(200)
-    expect(response.body.success).toBe(false)
-    expect(response.body.message).toMatch(/Not Authorized/i)
-  })
-
-  it('rejects forged tokens signed with the wrong secret', async () => {
-    const { user } = await createAccount('admin')
-    const forgedToken = jwt.sign({ id: user._id }, 'wrong-secret')
-
-    const response = await request(app)
-      .get('/api/order/list')
-      .set('token', forgedToken)
-
-    const message = response.body.message
-    expect(response.status).toBe(200)
-    expect(response.body.success).toBe(false)
-    expect(
-      typeof message === 'string'
-        ? message
-        : message?.name || JSON.stringify(message)
-    ).toMatch(/jwt|signature|JsonWebToken/i)
-  })
-
-  it('prevents regular users from mutating order status', async () => {
-    const { user, token } = await createAccount('user')
-    const order = await Order.create({
-      userId: user._id.toString(),
-      items: [
-        { _id: 'food-locked', name: 'Locked Meal', quantity: 1 }
-      ],
-      amount: 25,
-      address: buildAddress()
+    await Order.create({
+      userId: victim._id.toString(),
+      items: orderSecurityData.victimOrderItems.first(),
+      amount: 9,
+      address: orderSecurityData.address()
     })
 
     const response = await request(app)
-      .patch('/api/order/status')
+      .post('/api/order/userorders')
       .set('token', token)
-      .send({ orderId: order._id.toString(), status: 'Delivered' })
+      .send({ userId: victim._id.toString() })
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(403)
     expect(response.body.success).toBe(false)
-    expect(response.body.message).toMatch(/permission/i)
+    expect(response.body.message).toMatch(/forbidden/i)
+  })
 
-    const freshOrder = await Order.findById(order._id).lean()
-    expect(freshOrder.status).toBe('Food Processing')
+  it('SEC_ORDE_SEC_02 · crafting orderId in query string should not expose other user data', async () => {
+    const { user: attacker, token } = await createAccount('user', 'attacker')
+    const { user: victim } = await createAccount('user', 'victim')
+    const victimOrder = await Order.create({
+      userId: victim._id.toString(),
+      items: orderSecurityData.victimOrderItems.second(),
+      amount: 11,
+      address: orderSecurityData.address()
+    })
+
+    const response = await request(app)
+      .get(`/api/order/list?orderId=${victimOrder._id.toString()}`)
+      .set('token', token)
+
+    expect(response.status).toBe(403)
+    expect(response.body.success).toBe(false)
+    expect(response.body.message).toMatch(/forbidden/i)
   })
 })

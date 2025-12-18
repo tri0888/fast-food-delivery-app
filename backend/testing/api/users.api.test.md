@@ -1,6 +1,13 @@
 # users.api.test
 
-| ID | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
-| --- | --- | --- | --- | --- | --- | --- |
-| API-USR-001 | API đăng ký trả token khi thành công | Không | 1. Chuẩn bị payload name/email/password hợp lệ<br>2. Gửi `POST /api/user/register` | HTTP `200` cùng `{ success: true, token: <jwt> }` | Body `{ name: 'API User', email: 'api+<ts>@example.com', password: 'ApiPass123!' }` | Tự động (Jest) |
-| API-USR-002 | API đăng nhập trả về role của user hiện có | Không | 1. Seed admin trong DB<br>2. Gửi `POST /api/user/login` với email/password<br>3. Đọc `role` từ response | HTTP `200` với `{ role: 'admin' }` | User role `admin`, password `ApiPass123!` | Tự động (Jest) |
+| ID | Test level | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| API_USER_01 | Integration | Verify đăng ký thành công với thông tin hợp lệ (Happy Path) | Không | 1. Chuẩn bị payload name/email/password hợp lệ<br>2. `POST /api/user/register`<br>3. Đọc response | HTTP `201`, `{ success: true, token }` (backend đang trả `200`, cần chỉnh) | `TD-API-USERS-REGISTER-PAYLOAD` | FAIL |
+| API_USER_02 | Integration | Verify lỗi đăng ký khi Email không đúng định dạng | Không | 1. `POST /api/user/register` với `email = invalid`<br>2. Quan sát phản hồi | HTTP `400`, message báo email invalid | `TD-API-USERS-INVALID-EMAIL` | PASS |
+| API_USER_03 | Integration | Verify lỗi đăng ký khi Password quá ngắn (<6) | Không | 1. `POST /api/user/register` với `password = 12345`<br>2. Ghi nhận mã lỗi | HTTP `400`, message báo cần password mạnh | `TD-API-USERS-UNIQUE-EMAIL`, `TD-API-COMMON-PASSWORDS` | PASS |
+| API_USER_04 | Integration | Verify lỗi đăng ký khi Email đã tồn tại | API_USER_01 | 1. Đăng ký user lần 1<br>2. Đăng ký lại cùng email lần 2<br>3. Đọc phản hồi | HTTP `409 Conflict`, message báo trùng email (backend hiện trả 400) | `TD-API-USERS-REGISTER-PAYLOAD`, `TD-API-USERS-UNIQUE-EMAIL` | FAIL |
+| API_USER_05 | Integration | Verify Login thành công trả về Token | API_USER_01 | 1. Đăng ký user<br>2. `POST /api/user/login` đúng email/pass<br>3. Đối chiếu body | HTTP `200`, trả token & `success: true` | `TD-API-USERS-REGISTER-PAYLOAD`, `TD-API-COMMON-PASSWORDS` | PASS |
+| API_USER_06 | Integration | Verify Login thất bại sai Password | API_USER_01 | 1. Đăng ký user<br>2. Login với password sai<br>3. Đọc thông báo lỗi | HTTP `401 Unauthorized`, message `Incorrect Password` | `TD-API-USERS-REGISTER-PAYLOAD`, `TD-API-USERS-WRONG-PASSWORD` | PASS |
+| API_USER_07 | Integration | Verify Login thất bại sai Email | Không | 1. `POST /api/user/login` với email chưa tồn tại<br>2. Đọc phản hồi | HTTP `401/404`, message `Incorrect Email` | `TD-API-USERS-UNIQUE-EMAIL`, `TD-API-COMMON-PASSWORDS` | PASS |
+| API_USER_08 | Integration | Verify chức năng khóa giỏ hàng (Toggle Cart Lock) hoạt động | API_USER_05 | 1. Lấy admin token<br>2. `PATCH /api/user/toggle-cart-lock` với userId hợp lệ<br>3. Kiểm tra DB | HTTP `200`, `isCartLock = true` | `TD-API-USERS-UNIQUE-EMAIL`, `TD-API-COMMON-PASSWORDS` | PASS |
+| API_USER_09 | Integration | Verify User bị khóa không thể Login | API_USER_08 | 1. Khóa user ở TC08<br>2. Thử `POST /api/user/login`<br>3. Quan sát mã lỗi | HTTP `403`, message báo user bị khóa (backend hiện vẫn cho login) | `TD-API-USERS-UNIQUE-EMAIL`, `TD-API-COMMON-PASSWORDS` | FAIL |

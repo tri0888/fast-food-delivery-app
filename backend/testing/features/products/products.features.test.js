@@ -7,6 +7,7 @@ import listFoodService from '../../../modules/Foods/listFood/Service.js'
 import removeFoodService from '../../../modules/Foods/removeFood/Service.js'
 import AppError from '../../../utils/appError.js'
 import fs from 'fs'
+import { productFeatureData } from '../test-data/products.js'
 
 describe('Features · Products capability', () => {
   beforeAll(async () => {
@@ -22,20 +23,8 @@ describe('Features · Products capability', () => {
     jest.restoreAllMocks()
   })
 
-  const buildPayload = (overrides = {}) => ({
-    name: 'Spec Salad',
-    description: 'Feature-informed salad',
-    price: 9,
-    category: 'Salad',
-    stock: 5,
-    isAvailable: true,
-    ...overrides
-  })
-
-  const fakeFile = (filename = 'spec-salad.jpg') => ({ filename })
-
-  it('creates a product with server-side validation + defaults', async () => {
-    const created = await addFoodService.createFood(buildPayload(), fakeFile())
+  it('FE-PROD-001 · creates a product with server-side validation + defaults', async () => {
+    const created = await addFoodService.createFood(productFeatureData.buildPayload(), productFeatureData.fakeFile())
 
     expect(created.name).toBe('Spec Salad')
     expect(created.isAvailable).toBe(true)
@@ -43,21 +32,27 @@ describe('Features · Products capability', () => {
     expect(created.stock).toBe(5)
   })
 
-  it('rejects invalid payloads (missing fields or negative values)', async () => {
-    await expect(addFoodService.createFood(buildPayload({ name: '' }), fakeFile())).rejects.toBeInstanceOf(AppError)
-    await expect(addFoodService.createFood(buildPayload({ price: -1 }), fakeFile())).rejects.toBeInstanceOf(AppError)
-    await expect(addFoodService.createFood(buildPayload({ stock: -5 }), fakeFile())).rejects.toBeInstanceOf(AppError)
+  it('FE-PROD-002 · rejects when name is empty', async () => {
+    await expect(addFoodService.createFood(productFeatureData.buildPayload({ name: '' }), productFeatureData.fakeFile())).rejects.toBeInstanceOf(AppError)
   })
 
-  it('updates product details and swaps image when provided', async () => {
+  it('FE-PROD-003 · rejects when price is negative', async () => {
+    await expect(addFoodService.createFood(productFeatureData.buildPayload({ price: -1 }), productFeatureData.fakeFile())).rejects.toBeInstanceOf(AppError)
+  })
+
+  it('FE-PROD-004 · rejects when stock is negative', async () => {
+    await expect(addFoodService.createFood(productFeatureData.buildPayload({ stock: -5 }), productFeatureData.fakeFile())).rejects.toBeInstanceOf(AppError)
+  })
+
+  it('FE-PROD-005 · updates product details and swaps image when provided', async () => {
     const existing = await Food.create({
-      ...buildPayload(),
+      ...productFeatureData.buildPayload(),
       image: 'orig.jpg'
     })
 
     const updated = await editFoodService.updateFood(existing._id.toString(), {
-      ...buildPayload({ name: 'Updated Spec', price: 11, stock: 3 })
-    }, fakeFile('updated.jpg'))
+      ...productFeatureData.buildPayload({ name: 'Updated Spec', price: 11, stock: 3 })
+    }, productFeatureData.fakeFile('updated.jpg'))
 
     expect(updated.name).toBe('Updated Spec')
     expect(updated.price).toBe(11)
@@ -65,10 +60,10 @@ describe('Features · Products capability', () => {
     expect(updated.image).toBe('updated.jpg')
   })
 
-  it('removes a product and unlinks the underlying file', async () => {
+  it('FE-PROD-006 · removes a product and unlinks the underlying file', async () => {
     const unlinkSpy = jest.spyOn(fs, 'unlink').mockImplementation((_, cb) => cb && cb(null))
     const existing = await Food.create({
-      ...buildPayload({ name: 'Removable' }),
+      ...productFeatureData.buildPayload({ name: 'Removable' }),
       image: 'removable.jpg'
     })
 
@@ -79,10 +74,10 @@ describe('Features · Products capability', () => {
     expect(unlinkSpy).toHaveBeenCalled()
   })
 
-  it('lists every product for storefront surfaces', async () => {
+  it('FE-PROD-007 · lists every product for storefront surfaces', async () => {
     const created = await Food.create([
-      { ...buildPayload({ name: 'List Salad A' }), image: 'a.jpg' },
-      { ...buildPayload({ name: 'List Salad B', price: 11 }), image: 'b.jpg' }
+      { ...productFeatureData.buildPayload({ name: 'List Salad A' }), image: 'a.jpg' },
+      { ...productFeatureData.buildPayload({ name: 'List Salad B', price: 11 }), image: 'b.jpg' }
     ])
 
     const foods = await listFoodService.getAllFoods()

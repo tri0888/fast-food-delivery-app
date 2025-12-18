@@ -18,7 +18,7 @@ const pixelGif = Buffer.from(
 )
 
 test.describe('Cart · Update quantities', () => {
-  test('customer can increment and decrement quantities from cart page', async ({ page }) => {
+  test('SCREEN-FE-002 · customer can increment and decrement quantities from cart page', async ({ page }) => {
     const addCalls: string[] = []
     const removeCalls: unknown[] = []
 

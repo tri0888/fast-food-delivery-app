@@ -1,11 +1,10 @@
 # orders.data-integrity.test
 
-| ID | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
-| --- | --- | --- | --- | --- | --- | --- |
-| DI-ORD-001 | Đơn hàng mới mặc định `Food Processing` và chưa thanh toán | Không | 1. Chuẩn bị payload order tối thiểu<br>2. Gọi `Order.create`<br>3. Đọc document kết quả | Lưu `status = 'Food Processing'`, `payment = false`, `date` là Date | `{ userId: 'user-1', items: [{ _id: 'food-1', name: 'Pho', price: 10, quantity: 1 }], amount: 10, address: <buildAddress()> }` | Tự động (Jest) |
-| DI-ORD-002A | Thiếu `userId` khi tạo Order | Không | 1. Sao chép payload mẫu<br>2. Xoá `userId`<br>3. Gọi `Order.create` | Nhận lỗi validate thiếu `userId` | Payload thiếu `userId` | Tự động (Jest) |
-| DI-ORD-002B | Thiếu `items` khi tạo Order | Không | 1. Xoá trường `items` khỏi payload<br>2. Gọi `Order.create` | Lỗi yêu cầu danh sách items | Payload thiếu `items` | Tự động (Jest) |
-| DI-ORD-002C | Thiếu `amount` khi tạo Order | Không | 1. Xoá `amount` khỏi payload<br>2. Gọi `Order.create` | Lỗi validate thiếu amount | Payload thiếu `amount` | Tự động (Jest) |
-| DI-ORD-002D | Thiếu `address` khi tạo Order | Không | 1. Xoá `address` khỏi payload<br>2. Gọi `Order.create` | Lỗi validate thiếu address | Payload thiếu `address` | Tự động (Jest) |
-| DI-ORD-003 | Thanh toán thất bại phải hoàn kho và xoá đơn | Không | 1. Tạo Food stock 0 và order quantity 2<br>2. Gọi `verifyOrderService.verifyOrder(orderId, 'false')`<br>3. Kiểm tra order bị xoá và stock hồi | Service trả `{ success: false, message: 'Not Paid' }`, order bị xoá, stock được hồi | Food `Integrity Pizza` (stock 0), order quantity 2 | Tự động (Jest) |
-| DI-ORD-004 | Verify thiếu `orderId` ném AppError | Không | 1. Gọi `verifyOrderService.verifyOrder(undefined, 'true')`<br>2. Bắt lỗi trả về | Promise reject với `AppError` | `orderId = undefined` | Tự động (Jest) |
+| ID | Test level | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DAT_ORDE_DI_01 | Integration | Cascade/Delete: Xóa user nhưng order phải giữ lịch sử (deleteOne). | None | 1. Seed user và order liên kết userId đó.<br>2. Gọi `User.deleteOne` với `_id` user.<br>3. Truy vấn lại `Order.findOne`. | Order vẫn tồn tại với `userId` giữ nguyên hoặc null hóa chuẩn. | `TD-DI-USERS-BUILD`, `TD-DI-ORDERS-MISMATCH-LIST` | PASS |
+| DAT_ORDE_DI_02 | Integration | Order Items phải tham chiếu Food ID hợp lệ (dịch vụ). | None | 1. Chuẩn bị payload order chứa item `_id` giả.<br>2. Gọi `placeOrderService.placeOrder`.<br>3. Ghi nhận lỗi trả về. | Service ném `Food item not found`. | `TD-DI-ORDERS-GHOST-FOOD` | PASS |
+| DAT_ORDE_DI_03 | Integration | Tổng tiền order = tổng item (service). | None | 1. Lập items tổng cộng 20.<br>2. Gọi `placeOrderService` nhưng truyền `amount = 999`.<br>3. Quan sát phản hồi. | Service reject vì `amount` không khớp sum. | `TD-DI-ORDERS-MISMATCH-LIST` | FAIL |
+| DAT_ORDE_DI_04 | Integration | Cascade/Delete qua `findByIdAndDelete`. | None | 1. Seed user + order.<br>2. Thực hiện `User.findByIdAndDelete`.<br>3. Đọc lại đơn trong DB. | Order không bị xóa/mất dữ liệu. | `TD-DI-USERS-BUILD`, `TD-DI-ORDERS-MISMATCH-LIST` | PASS |
+| DAT_ORDE_DI_05 | Integration | Order Items tham chiếu Food ID hợp lệ (insert trực tiếp). | None | 1. Thực hiện `Order.create` với `items` chứa `_id` không tồn tại.<br>2. Theo dõi kết quả lưu.<br>3. Kiểm tra xem schema có chặn hay không. | Schema từ chối vì vi phạm ràng buộc. | `TD-DI-ORDERS-PHANTOM-ITEM` | FAIL |
+| DAT_ORDE_DI_06 | Integration | Tổng tiền order = tổng item (DB). | None | 1. Thực hiện `Order.create` với `amount 50`, sum item = 10.<br>2. Theo dõi outcome/validation.<br>3. Xác nhận schema chặn. | Schema từ chối insert khi `amount` lệch tổng item. | `TD-DI-ORDERS-MISMATCH-LIST` | FAIL |

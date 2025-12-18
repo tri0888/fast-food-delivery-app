@@ -1,78 +1,130 @@
-import { beforeAll, afterAll, afterEach, describe, it, expect } from '@jest/globals'
+import { beforeAll, afterAll, afterEach, describe, it, expect, jest } from '@jest/globals'
 import jwt from 'jsonwebtoken'
 import { connectInMemoryMongo, disconnectInMemoryMongo, resetDatabase } from '../fixtures/mongo.js'
-import Food from '../../models/foodModel.js'
-import User from '../../models/userModel.js'
+import { createUser, createFood } from '../fixtures/dataFactory.js'
 import Order from '../../models/orderModel.js'
-import { buildClient } from '../fixtures/app.js'
+import { orderApiData } from './test-data/orders.js'
 
-beforeAll(async () => {
-  process.env.JWT_SECRET = 'api-secret'
-  await connectInMemoryMongo()
-})
+const mockStripeAdapter = {
+  createCheckoutSession: jest.fn()
+}
 
-afterAll(async () => {
-  await disconnectInMemoryMongo()
-})
+jest.unstable_mockModule('../../modules/Payment/stripeAdapter.js', () => ({
+  __esModule: true,
+  default: mockStripeAdapter
+}))
 
-afterEach(async () => {
-  await resetDatabase()
-})
+const { buildClient } = await import('../fixtures/app.js')
 
-describe('API · /api/food/list', () => {
-  it('returns food documents from database', async () => {
-    await Food.create({ name: 'API burger', description: 'Test item', price: 10, category: 'Burger', image: 'api-burger.jpg' })
+const buildToken = (user) => jwt.sign({ id: user._id }, process.env.JWT_SECRET)
+const placeOrderViaApi = ({ token, payload }) =>
+  buildClient()
+    .post('/api/order/place')
+    .set('token', token)
+    .send(payload)
 
-    const response = await buildClient().get('/api/food/list')
-
-    expect(response.status).toBe(200)
-    expect(response.body.success).toBe(true)
-    expect(response.body.data).toHaveLength(1)
-    expect(response.body.data[0].name).toBe('API burger')
+describe('API · /api/order endpoints (CSV-aligned)', () => {
+  beforeAll(async () => {
+    process.env.JWT_SECRET = 'api-order-secret'
+    process.env.FRONTEND_URL = 'http://localhost:4173'
+    await connectInMemoryMongo()
   })
-})
 
-describe('API · /api/order workflow', () => {
-  const buildToken = (user) => jwt.sign({ id: user._id }, process.env.JWT_SECRET)
+  afterAll(async () => {
+    await disconnectInMemoryMongo()
+  })
 
-  it('returns orders for the authenticated user only', async () => {
-    const user = await User.create({ name: 'Order API User', email: 'order-user@example.com', password: 'Password123!' })
-    const otherUser = await User.create({ name: 'Other', email: 'other@example.com', password: 'Password123!' })
+  afterEach(async () => {
+    await resetDatabase()
+    jest.clearAllMocks()
+  })
+
+  it('API_ORDE_01 · places an order from cart data and returns Pending status', async () => {
+    mockStripeAdapter.createCheckoutSession.mockResolvedValue('https://stripe.test/session')
+    const user = await createUser({ cartData: { phantom: 1 } })
+    const entree = await createFood({ name: orderApiData.menuItems.combo.name, price: orderApiData.menuItems.combo.price, stock: 10 })
+
+    const response = await placeOrderViaApi({
+      token: buildToken(user),
+      payload: {
+        userId: user._id.toString(),
+        items: [
+          {
+            _id: entree._id.toString(),
+            name: entree.name,
+            price: entree.price,
+            quantity: 2
+          }
+        ],
+        amount: entree.price * 2,
+        address: orderApiData.address()
+      }
+    })
+
+    expect(response.status).toBe(201)
+    expect(response.body.success).toBe(true)
+    expect(response.body.session_url).toContain('stripe.test')
+    expect(mockStripeAdapter.createCheckoutSession).toHaveBeenCalledTimes(1)
+
+    const storedOrder = await Order.findOne({ userId: user._id.toString() }).lean()
+    expect(storedOrder).toBeTruthy()
+    expect(storedOrder.status).toBe('Pending')
+  })
+
+  it('API_ORDE_02 · rejects checkout when cart/items payload is empty', async () => {
+    const user = await createUser({ cartData: {} })
+
+    const response = await placeOrderViaApi({
+      token: buildToken(user),
+      payload: {
+        userId: user._id.toString(),
+        items: [],
+        amount: 0,
+        address: orderApiData.address()
+      }
+    })
+
+    expect(response.status).toBe(400)
+    expect(response.body.status).toBe('fail')
+    expect(response.body.message).toMatch(/at least one item/i)
+    expect(mockStripeAdapter.createCheckoutSession).not.toHaveBeenCalled()
+  })
+
+  it('API_ORDE_03 · returns only orders owned by the authenticated user', async () => {
+    const owner = await createUser({ email: orderApiData.buildUserEmail('owner') })
+    const other = await createUser({ email: orderApiData.buildUserEmail('other') })
 
     await Order.create([
       {
-        userId: user._id.toString(),
-        items: [{ name: 'One', price: 5, quantity: 1 }],
-        amount: 5,
-        address: { street: 'User St', city: 'API' }
+        userId: owner._id.toString(),
+        items: [{ name: orderApiData.menuItems.ownerMeal.name, price: orderApiData.menuItems.ownerMeal.price, quantity: 1 }],
+        amount: orderApiData.menuItems.ownerMeal.price,
+        address: orderApiData.address()
       },
       {
-        userId: otherUser._id.toString(),
-        items: [{ name: 'Other', price: 7, quantity: 1 }],
-        amount: 7,
-        address: { street: 'Other St', city: 'API' }
+        userId: other._id.toString(),
+        items: [{ name: orderApiData.menuItems.otherMeal.name, price: orderApiData.menuItems.otherMeal.price, quantity: 1 }],
+        amount: orderApiData.menuItems.otherMeal.price,
+        address: orderApiData.address()
       }
     ])
 
     const response = await buildClient()
       .post('/api/order/userorders')
-      .set('token', buildToken(user))
+      .set('token', buildToken(owner))
 
     expect(response.status).toBe(200)
     expect(response.body.success).toBe(true)
     expect(response.body.data).toHaveLength(1)
-    expect(response.body.data[0].userId).toBe(user._id.toString())
+    expect(response.body.data[0].userId).toBe(owner._id.toString())
   })
 
-  it('allows admins to list every order', async () => {
-    const admin = await User.create({ name: 'Admin', email: 'admin-order@example.com', password: 'Password123!', role: 'admin' })
-
-    await Order.create({
-      userId: admin._id.toString(),
-      items: [{ name: 'Admin order', price: 9, quantity: 1 }],
-      amount: 9,
-      address: { street: 'Admin', city: 'API' }
-    })
+  it('API_ORDE_04 · allows admins to list every order in the system', async () => {
+    const admin = await createUser({ role: 'admin', email: orderApiData.buildUserEmail('admin-list') })
+    await Order.create([
+      { userId: 'user-1', items: [{ name: 'Matrix Burger', price: 10, quantity: 1 }], amount: 10, address: orderApiData.address() },
+      { userId: 'user-2', items: [{ name: 'Matrix Fries', price: 5, quantity: 2 }], amount: 10, address: orderApiData.address() }
+    ])
 
     const response = await buildClient()
       .get('/api/order/list')
@@ -81,17 +133,40 @@ describe('API · /api/order workflow', () => {
     expect(response.status).toBe(200)
     expect(response.body.success).toBe(true)
     expect(Array.isArray(response.body.data)).toBe(true)
-    expect(response.body.data.length).toBeGreaterThanOrEqual(1)
+    expect(response.body.data.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('updates order status when requested by an admin', async () => {
-    const admin = await User.create({ name: 'Admin Status', email: 'admin-status@example.com', password: 'Password123!', role: 'admin' })
+  it('API_ORDE_05 · transitions Pending -> Confirmed when admin updates status', async () => {
+    const admin = await createUser({ role: 'admin', email: orderApiData.buildUserEmail('admin-status') })
     const order = await Order.create({
-      userId: 'user-status',
-      items: [{ name: 'Status Meal', price: 11, quantity: 1 }],
-      amount: 11,
-      status: 'Food Processing',
-      address: { street: 'Status', city: 'API' }
+      userId: 'user-status-confirm',
+      items: [{ name: orderApiData.menuItems.pending.name, price: orderApiData.menuItems.pending.price, quantity: 1 }],
+      amount: orderApiData.menuItems.pending.price,
+      address: orderApiData.address(),
+      status: 'Pending'
+    })
+
+    const response = await buildClient()
+      .patch('/api/order/status')
+      .set('token', buildToken(admin))
+      .send({ orderId: order._id.toString(), status: 'Confirmed' })
+
+    expect(response.status).toBe(200)
+    expect(response.body.success).toBe(true)
+    expect(response.body.message).toBe('Status Updated')
+
+    const updated = await Order.findById(order._id).lean()
+    expect(updated.status).toBe('Confirmed')
+  })
+
+  it('API_ORDE_06 · rejects skipping Confirmed when jumping straight to Delivered', async () => {
+    const admin = await createUser({ role: 'admin', email: orderApiData.buildUserEmail('admin-skip') })
+    const order = await Order.create({
+      userId: 'user-skip',
+      items: [{ name: orderApiData.menuItems.skip.name, price: orderApiData.menuItems.skip.price, quantity: 1 }],
+      amount: orderApiData.menuItems.skip.price,
+      address: orderApiData.address(),
+      status: 'Pending'
     })
 
     const response = await buildClient()
@@ -99,24 +174,52 @@ describe('API · /api/order workflow', () => {
       .set('token', buildToken(admin))
       .send({ orderId: order._id.toString(), status: 'Delivered' })
 
-    expect(response.status).toBe(200)
-    expect(response.body.success).toBe(true)
-    expect(response.body.message).toBe('Status Updated')
-
-    const updated = await Order.findById(order._id).lean()
-    expect(updated.status).toBe('Delivered')
+    expect(response.status).toBe(400)
+    expect(response.body.status).toBe('fail')
+    expect(response.body.message).toMatch(/must confirm before delivering/i)
   })
 
-  it('surfaces validation errors when admins provide invalid order identifiers', async () => {
-    const admin = await User.create({ name: 'Admin Missing Order', email: 'admin-miss@example.com', password: 'Password123!', role: 'admin' })
+  it('API_ORDE_07 · blocks cancellation when order already delivering', async () => {
+    const admin = await createUser({ role: 'admin', email: orderApiData.buildUserEmail('admin-cancel') })
+    const order = await Order.create({
+      userId: 'user-cancel',
+      items: [{ name: orderApiData.menuItems.delivery.name, price: orderApiData.menuItems.delivery.price, quantity: 1 }],
+      amount: orderApiData.menuItems.delivery.price,
+      address: orderApiData.address(),
+      status: 'Out for delivery'
+    })
 
     const response = await buildClient()
       .patch('/api/order/status')
       .set('token', buildToken(admin))
-      .send({ orderId: '000000000000000000000000', status: 'Delivered' })
+      .send({ orderId: order._id.toString(), status: 'Cancelled' })
 
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(400)
     expect(response.body.status).toBe('fail')
-    expect(response.body.message).toMatch(/order not found/i)
+    expect(response.body.message).toMatch(/cannot cancel .* delivering/i)
+
+    const unchanged = await Order.findById(order._id).lean()
+    expect(unchanged.status).toBe('Out for delivery')
+  })
+
+  it('API_ORDE_08 · verifies an order after payment gateway callback', async () => {
+    const order = await Order.create({
+      userId: 'user-verify',
+      items: [{ name: orderApiData.menuItems.verify.name, price: orderApiData.menuItems.verify.price, quantity: 1 }],
+      amount: orderApiData.menuItems.verify.price,
+      address: orderApiData.address(),
+      payment: false
+    })
+
+    const response = await buildClient()
+      .post('/api/order/verify')
+      .send({ orderId: order._id.toString(), success: 'true' })
+
+    expect(response.status).toBe(200)
+    expect(response.body.success).toBe(true)
+    expect(response.body.message).toBe('Paid')
+
+    const verified = await Order.findById(order._id).lean()
+    expect(verified.payment).toBe(true)
   })
 })

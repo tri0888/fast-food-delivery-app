@@ -7,6 +7,7 @@ const loginUser = async (req, res, next) => {
         const result = await userService.login(email, password)
         
         res.json({success : true,
+                  message : 'Login success',
                   token   : result.token,
                   role    : result.role})
 

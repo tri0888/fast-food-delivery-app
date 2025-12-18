@@ -1,23 +1,24 @@
-import { beforeAll, afterAll, afterEach, describe, it, expect } from '@jest/globals'
+import { beforeAll, afterAll, afterEach, describe, it, expect, jest } from '@jest/globals'
 import { connectInMemoryMongo, disconnectInMemoryMongo, resetDatabase } from '../fixtures/mongo.js'
+import { createUser, createFood } from '../fixtures/dataFactory.js'
 import Order from '../../models/orderModel.js'
-import Food from '../../models/foodModel.js'
-import AppError from '../../utils/appError.js'
+import User from '../../models/userModel.js'
+import { dataIntegrityOrderData } from './test-data/orders.js'
 
-const { default: verifyOrderService } = await import('../../modules/Orders/verifyOrder/Service.js')
+const mockStripeAdapter = {
+  createCheckoutSession: jest.fn().mockResolvedValue('https://stripe.test/session')
+}
 
-const buildAddress = () => ({
-  firstName: 'Data',
-  lastName: 'Integrity',
-  phone: '+84 900 000 000',
-  city: 'Ho Chi Minh',
-  state: '1',
-  zipcode: '700000',
-  country: 'Vietnam'
-})
+jest.unstable_mockModule('../../modules/Payment/stripeAdapter.js', () => ({
+  __esModule: true,
+  default: mockStripeAdapter
+}))
 
-describe('Data Integrity · Orders schema', () => {
+const { default: placeOrderService } = await import('../../modules/Orders/placeOrder/Service.js')
+
+describe('Data Integrity · Orders schema (CSV aligned)', () => {
   beforeAll(async () => {
+    process.env.FRONTEND_URL = 'http://localhost:5173'
     await connectInMemoryMongo()
   })
 
@@ -27,67 +28,89 @@ describe('Data Integrity · Orders schema', () => {
 
   afterEach(async () => {
     await resetDatabase()
+    jest.clearAllMocks()
   })
 
-  it('applies Food Processing + unpaid defaults', async () => {
-    const stored = await Order.create({
-      userId: 'user-1',
-      items: [{ _id: 'food-1', name: 'Pho', price: 10, quantity: 1 }],
-      amount: 10,
-      address: buildAddress()
-    })
-
-    expect(stored.status).toBe('Food Processing')
-    expect(stored.payment).toBe(false)
-    expect(stored.date).toBeInstanceOf(Date)
-  })
-
-  it.each([
-    ['userId'],
-    ['items'],
-    ['amount'],
-    ['address']
-  ])('requires %s to persist an order', async (field) => {
-    const payload = {
-      userId: 'user-2',
-      items: [{ _id: 'food', name: 'Banh mi', quantity: 1, price: 5 }],
-      amount: 5,
-      address: buildAddress()
-    }
-    delete payload[field]
-
-    const matcher = field === 'items' ? /must contain/i : /must have/i
-    await expect(Order.create(payload)).rejects.toThrow(matcher)
-  })
-
-  it('restores inventory and deletes order when payment fails', async () => {
-    const food = await Food.create({
-      name: 'Integrity Pizza',
-      description: 'Data pizza',
-      price: 12,
-      image: 'pizza.jpg',
-      category: 'Pizza',
-      stock: 0
-    })
-
+  it('DAT_ORDE_DI_01 · deleting a user keeps historical orders intact', async () => {
+    const user = await createUser()
     const order = await Order.create({
-      userId: 'user-restore',
-      items: [{ _id: food._id, name: food.name, price: food.price, quantity: 2 }],
-      amount: 24,
-      address: buildAddress()
+      userId: user._id.toString(),
+      items: [{ _id: 'food-keep', name: 'History Meal', price: 10, quantity: 1 }],
+      amount: 10,
+      address: dataIntegrityOrderData.buildAddress()
     })
 
-    const response = await verifyOrderService.verifyOrder(order._id.toString(), 'false')
-    expect(response).toEqual({ success: false, message: 'Not Paid' })
+    await User.deleteOne({ _id: user._id })
 
-    const removed = await Order.findById(order._id)
-    expect(removed).toBeNull()
-
-    const refreshedFood = await Food.findById(food._id).lean()
-    expect(refreshedFood.stock).toBe(2)
+    const persisted = await Order.findById(order._id).lean()
+    expect(persisted).toBeTruthy()
+    expect(persisted.userId).toBe(user._id.toString())
   })
 
-  it('throws when verifying without an order id', async () => {
-    await expect(verifyOrderService.verifyOrder(undefined, 'true')).rejects.toBeInstanceOf(AppError)
+  it('DAT_ORDE_DI_02 · cascaded deletes should never wipe past order entries', async () => {
+    const user = await createUser()
+    const order = await Order.create({
+      userId: user._id.toString(),
+      items: [{ _id: 'food-keep2', name: 'History Meal 2', price: 12, quantity: 1 }],
+      amount: 12,
+      address: dataIntegrityOrderData.buildAddress()
+    })
+
+    await User.findByIdAndDelete(user._id)
+
+    const persisted = await Order.findById(order._id).lean()
+    expect(persisted).toBeTruthy()
+    expect(persisted.userId).toBe(order.userId)
+  })
+
+  it('DAT_ORDE_DI_03 · placeOrder rejects items that reference non-existing Food IDs', async () => {
+    const user = await createUser()
+
+    await expect(
+      placeOrderService.placeOrder(
+        user._id,
+        [dataIntegrityOrderData.ghostFood],
+        15,
+        dataIntegrityOrderData.buildAddress(),
+        dataIntegrityOrderData.frontendUrl
+      )
+    ).rejects.toThrow(/not found/i)
+  })
+
+  it('DAT_ORDE_DI_04 · direct inserts with fake FoodID should be rejected by schema rules', async () => {
+    await expect(
+      Order.create({
+        userId: 'user-fake-food',
+        items: [dataIntegrityOrderData.phantomItem],
+        amount: 20,
+        address: dataIntegrityOrderData.buildAddress()
+      })
+    ).rejects.toThrow(/food id/i)
+  })
+
+  it('DAT_ORDE_DI_05 · amount must equal sum(items) when persisting orders', async () => {
+    const user = await createUser()
+    const food = await createFood({ price: 10, stock: 5 })
+
+    await expect(
+      placeOrderService.placeOrder(
+        user._id,
+        [{ _id: food._id, name: food.name, price: food.price, quantity: 2 }],
+        999,
+        dataIntegrityOrderData.buildAddress(),
+        dataIntegrityOrderData.frontendUrl
+      )
+    ).rejects.toThrow(/total/i)
+  })
+
+  it('DAT_ORDE_DI_06 · manual amount mismatches against item sum should be blocked', async () => {
+    await expect(
+      Order.create({
+        userId: 'user-mismatch',
+        items: dataIntegrityOrderData.mismatchItems,
+        amount: 50,
+        address: dataIntegrityOrderData.buildAddress()
+      })
+    ).rejects.toThrow(/total/i)
   })
 })

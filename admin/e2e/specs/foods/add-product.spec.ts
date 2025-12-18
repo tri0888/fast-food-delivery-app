@@ -7,7 +7,7 @@ const pixelPng = Buffer.from(
 )
 
 test.describe('Products · Add flow', () => {
-  test('admin can add a new product with confirmation', async ({ page }) => {
+  test('SCREEN-ADMIN-001 · admin can add a new product with confirmation', async ({ page }) => {
     let addPayload: string | undefined
 
     await page.route('**/api/**', async (route) => {
@@ -59,7 +59,7 @@ test.describe('Products · Add flow', () => {
     expect(addPayload).toContain('Cart Lab Special')
   })
 
-  test('shows validation error toast when required fields are missing', async ({ page }) => {
+  test('SCREEN-ADMIN-004 · shows validation error toast when required fields are missing', async ({ page }) => {
     let addPayload: string | undefined
 
     await page.route('**/api/**', async (route) => {

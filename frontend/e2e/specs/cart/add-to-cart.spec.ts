@@ -18,7 +18,7 @@ const pixelGif = Buffer.from(
 )
 
 test.describe('Cart · Add item', () => {
-  test('customer can add a product from the menu into cart', async ({ page }) => {
+  test('SCREEN-FE-001 · customer can add a product from the menu into cart', async ({ page }) => {
     const cartAdds: string[] = []
 
     await page.addInitScript((token) => {

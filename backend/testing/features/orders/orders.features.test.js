@@ -5,6 +5,8 @@ import Food from '../../../models/foodModel.js'
 import User from '../../../models/userModel.js'
 import Order from '../../../models/orderModel.js'
 import AppError from '../../../utils/appError.js'
+import { orderFeatureData } from '../test-data/orders.js'
+import { featureNullObjectId } from '../test-data/common.js'
 
 const mockStripeAdapter = {
   createCheckoutSession: jest.fn()
@@ -21,8 +23,6 @@ const { default: updateStatusService } = await import('../../../modules/Orders/u
 const { default: userOrdersService } = await import('../../../modules/Orders/userOrders/Service.js')
 const { default: verifyOrderService } = await import('../../../modules/Orders/verifyOrder/Service.js')
 
-const frontendUrl = 'http://localhost:4173'
-
 describe('Features · Orders capability', () => {
   beforeAll(async () => {
     await connectInMemoryMongo()
@@ -37,7 +37,7 @@ describe('Features · Orders capability', () => {
     jest.clearAllMocks()
   })
 
-  it('places orders end-to-end and returns a Stripe checkout url', async () => {
+  it('FE-ORD-001 · places orders end-to-end and returns a Stripe checkout url', async () => {
     const user = await createUser({ cartData: { stale: 2 } })
     const food = await createFood({ stock: 5 })
     mockStripeAdapter.createCheckoutSession.mockResolvedValue('https://stripe.test/checkout-session')
@@ -55,8 +55,8 @@ describe('Features · Orders capability', () => {
       user._id,
       items,
       amount,
-      { street: '123 Feature', city: 'Orders', country: 'VN' },
-      frontendUrl
+      orderFeatureData.address,
+      orderFeatureData.frontendUrl
     )
 
     expect(response.session_url).toBe('https://stripe.test/checkout-session')
@@ -73,7 +73,7 @@ describe('Features · Orders capability', () => {
     expect(refreshedUser.cartData).toEqual({})
   })
 
-  it('blocks checkout when requested items exceed stock', async () => {
+  it('FE-ORD-002 · blocks checkout when requested items exceed stock', async () => {
     const user = await createUser()
     const food = await createFood({ stock: 0 })
 
@@ -82,20 +82,20 @@ describe('Features · Orders capability', () => {
         user._id,
         [{ _id: food._id, name: food.name, price: food.price, quantity: 1 }],
         food.price,
-        { street: 'Low Stock', city: 'Orders', country: 'VN' },
-        frontendUrl
+        orderFeatureData.lowStockAddress,
+        orderFeatureData.frontendUrl
       )
     ).rejects.toBeInstanceOf(AppError)
 
     expect(mockStripeAdapter.createCheckoutSession).not.toHaveBeenCalled()
   })
 
-  it('marks orders as paid when verification succeeds', async () => {
+  it('FE-ORD-003 · marks orders as paid when verification succeeds', async () => {
     const order = await Order.create({
       userId: 'user-pay',
       items: [{ _id: 'food', quantity: 1 }],
       amount: 10,
-      address: { street: 'Pay', city: 'Orders' }
+      address: orderFeatureData.paymentAddress
     })
 
     const response = await verifyOrderService.verifyOrder(order._id.toString(), 'true')
@@ -105,12 +105,12 @@ describe('Features · Orders capability', () => {
     expect(stored.payment).toBe(true)
   })
 
-  it('enforces valid admin status transitions', async () => {
+  it('FE-ORD-004 · enforces valid admin status transitions', async () => {
     const order = await Order.create({
       userId: 'user-status',
       items: [{ _id: 'food', quantity: 1 }],
       amount: 10,
-      address: { street: 'Status', city: 'Orders' },
+      address: orderFeatureData.statusAddress,
       status: 'Food Processing'
     })
 
@@ -122,10 +122,10 @@ describe('Features · Orders capability', () => {
     await expect(updateStatusService.updateOrderStatus(order._id.toString(), 'INVALID')).rejects.toBeInstanceOf(AppError)
   })
 
-  it('lists every order for admin monitoring', async () => {
+  it('FE-ORD-005 · lists every order for admin monitoring', async () => {
     await Order.create([
-      { userId: 'admin-list-one', items: [{ _id: 'food', quantity: 1 }], amount: 10, address: { street: 'A' } },
-      { userId: 'admin-list-two', items: [{ _id: 'food2', quantity: 2 }], amount: 20, address: { street: 'B' } }
+      { userId: 'admin-list-one', items: [{ _id: 'food', quantity: 1 }], amount: 10, address: orderFeatureData.listAddresses[0] },
+      { userId: 'admin-list-two', items: [{ _id: 'food2', quantity: 2 }], amount: 20, address: orderFeatureData.listAddresses[1] }
     ])
 
     const orders = await listOrdersService.getAllOrders()
@@ -133,19 +133,19 @@ describe('Features · Orders capability', () => {
     expect(orders.map((order) => order.amount)).toEqual(expect.arrayContaining([10, 20]))
   })
 
-  it('returns orders belonging to a specific user and rejects missing users', async () => {
+  it('FE-ORD-006 · returns orders belonging to a specific user and rejects missing users', async () => {
     const customer = await createUser()
     const other = await createUser()
 
     await Order.create([
-      { userId: customer._id, items: [{ _id: 'food', quantity: 1 }], amount: 15, address: { street: 'User' } },
-      { userId: other._id, items: [{ _id: 'food', quantity: 1 }], amount: 25, address: { street: 'Other' } }
+      { userId: customer._id, items: [{ _id: 'food', quantity: 1 }], amount: 15, address: orderFeatureData.userAddress },
+      { userId: other._id, items: [{ _id: 'food', quantity: 1 }], amount: 25, address: orderFeatureData.otherAddress }
     ])
 
     const orders = await userOrdersService.getUserOrders(customer._id.toString())
     expect(orders).toHaveLength(1)
     expect(orders[0].userId.toString()).toBe(customer._id.toString())
 
-    await expect(userOrdersService.getUserOrders('000000000000000000000000')).rejects.toBeInstanceOf(AppError)
+    await expect(userOrdersService.getUserOrders(featureNullObjectId)).rejects.toBeInstanceOf(AppError)
   })
 })

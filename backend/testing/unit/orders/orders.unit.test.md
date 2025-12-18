@@ -1,0 +1,7 @@
+# orders.unit.test
+
+| ID | Test level | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| UNI_ORDE_UNIT_01 / UNI_ORDE_UNIT_02 | Unit | `placeOrderService` phải rollback stock khi lưu order thất bại. | None | 1. Mock repo `findUserById`/`findFoodById` trả hợp lệ và `createOrder` ném lỗi.<br>2. Gọi `placeOrderService.placeOrder` với item quantity > 0.<br>3. Theo dõi lời gọi `reserveStock` và kỳ vọng `restoreStock`. | Khi `createOrder` thất bại, service gọi `restoreStock` với danh sách item đã reserve. | `TD-UNIT-ORDER-ROLLBACK-USER`, `TD-UNIT-ORDER-ROLLBACK-FOOD`, `TD-UNIT-ORDER-ROLLBACK-ITEMS`, `TD-UNIT-ORDER-ADDRESS`, `TD-UNIT-ORDER-CHECKOUT` | FAIL |
+| UNI_ORDE_UNIT_03 / UNI_ORDE_UNIT_04 | Unit | `updateStatusService` phải chặn nhảy trạng thái sai luồng (Pending → Delivered). | None | 1. Mock repo `findOrderById` trả order `status: 'Pending'`.<br>2. Gọi `updateOrderStatus(orderId, 'Delivered')`.<br>3. Quan sát reject `AppError`. | Service từ chối và không gọi `updateStatus`. | `TD-UNIT-ORDER-SEQUENTIAL` | FAIL |
+| UNI_ORDE_UNIT_05 / UNI_ORDE_UNIT_06 | Unit | `verifyOrderService` cần so OTP trước khi đánh dấu Paid. | None | 1. Mock repo `findById` trả order có `otp: '123456'`.<br>2. Gọi `verifyOrder(orderId, 'true', '000000')` (OTP sai).<br>3. Theo dõi reject và đảm bảo `updatePaymentStatus` không bị gọi. | OTP sai khiến request bị từ chối và không cập nhật payment. | `TD-UNIT-ORDER-OTP` | FAIL |
