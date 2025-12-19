@@ -2,7 +2,6 @@
 
 | ID | Data | Notes |
 | --- | --- | --- |
-| TD-FEAT-COMMON-EMAIL | Định dạng: `{prefix}+{timestamp}-{hex}@example.com`<br>Ví dụ: `feature+1734222222222-ab12cd@example.com` | Email động phục vụ toàn bộ suite features (prefix tuỳ ngữ cảnh). |
 | TD-FEAT-COMMON-PASSWORDS | `strong`: `Password123!`<br>`weak`: `BadPassword!`<br>`whitespace`: `'  '` | Bộ mật khẩu tiêu chuẩn cho kịch bản đăng nhập/âm bản UI. |
 | TD-FEAT-COMMON-NULL-ID | `000000000000000000000000` | ObjectId toàn số 0 dùng để ép lỗi không tìm thấy. |
 | TD-FEAT-CART-USER | name: `Cart User`<br>email: `cart+{timestamp}-{hex}@example.com`<br>password: `Password123!`<br>cartData: `{}` | Người dùng mẫu cho tính năng giỏ hàng (có thể override cartData tuỳ case). |

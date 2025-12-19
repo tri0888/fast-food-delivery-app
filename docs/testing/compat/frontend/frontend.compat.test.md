@@ -1,0 +1,10 @@
+# frontend.compat.test
+
+| ID | Test level | Mô tả test case | Inter-test case Dependence | Quy trình kiểm thử | Kết quả mong đợi | Dữ liệu kiểm thử | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| COMPAT-FE-001 | Acceptance | Homepage render navbar + danh sách món (cross-browser) | Không | 1. Stub `GET /api/food/list` trả 1-3 món mẫu + stub ảnh `/images/**`<br>2. Mở `/` trên Chromium/Firefox/WebKit<br>3. Quan sát navbar và khu vực list | Navbar hiển thị link Home và icon cart, `.food-display-list` render, không crash | Mock foods, pixel image | PASS |
+| COMPAT-FE-002 | Acceptance | Route `/cart` render không crash (cross-browser) | Không | 1. Stub `GET /api/cart/get` trả cart rỗng<br>2. Mở `/cart` trên 3 browser<br>3. Quan sát URL và DOM | URL chứa `/cart`, trang render body bình thường, không blank screen | Mock cart rỗng | PASS |
+| COMPAT-FE-003 | Acceptance | Category filter/scroll vẫn hoạt động cơ bản (cross-browser) | COMPAT-FE-001 | 1. Mở `/` và đảm bảo có ít nhất 2 category trong data mẫu<br>2. Click/chọn category (nếu UI có category menu)<br>3. Quan sát danh sách món thay đổi/scroll được | UI không lỗi layout, thao tác click không bị ignore trên Firefox/WebKit | Mock foods có `category` khác nhau | PASS |
+| COMPAT-FE-004 | Acceptance | Add-to-cart tăng counter trên navbar (cross-browser) | COMPAT-FE-001 | 1. Stub `POST /api/cart/add` trả success<br>2. Ở `/` bấm nút `+` (add) của món đầu tiên<br>3. Quan sát badge/counter cart tăng | Counter tăng (hoặc cart indicator thay đổi), request add được gọi | Mock add success | PASS |
+| COMPAT-FE-005 | Acceptance | Reload trực tiếp `/cart` không mất render (cross-browser) | COMPAT-FE-002 | 1. Mở `/cart`<br>2. Refresh trang (Ctrl+R)<br>3. Quan sát vẫn render được | Sau refresh không lỗi JS, trang vẫn hiển thị | Mock cart rỗng | PASS |
+| COMPAT-FE-006 | Acceptance | Hình ảnh món render (no broken image) trên 3 browser | COMPAT-FE-001 | 1. Stub `/images/**` trả PNG 1x1 (pixel)<br>2. Mở `/`<br>3. Kiểm tra request tới `/images/**` trả HTTP 200 | Không có hình broken; các response `/images/**` trả 200 | Pixel image | PASS |

@@ -1,1 +1,7 @@
-{}
+{
+	"name": "fast-food-delivery-app",
+	"private": true,
+	"scripts": {
+		"test:usability": "node tools/test-usability.mjs"
+	}
+}

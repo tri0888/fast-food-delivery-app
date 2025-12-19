@@ -2,8 +2,6 @@
 
 | ID | Data | Notes |
 | --- | --- | --- |
-| TD-API-COMMON-EMAIL | Định dạng: `csv-{prefix}-{timestamp}-{hex}@example.com`<br>Ví dụ: `csv-api-1734222222222-ab12cd@example.com` | Email động phục vụ tạo user duy nhất cho mọi kịch bản API. |
-| TD-API-COMMON-ADDRESS | street: `CSV Matrix St`<br>city: `Ho Chi Minh`<br>state: `SG`<br>zipcode: `700000`<br>country: `Vietnam` | Địa chỉ chuẩn dùng cho shipping/billing chung giữa các suite. |
 | TD-API-COMMON-NULL-ID | `000000000000000000000000` | ObjectId 24 ký tự toàn số 0 để kiểm tra lỗi không tìm thấy. |
 | TD-API-COMMON-PASSWORDS | `strong`: `Password123!`<br>`weak`: `12345`<br>`wrong`: `WrongPass999!` | Bộ mật khẩu chuẩn cho ca đăng ký/đăng nhập (đúng, yếu, sai). |
 | TD-API-CART-USER-EMAIL | Định dạng: `csv-cart-{tag}-{timestamp}-{hex}@example.com`<br>Ví dụ: `csv-cart-user-1734222222222-bc09ef@example.com` | Email khách hàng chuyên dùng cho Cart API, bảo đảm duy nhất theo tag. |
@@ -18,5 +16,4 @@
 | TD-API-USERS-REGISTER-PAYLOAD | name: `CSV Matrix User`<br>email: `csv-register-{tag}-{timestamp}-{hex}@example.com`<br>password: `Password123!`<br>Ví dụ email: `csv-register-user-1734222222222-de34fa@example.com` | Payload đăng ký người dùng chuẩn, cho phép override field khi cần. |
 | TD-API-USERS-UNIQUE-EMAIL | Định dạng: `csv-user-{tag}-{timestamp}-{hex}@example.com`<br>Ví dụ email: `csv-user-admin-1734222222222-91ab34@example.com` | Email duy nhất cho từng test user API (login/profile). |
 | TD-API-USERS-INVALID-EMAIL | `invalid-email` | Chuỗi email sai format để test lỗi validate. |
-| TD-API-USERS-WEAK-PASSWORD | `12345` | Mật khẩu yếu nhằm kiểm tra rule bảo mật. |
 | TD-API-USERS-WRONG-PASSWORD | `WrongPass999!` | Mật khẩu sai dùng cho ca đăng nhập thất bại. |

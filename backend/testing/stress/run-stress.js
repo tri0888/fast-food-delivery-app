@@ -8,6 +8,7 @@ import path from 'node:path'
 import app from '../../app.js'
 import { connectInMemoryMongo, disconnectInMemoryMongo, resetDatabase } from '../fixtures/mongo.js'
 import { createFood } from '../fixtures/dataFactory.js'
+import { createUser } from '../fixtures/dataFactory.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -112,6 +113,11 @@ async function ensureApiAvailable() {
 
   console.warn('[stress] API not reachable at %s. Bootstrapping ephemeral server...', providedBaseUrl)
 
+  // Auth endpoints require a JWT secret.
+  if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = 'stress-jwt-secret'
+  }
+
   await connectInMemoryMongo()
   await resetDatabase()
   await Promise.all(
@@ -119,6 +125,15 @@ async function ensureApiAvailable() {
       createFood({ name: `Load Test Item ${idx + 1}`, price: 10 + idx })
     )
   )
+
+  // Seed a deterministic user so k6 can optionally exercise authenticated endpoints.
+  const stressEmail = process.env.STRESS_USER_EMAIL || 'stress.user@example.com'
+  const stressPassword = process.env.STRESS_USER_PASSWORD || 'Password123!'
+  try {
+    await createUser({ email: stressEmail, password: stressPassword, name: 'Stress User' })
+  } catch {
+    // If unique constraint collides, ignore; k6 will still be able to login if user exists.
+  }
 
   const listenHost = '127.0.0.1'
   const server = app.listen(0, listenHost)
@@ -138,7 +153,17 @@ async function ensureApiAvailable() {
 }
 
 const controller = await ensureApiAvailable()
-const envOverrides = { API_BASE_URL: controller.baseUrl }
+const envOverrides = {
+  API_BASE_URL: controller.baseUrl,
+  // Baseline STRESS-001 focuses on public browse endpoint. Keep auth flow OFF by default.
+  STRESS_ENABLE_AUTH: process.env.STRESS_ENABLE_AUTH || 'false'
+}
+
+// Only pass creds to k6 when explicitly provided.
+if (process.env.STRESS_USER_EMAIL && process.env.STRESS_USER_PASSWORD) {
+  envOverrides.STRESS_USER_EMAIL = process.env.STRESS_USER_EMAIL
+  envOverrides.STRESS_USER_PASSWORD = process.env.STRESS_USER_PASSWORD
+}
 
 const k6Command = process.env.K6_BIN || 'k6'
 let result

@@ -8,6 +8,8 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "test:compat": "npm run build && playwright test --config=e2e/playwright.compat.config.ts",
+    "test:speed": "npm run build && playwright test --config=e2e/playwright.speed.config.ts",
     "test:ui": "playwright test --config=e2e/playwright.config.ts",
     "test:ui:headed": "playwright test --headed --config=e2e/playwright.config.ts",
     "test:ui:report": "playwright show-report --config=e2e/playwright.config.ts",

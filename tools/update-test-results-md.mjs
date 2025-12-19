@@ -11,7 +11,11 @@ const ID_PATTERNS = [
   /UNI_[A-Z]+_UNIT_\d+/g,
   /FE-[A-Z]+-\d+[A-Z]?/g,
   /FEA_[A-Z]+_FEAT_\d+/g,
-  /SCREEN-(?:FE|ADMIN)-\d+/g
+  /SCREEN-(?:FE|ADMIN)-\d+/g,
+  /COMPAT-(?:FE|ADMIN)-\d+/g,
+  /SPEED-(?:FE|ADMIN)-\d+/g,
+  /STRESS-\d+/g,
+  /USABILITY-(?:FE|ADMIN)-\d+/g
 ]
 
 function extractIds(text) {
@@ -73,7 +77,16 @@ async function buildStatusMap() {
   }
 
   // Playwright JSON reporter results
-  const pwFiles = ['playwright-frontend.json', 'playwright-admin.json']
+  /** @type {string[]} */
+  let pwFiles = []
+  try {
+    const entries = await fs.readdir(RESULTS_DIR, { withFileTypes: true })
+    pwFiles = entries
+      .filter((e) => e.isFile() && /^playwright-.*\.json$/i.test(e.name))
+      .map((e) => e.name)
+  } catch {
+    pwFiles = []
+  }
 
   const visitSuites = (suite, fn) => {
     if (!suite) return
@@ -115,6 +128,20 @@ async function buildStatusMap() {
     } catch {
       // ignore missing/invalid files
     }
+  }
+
+  // Usability validator results
+  try {
+    const fp = path.join(RESULTS_DIR, 'usability.json')
+    const json = await readJson(fp)
+    for (const r of json.results || []) {
+      const id = String(r.id || '').trim()
+      if (!id) continue
+      const status = r.status === 'PASS' ? 'PASS' : r.status === 'FAIL' ? 'FAIL' : 'NOT RUN'
+      push(id, status)
+    }
+  } catch {
+    // ignore missing file
   }
 
   return map
@@ -216,7 +243,8 @@ async function main() {
 
   const targets = new Set([
     path.join(ROOT, 'backend', 'testing'),
-    path.join(ROOT, 'tests', 'screen')
+    path.join(ROOT, 'tests', 'screen'),
+    path.join(ROOT, 'docs', 'testing')
   ])
 
   const allFiles = []

@@ -125,7 +125,11 @@ npm run test:screen --prefix frontend
 npm run test:screen --prefix admin
 ```
 
-See `docs/testing/test-taxonomy-v2.md` for detailed coverage expectations.
+More guides:
+
+- `docs/testing/stress.md` (k6 load/stress)
+- `docs/testing/compat.md` (cross-browser compatibility)
+- `docs/testing/speed.md` (basic performance budget)
 
 ## White-box vs Black-box Testing
 We intentionally combine both methodologies:

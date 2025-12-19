@@ -1,0 +1,258 @@
+
+> admin@0.0.0 test:speed
+> npm run build && playwright test --config=e2e/playwright.speed.config.ts --reporter=json
+
+
+> admin@0.0.0 build
+> vite build
+
+[36mvite v7.1.6 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 111 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                         [39m[1m[2m  0.48 kB[22m[1m[22m[2m │ gzip:  0.31 kB[22m
+[2mdist/[22m[32massets/profile_image-CVVn_jUS.png  [39m[1m[2m  6.22 kB[22m[1m[22m
+[2mdist/[22m[35massets/index-DQ9aK1fX.css          [39m[1m[2m 21.53 kB[22m[1m[22m[2m │ gzip:  4.27 kB[22m
+[2mdist/[22m[36massets/index-sP3OD7o2.js           [39m[1m[2m248.73 kB[22m[1m[22m[2m │ gzip: 87.26 kB[22m
+[32m✓ built in 1.47s[39m
+{
+  "config": {
+    "configFile": "D:\\Git\\fast-food-delivery-app\\admin\\e2e\\playwright.speed.config.ts",
+    "rootDir": "D:/Git/fast-food-delivery-app/admin/e2e/specs/performance",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "D:/Git/fast-food-delivery-app/admin/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "D:/Git/fast-food-delivery-app/admin/e2e/specs/performance",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run preview -- --host 0.0.0.0 --port 4175",
+      "reuseExistingServer": true,
+      "timeout": 60000,
+      "url": "http://127.0.0.1:4175"
+    }
+  },
+  "suites": [
+    {
+      "title": "speed.spec.ts",
+      "file": "speed.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Speed · Navigation timings",
+          "file": "speed.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "SPEED-ADMIN-001 · users page loads within budget (configurable)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1003,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-18T16:59:16.142Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "speed-metrics",
+                          "contentType": "application/json",
+                          "body": "ewogICJidWRnZXRNcyI6IDE1MDAwLAogICJ0aW1pbmdzIjogewogICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudEVuZCI6IDMzNy45MDAwMDAwOTUzNjc0MywKICAgICJsb2FkRXZlbnRFbmQiOiAzMzkuNDAwMDAwMDk1MzY3NDMsCiAgICAicmVzcG9uc2VFbmQiOiAxMy45MDAwMDAwOTUzNjc0MzIsCiAgICAidHJhbnNmZXJTaXplIjogNzc5CiAgfQp9"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b0e2696f6e8971da9d01-88cdbc7750a4dbb31f3d",
+              "file": "speed.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "SPEED-ADMIN-002 · list page loads within budget (configurable)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 851,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"playwright-admin\"\u001b[39m\nReceived: \u001b[31mundefined\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"playwright-admin\"\u001b[39m\nReceived: \u001b[31mundefined\u001b[39m\n    at D:\\Git\\fast-food-delivery-app\\admin\\e2e\\specs\\performance\\speed.spec.ts:22:50",
+                        "location": {
+                          "file": "D:\\Git\\fast-food-delivery-app\\admin\\e2e\\specs\\performance\\speed.spec.ts",
+                          "column": 50,
+                          "line": 22
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mroute(\u001b[32m'**/api/**'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m (route) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m       expect(route\u001b[33m.\u001b[39mrequest()\u001b[33m.\u001b[39mheaders()[\u001b[32m'token'\u001b[39m])\u001b[33m.\u001b[39mtoBe(adminToken)\n \u001b[90m    |\u001b[39m                                                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m route\u001b[33m.\u001b[39mfulfill({\n \u001b[90m 24 |\u001b[39m         status\u001b[33m:\u001b[39m \u001b[35m200\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 25 |\u001b[39m         contentType\u001b[33m:\u001b[39m \u001b[32m'application/json'\u001b[39m\u001b[33m,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "D:\\Git\\fast-food-delivery-app\\admin\\e2e\\specs\\performance\\speed.spec.ts",
+                            "column": 50,
+                            "line": 22
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"playwright-admin\"\u001b[39m\nReceived: \u001b[31mundefined\u001b[39m\n\n  20 |   test.beforeEach(async ({ page }) => {\n  21 |     await page.route('**/api/**', async (route) => {\n> 22 |       expect(route.request().headers()['token']).toBe(adminToken)\n     |                                                  ^\n  23 |       await route.fulfill({\n  24 |         status: 200,\n  25 |         contentType: 'application/json',\n    at D:\\Git\\fast-food-delivery-app\\admin\\e2e\\specs\\performance\\speed.spec.ts:22:50"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-18T16:59:17.313Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "speed-metrics",
+                          "contentType": "application/json",
+                          "body": "ewogICJidWRnZXRNcyI6IDE1MDAwLAogICJ0aW1pbmdzIjogewogICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudEVuZCI6IDI2MC45MDAwMDAwOTUzNjc0MywKICAgICJsb2FkRXZlbnRFbmQiOiAyNjIuNzAwMDAwMDQ3NjgzNywKICAgICJyZXNwb25zZUVuZCI6IDUuMzAwMDAwMDcxNTI1NTc0LAogICAgInRyYW5zZmVyU2l6ZSI6IDc3OQogIH0KfQ=="
+                        },
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Git\\fast-food-delivery-app\\admin\\e2e\\test-results\\speed-Speed-·-Navigation-t-5eb69-within-budget-configurable--chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "D:\\Git\\fast-food-delivery-app\\admin\\e2e\\test-results\\speed-Speed-·-Navigation-t-5eb69-within-budget-configurable--chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "D:\\Git\\fast-food-delivery-app\\admin\\e2e\\specs\\performance\\speed.spec.ts",
+                        "column": 50,
+                        "line": 22
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b0e2696f6e8971da9d01-f3d6ed2491cacf4eef93",
+              "file": "speed.spec.ts",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "SPEED-ADMIN-003 · orders page loads within budget (configurable)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 839,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-18T16:59:19.252Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "speed-metrics",
+                          "contentType": "application/json",
+                          "body": "ewogICJidWRnZXRNcyI6IDE1MDAwLAogICJ0aW1pbmdzIjogewogICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudEVuZCI6IDI5Mi45MDAwMDAwOTUzNjc0MywKICAgICJsb2FkRXZlbnRFbmQiOiAyOTQuNjAwMDAwMDIzODQxODYsCiAgICAicmVzcG9uc2VFbmQiOiAxMi4zMDAwMDAwNzE1MjU1NzQsCiAgICAidHJhbnNmZXJTaXplIjogNzc5CiAgfQp9"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b0e2696f6e8971da9d01-9fbf887e6346dc603292",
+              "file": "speed.spec.ts",
+              "line": 94,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-12-18T16:59:14.092Z",
+    "duration": 6443.251,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}
