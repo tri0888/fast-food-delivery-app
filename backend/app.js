@@ -15,6 +15,26 @@ import cartRouter from './routes/cartRoute.js';
 //app config
 const app = express()
 
+// CORS
+// - Default: allow all origins (keeps local dev + existing tests working)
+// - If CORS_ORIGINS is provided (comma-separated), only allow those origins
+//   Example: CORS_ORIGINS=https://<user>.github.io,https://<user>.github.io/<repo>
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
+const corsOptions = corsOrigins.length
+    ? {
+        origin: (origin, cb) => {
+            // Allow non-browser requests (no Origin header), e.g. tests, curl, server-to-server
+            if (!origin) return cb(null, true);
+            if (corsOrigins.includes(origin)) return cb(null, true);
+            return cb(new Error(`CORS blocked for origin: ${origin}`));
+        },
+      }
+    : undefined;
+
 // middleware
 // Set security HTTP headers
 // app.use(helmet())
@@ -26,7 +46,8 @@ app.use(ExpressMongoSanitize())
 
 app.use(morgan('dev'));
 app.use(express.json());
-app.use(cors())
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 
 // api endpoints
 app.use("/api/food", foodRouter)

@@ -5,6 +5,29 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Food Delivery</title>
+
+    <!-- GitHub Pages SPA fallback support (works with public/404.html) -->
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var p = params.get('p');
+          var q = params.get('q');
+          if (!p) return;
+
+          // Vite replaces %BASE_URL% at build time based on the `base` config.
+          var base = '%BASE_URL%';
+          var baseNoTrail = base.replace(/\/$/, '');
+          var newPath = baseNoTrail + '/' + p.replace(/^\//, '');
+          var newUrl = newPath + (q ? ('?' + q) : '') + window.location.hash;
+
+          // Remove redirect params from the visible URL
+          window.history.replaceState(null, document.title, newUrl);
+        } catch (e) {
+          // If anything goes wrong, fail silently and let the app load at '/'
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting…</title>
+    <meta http-equiv="refresh" content="0; url=%BASE_URL%" />
+    <script>
+      (function () {
+        // GitHub Pages serves 404.html for unknown routes.
+        // We redirect to the SPA entry (index.html) while preserving the original path.
+        // index.html then restores it via history.replaceState.
+
+        // Vite replaces %BASE_URL% at build time based on the `base` config.
+        var base = '%BASE_URL%';
+        var baseNoTrail = base.replace(/\/$/, '');
+
+        // Current path without the base prefix
+        var fullPath = window.location.pathname;
+        var pathAfterBase = fullPath.indexOf(baseNoTrail) === 0
+          ? fullPath.slice(baseNoTrail.length)
+          : fullPath;
+
+        // Trim leading slash
+        pathAfterBase = pathAfterBase.replace(/^\//, '');
+
+        var query = window.location.search.replace(/^\?/, '');
+        var target = base + '?p=' + encodeURIComponent(pathAfterBase);
+        if (query) target += '&q=' + encodeURIComponent(query);
+
+        window.location.replace(target + window.location.hash);
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>
+      This app requires JavaScript. Please enable JavaScript and refresh.
+    </noscript>
+  </body>
+</html>
