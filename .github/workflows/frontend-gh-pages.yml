@@ -5,6 +5,19 @@ on:
     branches:
       - Software-Testting
   workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Vite base URL (leave empty to use '/<repo>/')"
+        required: false
+        default: ""
+      vite_api_url:
+        description: "Override VITE_API_URL (leave empty to use secret VITE_API_URL)"
+        required: false
+        default: ""
+      vite_admin_url:
+        description: "Override VITE_ADMIN_URL (leave empty to use secret VITE_ADMIN_URL)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -42,11 +55,11 @@ jobs:
       - name: Build
         env:
           # GitHub Pages project sites are served from '/<repo>/'
-          BASE_URL: /${{ github.event.repository.name }}/
+          BASE_URL: ${{ inputs.base_url != '' && inputs.base_url || format('/{0}/', github.event.repository.name) }}
           # Backend public URL exposed by Cloudflare Tunnel (set this as a repo secret)
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: ${{ inputs.vite_api_url != '' && inputs.vite_api_url || secrets.VITE_API_URL }}
           # Optional: where your admin UI lives
-          VITE_ADMIN_URL: ${{ secrets.VITE_ADMIN_URL }}
+          VITE_ADMIN_URL: ${{ inputs.vite_admin_url != '' && inputs.vite_admin_url || secrets.VITE_ADMIN_URL }}
         run: npm run build
 
       - name: Upload artifact
