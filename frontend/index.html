@@ -15,8 +15,8 @@
           var q = params.get('q');
           if (!p) return;
 
-          // Vite replaces %BASE_URL% at build time based on the `base` config.
-          var base = '%BASE_URL%';
+          // BASE_URL is '/' for custom domain deployment
+          var base = '/';
           var baseNoTrail = base.replace(/\/$/, '');
           var newPath = baseNoTrail + '/' + p.replace(/^\//, '');
           var newUrl = newPath + (q ? ('?' + q) : '') + window.location.hash;

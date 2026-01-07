@@ -1,21 +1,18 @@
-name: Deploy Frontend to GitHub Pages
+name: Deploy Frontend and Admin to GitHub Pages
 
 on:
   push:
     branches:
+      - main
       - Software-Testting
   workflow_dispatch:
     inputs:
       base_url:
-        description: "Vite base URL (leave empty to use '/<repo>/')"
+        description: "Vite base URL (leave empty for '/')"
         required: false
         default: ""
       vite_api_url:
-        description: "Override VITE_API_URL (leave empty to use secret VITE_API_URL)"
-        required: false
-        default: ""
-      vite_admin_url:
-        description: "Override VITE_ADMIN_URL (leave empty to use secret VITE_ADMIN_URL)"
+        description: "Override VITE_API_URL (leave empty to use secret)"
         required: false
         default: ""
 
@@ -31,9 +28,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
 
     steps:
       - name: Checkout
@@ -44,28 +38,50 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: |
+            frontend/package-lock.json
+            admin/package-lock.json
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Install dependencies
+      # Build Frontend
+      - name: Install frontend dependencies
+        working-directory: ./frontend
         run: npm ci
 
-      - name: Build
+      - name: Build frontend
+        working-directory: ./frontend
         env:
-          # GitHub Pages project sites are served from '/<repo>/'
           BASE_URL: ${{ inputs.base_url != '' && inputs.base_url || '/' }}
-          # Backend public URL exposed by Cloudflare Tunnel (set this as a repo secret)
           VITE_API_URL: ${{ inputs.vite_api_url != '' && inputs.vite_api_url || secrets.VITE_API_URL }}
-          # Optional: where your admin UI lives
-          VITE_ADMIN_URL: ${{ inputs.vite_admin_url != '' && inputs.vite_admin_url || secrets.VITE_ADMIN_URL }}
+          VITE_ADMIN_URL: /admin/
         run: npm run build
+
+      # Build Admin
+      - name: Install admin dependencies
+        working-directory: ./admin
+        run: npm ci
+
+      - name: Build admin
+        working-directory: ./admin
+        env:
+          BASE_URL: /admin/
+          VITE_API_URL: ${{ inputs.vite_api_url != '' && inputs.vite_api_url || secrets.VITE_API_URL }}
+        run: npm run build
+
+      # Combine builds - frontend at root, admin under /admin/
+      - name: Combine builds
+        run: |
+          mkdir -p combined
+          cp -r frontend/dist/* combined/
+          mkdir -p combined/admin
+          cp -r admin/dist/* combined/admin/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: frontend/dist
+          path: combined
 
   deploy:
     runs-on: ubuntu-latest
