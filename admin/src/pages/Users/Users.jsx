@@ -1,74 +1,75 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './Users.css'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 
-const Users = ({url}) => {
-    const navigate          = useNavigate();
-    const [users, setUsers] = useState([]);
-    const [confirmDialog, setConfirmDialog] = useState({
-        isOpen: false,
-        userId: null,
-        userName: '',
-        action: ''
-    });
+const Users = ({ url }) => {
+  const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    userId: null,
+    userName: '',
+    action: ''
+  });
 
-    const fetchUsers = async () => {
-        const token = sessionStorage.getItem("token");
-        try {
-            const response = await axios.get(`${url}/api/user/list`, {
-                                             headers: { token }});
-            if(response.data.success) {
-              setUsers(response.data.data);
-            } 
-        } catch (error) {
-            console.log(error);
-            toast.error("Failed to fetch users");
-        }
+  const fetchUsers = async () => {
+    const token = sessionStorage.getItem("token");
+    try {
+      const response = await axios.get(`${url}/api/user/list`, {
+        headers: { token }
+      });
+      if (response.data.success) {
+        setUsers(response.data.data);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to fetch users");
+    }
+  }
+
+  const toggleCartLock = (user) => {
+    const currentStatus = user.isCartLock;
+    const action = currentStatus ? 'Unlock Cart' : 'Lock Cart';
+
+    setConfirmDialog({
+      isOpen: true,
+      userId: user._id,
+      userName: user.name,
+      action: action
+    });
+  };
+
+  const handleConfirmToggleLock = async () => {
+    const { userId } = confirmDialog;
+    const token = sessionStorage.getItem("token");
+    try {
+      const response = await axios.patch(`${url}/api/user/toggle-cart-lock`,
+        { userId },
+        { headers: { token } });
+      if (response.data.success) {
+        const newStatus = response.data.data.isCartLock;
+        setUsers(prevUsers =>
+          prevUsers.map(u =>
+            u._id === userId
+              ? { ...u, isCartLock: newStatus }
+              : u))
+
+        const actionText = newStatus ? 'Locked' : 'Unlocked';
+        toast.success(`"${confirmDialog.userName}" shopping cart has been ${actionText} successfully`);
+      }
+    } catch (error) {
+      toast.error("Failed to toggle cart lock");
     }
 
-    const toggleCartLock = (user) => {
-        const currentStatus = user.isCartLock;
-        const action = currentStatus ? 'Unlock Cart' : 'Lock Cart';
-        
-        setConfirmDialog({
-            isOpen: true,
-            userId: user._id,
-            userName: user.name,
-            action: action
-        });
-    };
+    setConfirmDialog({ isOpen: false, userId: null, userName: '', action: '' });
+  };
 
-    const handleConfirmToggleLock = async () => {
-        const { userId } = confirmDialog;
-        const token = sessionStorage.getItem("token");
-        try {
-            const response = await axios.patch(`${url}/api/user/toggle-cart-lock`, 
-                                              { userId },
-                                              { headers: { token } });            
-            if (response.data.success) {
-                const newStatus = response.data.data.isCartLock;
-                setUsers(prevUsers =>
-                  prevUsers.map(u =>
-                    u._id === userId 
-                    ? { ...u, isCartLock: newStatus } 
-                    : u))
-
-                const actionText = newStatus ? 'Locked' : 'Unlocked';
-                toast.success(`"${confirmDialog.userName}" shopping cart has been ${actionText} successfully`);
-            }
-        } catch (error) {
-            toast.error("Failed to toggle cart lock");
-        }
-        
-        setConfirmDialog({ isOpen: false, userId: null, userName: '', action: '' });
-    };
-
-    const handleCancelToggleLock = () => {
-        setConfirmDialog({ isOpen: false, userId: null, userName: '', action: '' });
-    };
+  const handleCancelToggleLock = () => {
+    setConfirmDialog({ isOpen: false, userId: null, userName: '', action: '' });
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -79,7 +80,7 @@ const Users = ({url}) => {
       <div className="users-header">
         <p>Users Management</p>
         <button className="add-user-btn" onClick={() => navigate('/add-user')}>
-           Add User
+          Add User
         </button>
       </div>
       <div className="users-table">
@@ -99,9 +100,9 @@ const Users = ({url}) => {
               <p>{user.email}</p>
               <p>{cartItemsCount}</p>
               <div className="user-actions">
-                <a href={`/edit-user/${user._id}`} className='cursor edit-link' style={{marginRight:10}}>Edit</a>
-                <button 
-                  onClick={() => toggleCartLock(user)} 
+                <Link to={`/edit-user/${user._id}`} className='cursor edit-link' style={{ marginRight: 10 }}>Edit</Link>
+                <button
+                  onClick={() => toggleCartLock(user)}
                   className={`toggle-btn ${isLocked ? 'locked' : 'unlocked'}`}
                 >
                   {isLocked ? '🔓 Unlock Cart' : '🔒 Lock Cart'}
@@ -111,7 +112,7 @@ const Users = ({url}) => {
           )
         })}
       </div>
-      
+
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         title="Confirm Status Change"
