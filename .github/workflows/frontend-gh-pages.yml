@@ -68,6 +68,7 @@ jobs:
         env:
           BASE_URL: /admin/
           VITE_API_URL: ${{ inputs.vite_api_url != '' && inputs.vite_api_url || secrets.VITE_API_URL }}
+          VITE_FRONTEND_URL: ${{ secrets.VITE_FRONTEND_URL }}
         run: npm run build
 
       # Combine builds - frontend at root, admin under /admin/
